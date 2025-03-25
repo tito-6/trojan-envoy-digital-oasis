@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -21,6 +21,11 @@ import AdminContent from "./pages/admin/AdminContent";
 import AdminContacts from "./pages/admin/AdminContacts";
 import AdminUsers from "./pages/admin/AdminUsers";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import CaseStudies from "./pages/CaseStudies";
+import FAQ from "./pages/FAQ";
+import { LanguageCode, availableLanguages } from "./lib/i18n";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +42,20 @@ const App = () => {
     }
   }, []);
 
+  // Create language route helper to reduce duplication
+  const createLanguageRoutes = (languages: typeof availableLanguages) => {
+    return languages.map(lang => (
+      <Route key={lang.code} path={`/${lang.code}`} element={<Navigate to={`/${lang.code}/`} replace />} />
+    ));
+  };
+
+  // Create localized routes for each page
+  const createLocalizedRoutes = (path: string, Component: React.ComponentType) => {
+    return availableLanguages.map(lang => (
+      <Route key={`${lang.code}-${path}`} path={`/${lang.code}${path}`} element={<Component />} />
+    ));
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
@@ -44,18 +63,51 @@ const App = () => {
           <Toaster />
           <Sonner />
           <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/portfolio" element={<Portfolio />} />
-            <Route path="/portfolio/:slug" element={<PortfolioItem />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/ai-tools" element={<AITools />} />
+            {/* Language Root Routes */}
+            {createLanguageRoutes(availableLanguages)}
             
-            {/* Admin Routes */}
+            {/* Main Routes for all languages */}
+            <Route path="/" element={<Index />} />
+            {createLocalizedRoutes("/", Index)}
+            
+            <Route path="/services" element={<Services />} />
+            {createLocalizedRoutes("/services", Services)}
+            
+            <Route path="/about" element={<About />} />
+            {createLocalizedRoutes("/about", About)}
+            
+            <Route path="/portfolio" element={<Portfolio />} />
+            {createLocalizedRoutes("/portfolio", Portfolio)}
+            
+            <Route path="/portfolio/:slug" element={<PortfolioItem />} />
+            {createLocalizedRoutes("/portfolio/:slug", PortfolioItem)}
+            
+            <Route path="/blog" element={<Blog />} />
+            {createLocalizedRoutes("/blog", Blog)}
+            
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            {createLocalizedRoutes("/blog/:slug", BlogPost)}
+            
+            <Route path="/contact" element={<Contact />} />
+            {createLocalizedRoutes("/contact", Contact)}
+            
+            <Route path="/ai-tools" element={<AITools />} />
+            {createLocalizedRoutes("/ai-tools", AITools)}
+            
+            {/* New Pages */}
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            {createLocalizedRoutes("/privacy-policy", PrivacyPolicy)}
+            
+            <Route path="/terms-of-service" element={<TermsOfService />} />
+            {createLocalizedRoutes("/terms-of-service", TermsOfService)}
+            
+            <Route path="/case-studies" element={<CaseStudies />} />
+            {createLocalizedRoutes("/case-studies", CaseStudies)}
+            
+            <Route path="/faq" element={<FAQ />} />
+            {createLocalizedRoutes("/faq", FAQ)}
+            
+            {/* Admin Routes (No language prefix) */}
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />

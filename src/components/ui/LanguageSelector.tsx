@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Globe } from "lucide-react";
 import { availableLanguages, useLanguage } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -16,8 +16,23 @@ const LanguageSelector: React.FC = () => {
     closeDropdown();
   };
 
+  // Close the dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.language-dropdown')) {
+        closeDropdown();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
-    <div className="relative">
+    <div className="relative language-dropdown">
       <button
         onClick={toggleDropdown}
         className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-secondary transition-colors"

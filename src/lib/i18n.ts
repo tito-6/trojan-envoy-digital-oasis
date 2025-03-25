@@ -4,8 +4,10 @@ import { es } from './i18n/translations/es';
 import { fr } from './i18n/translations/fr';
 import { de } from './i18n/translations/de';
 import { zh } from './i18n/translations/zh';
+import { ar } from './i18n/translations/ar';
+import { tr } from './i18n/translations/tr';
 
-type LanguageCode = 'en' | 'es' | 'fr' | 'de' | 'zh';
+export type LanguageCode = 'en' | 'es' | 'fr' | 'de' | 'zh' | 'ar' | 'tr';
 
 interface Translation {
   [key: string]: string;
@@ -20,6 +22,7 @@ interface LanguageState {
   translations: Translations;
   setLanguage: (lang: LanguageCode) => void;
   t: (key: string) => string;
+  getLocalizedSlug: (baseSlug: string) => string;
 }
 
 // Initial translations with all languages
@@ -74,11 +77,21 @@ const translations: Translations = {
     'footer.rights': 'All rights reserved',
     'footer.privacy': 'Privacy Policy',
     'footer.terms': 'Terms of Service',
+    
+    // Additional sections
+    'references.title': 'Our References',
+    'references.subtitle': 'Trusted by leading brands',
+    'caseStudies.title': 'Case Studies',
+    'caseStudies.subtitle': 'Success stories of our clients',
+    'faq.title': 'Frequently Asked Questions',
+    'faq.subtitle': 'Answers to common inquiries',
   },
   es,
   fr,
   de,
   zh,
+  ar,
+  tr,
 };
 
 export const useLanguage = create<LanguageState>((set, get) => ({
@@ -87,11 +100,30 @@ export const useLanguage = create<LanguageState>((set, get) => ({
   setLanguage: (lang) => {
     set({ currentLanguage: lang });
     localStorage.setItem('preferred-language', lang);
+    
+    // Update URL with language prefix if not already present
+    const currentPath = window.location.pathname;
+    const pathSegments = currentPath.split('/').filter(Boolean);
+    
+    if (pathSegments.length === 0 || !isLanguageCode(pathSegments[0])) {
+      // Only update URL if not already navigating or at root
+      if (currentPath !== '/' && !window.location.href.includes('?')) {
+        window.history.replaceState(null, '', `/${lang}${currentPath}`);
+      }
+    } else if (isLanguageCode(pathSegments[0]) && pathSegments[0] !== lang) {
+      // Replace language code in URL
+      pathSegments[0] = lang;
+      window.history.replaceState(null, '', `/${pathSegments.join('/')}`);
+    }
   },
   t: (key) => {
     const { currentLanguage, translations } = get();
     return translations[currentLanguage]?.[key] || key;
   },
+  getLocalizedSlug: (baseSlug) => {
+    const { currentLanguage } = get();
+    return currentLanguage === 'en' ? baseSlug : `${currentLanguage}/${baseSlug}`;
+  }
 }));
 
 export const availableLanguages = [
@@ -100,12 +132,55 @@ export const availableLanguages = [
   { code: 'fr', name: 'Français' },
   { code: 'de', name: 'Deutsch' },
   { code: 'zh', name: '中文' },
+  { code: 'ar', name: 'العربية', rtl: true },
+  { code: 'tr', name: 'Türkçe' },
 ];
 
-// Initialize with saved language preference if available
+// Helper function to check if a string is a valid language code
+const isLanguageCode = (code: string): code is LanguageCode => {
+  return availableLanguages.some(lang => lang.code === code);
+}
+
+// Initialize with language detection
 if (typeof window !== 'undefined') {
+  // Check for saved language preference
   const savedLanguage = localStorage.getItem('preferred-language') as LanguageCode | null;
-  if (savedLanguage && ['en', 'es', 'fr', 'de', 'zh'].includes(savedLanguage)) {
+  
+  if (savedLanguage && availableLanguages.some(lang => lang.code === savedLanguage)) {
     useLanguage.getState().setLanguage(savedLanguage);
+  } else {
+    // Check URL for language code
+    const pathSegments = window.location.pathname.split('/').filter(Boolean);
+    if (pathSegments.length > 0 && isLanguageCode(pathSegments[0])) {
+      useLanguage.getState().setLanguage(pathSegments[0]);
+    } else {
+      // Detect browser language
+      const browserLang = navigator.language.split('-')[0] as LanguageCode;
+      if (availableLanguages.some(lang => lang.code === browserLang)) {
+        useLanguage.getState().setLanguage(browserLang);
+      }
+    }
+  }
+  
+  // Add RTL support for Arabic
+  const currentLang = useLanguage.getState().currentLanguage;
+  const isRTL = availableLanguages.find(lang => lang.code === currentLang)?.rtl;
+  if (isRTL) {
+    document.documentElement.dir = 'rtl';
+  } else {
+    document.documentElement.dir = 'ltr';
   }
 }
+
+// Subscribe to language changes for RTL support
+useLanguage.subscribe(
+  (state) => state.currentLanguage, 
+  (currentLang) => {
+    const isRTL = availableLanguages.find(lang => lang.code === currentLang)?.rtl;
+    if (isRTL) {
+      document.documentElement.dir = 'rtl';
+    } else {
+      document.documentElement.dir = 'ltr';
+    }
+  }
+);

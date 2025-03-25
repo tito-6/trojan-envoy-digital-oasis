@@ -5,38 +5,38 @@ import { Mail, MapPin, Phone } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 
 const Footer: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, getLocalizedSlug } = useLanguage();
   const currentYear = new Date().getFullYear();
 
   const footerLinks = [
     {
       title: "Company",
       links: [
-        { label: "About Us", path: "/about" },
-        { label: "Services", path: "/services" },
-        { label: "Portfolio", path: "/portfolio" },
-        { label: "Careers", path: "/careers" },
-        { label: "Contact", path: "/contact" },
+        { label: "About Us", path: `/about` },
+        { label: "Services", path: `/services` },
+        { label: "Portfolio", path: `/portfolio` },
+        { label: "Careers", path: `/careers` },
+        { label: "Contact", path: `/contact` },
       ],
     },
     {
       title: "Services",
       links: [
-        { label: "Web Development", path: "/services/web-development" },
-        { label: "Mobile Development", path: "/services/mobile-development" },
-        { label: "UI/UX Design", path: "/services/ui-ux-design" },
-        { label: "Digital Marketing", path: "/services/digital-marketing" },
-        { label: "SEO Optimization", path: "/services/seo" },
+        { label: "Web Development", path: `/services/web-development` },
+        { label: "Mobile Development", path: `/services/mobile-development` },
+        { label: "UI/UX Design", path: `/services/ui-ux-design` },
+        { label: "Digital Marketing", path: `/services/digital-marketing` },
+        { label: "SEO Optimization", path: `/services/seo` },
       ],
     },
     {
       title: "Resources",
       links: [
-        { label: "Blog", path: "/blog" },
-        { label: "Case Studies", path: "/case-studies" },
-        { label: "FAQ", path: "/faq" },
-        { label: t('footer.privacy'), path: "/privacy-policy" },
-        { label: t('footer.terms'), path: "/terms-of-service" },
+        { label: "Blog", path: `/blog` },
+        { label: "Case Studies", path: `/case-studies` },
+        { label: "FAQ", path: `/faq` },
+        { label: t('footer.privacy'), path: `/privacy-policy` },
+        { label: t('footer.terms'), path: `/terms-of-service` },
       ],
     },
   ];

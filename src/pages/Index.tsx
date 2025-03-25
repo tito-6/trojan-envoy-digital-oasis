@@ -6,8 +6,13 @@ import About from "@/components/home/About";
 import Contact from "@/components/home/Contact";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
+import References from "@/components/home/References";
+import HomeFAQ from "@/components/home/HomeFAQ";
+import { useLanguage } from "@/lib/i18n";
 
 const Index: React.FC = () => {
+  const { t } = useLanguage();
+
   useEffect(() => {
     // Add fade-in animation to elements with the fade-in-element class
     const observer = new IntersectionObserver((entries) => {
@@ -33,6 +38,8 @@ const Index: React.FC = () => {
         <Hero />
         <Services />
         <About />
+        <References />
+        <HomeFAQ />
         <Contact />
       </main>
       
