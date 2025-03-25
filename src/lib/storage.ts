@@ -151,7 +151,6 @@ class StorageService {
     this.initializeStorage();
   }
 
-  // Initialize localStorage with default data if empty
   private initializeStorage() {
     if (!localStorage.getItem(this.contentKey)) {
       localStorage.setItem(this.contentKey, JSON.stringify(initialContent));
@@ -170,7 +169,6 @@ class StorageService {
     }
   }
 
-  // EVENT SYSTEM FOR REAL-TIME UPDATES
   addEventListener(event: string, callback: Function) {
     if (!this.eventListeners[event]) {
       this.eventListeners[event] = [];
@@ -191,7 +189,6 @@ class StorageService {
     }
   }
 
-  // CONTENT METHODS
   getAllContent(): ContentItem[] {
     const content = localStorage.getItem(this.contentKey);
     return content ? JSON.parse(content) : [];
@@ -213,17 +210,21 @@ class StorageService {
     const allContent = this.getAllContent();
     const newId = allContent.length > 0 ? Math.max(...allContent.map(item => item.id)) + 1 : 1;
     
-    const newContent: ContentItem = {
+    const normalizedContent: ContentItem = {
       ...content,
       id: newId,
       lastUpdated: new Date().toISOString().split('T')[0],
-      published: content.published ?? false
+      published: content.published ?? false,
+      seoKeywords: content.seoKeywords || [],
+      slug: content.slug ? content.slug.toLowerCase().replace(/\s+/g, '-') : undefined,
+      publishDate: content.type === 'Blog Post' ? 
+        (content.publishDate || new Date().toISOString().split('T')[0]) : 
+        content.publishDate
     };
     
-    allContent.push(newContent);
+    allContent.push(normalizedContent);
     localStorage.setItem(this.contentKey, JSON.stringify(allContent));
     
-    // If this is a page and should be shown in navigation, add it to nav items
     if (content.type === 'Page' && content.showInNavigation && content.slug) {
       this.addNavigationItem({
         label: content.title,
@@ -232,10 +233,9 @@ class StorageService {
       });
     }
     
-    // Dispatch event for real-time updates
-    this.dispatchEvent('content-added', newContent);
+    this.dispatchEvent('content-added', normalizedContent);
     
-    return newContent;
+    return normalizedContent;
   }
 
   updateContent(id: number, content: Partial<ContentItem>): ContentItem | null {
@@ -245,20 +245,23 @@ class StorageService {
     if (index === -1) return null;
     
     const originalContent = allContent[index];
-    const updatedContent = {
+    
+    const updatedContent: ContentItem = {
       ...originalContent,
       ...content,
-      lastUpdated: new Date().toISOString().split('T')[0]
+      lastUpdated: new Date().toISOString().split('T')[0],
+      seoKeywords: content.seoKeywords || originalContent.seoKeywords || [],
+      slug: content.slug ? 
+        content.slug.toLowerCase().replace(/\s+/g, '-') : 
+        originalContent.slug
     };
     
     allContent[index] = updatedContent;
     localStorage.setItem(this.contentKey, JSON.stringify(allContent));
     
-    // Handle navigation changes if this is a page and navigation status changed
     if (updatedContent.type === 'Page') {
       const navItem = this.getNavigationItemByPath(`/${updatedContent.slug || ''}`);
       
-      // If should show in nav but no nav item exists
       if (updatedContent.showInNavigation && !navItem && updatedContent.slug) {
         this.addNavigationItem({
           label: updatedContent.title,
@@ -266,7 +269,6 @@ class StorageService {
           order: this.getAllNavigationItems().length + 1
         });
       } 
-      // If exists in nav but should not show or the path changed
       else if (navItem) {
         if (!updatedContent.showInNavigation) {
           this.deleteNavigationItem(navItem.id);
@@ -279,7 +281,6 @@ class StorageService {
       }
     }
     
-    // Dispatch event for real-time updates
     this.dispatchEvent('content-updated', updatedContent);
     
     return updatedContent;
@@ -294,7 +295,6 @@ class StorageService {
     
     localStorage.setItem(this.contentKey, JSON.stringify(filteredContent));
     
-    // If this was a page in navigation, remove from navigation
     if (contentToDelete?.type === 'Page' && contentToDelete.showInNavigation && contentToDelete.slug) {
       const navItem = this.getNavigationItemByPath(`/${contentToDelete.slug}`);
       if (navItem) {
@@ -302,13 +302,11 @@ class StorageService {
       }
     }
     
-    // Dispatch event for real-time updates
     this.dispatchEvent('content-deleted', id);
     
     return true;
   }
 
-  // NAVIGATION METHODS
   getAllNavigationItems(): NavigationItem[] {
     const navItems = localStorage.getItem(this.navigationKey);
     return navItems ? JSON.parse(navItems) : [];
@@ -363,7 +361,6 @@ class StorageService {
     return true;
   }
 
-  // USER METHODS
   getAllUsers(): User[] {
     const users = localStorage.getItem(this.usersKey);
     return users ? JSON.parse(users) : [];
@@ -418,7 +415,6 @@ class StorageService {
     return true;
   }
 
-  // CONTACT REQUEST METHODS
   getAllContactRequests(): ContactRequest[] {
     const contacts = localStorage.getItem(this.contactsKey);
     return contacts ? JSON.parse(contacts) : [];
@@ -476,5 +472,4 @@ class StorageService {
   }
 }
 
-// Create a singleton instance
 export const storageService = new StorageService();

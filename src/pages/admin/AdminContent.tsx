@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ContentForm from "@/components/admin/ContentForm";
@@ -41,26 +40,42 @@ const AdminContent: React.FC = () => {
   const [sortField, setSortField] = useState<keyof ContentItem>('lastUpdated');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [activeTab, setActiveTab] = useState("all");
+  const [recentActions, setRecentActions] = useState<{
+    item: ContentItem;
+    action: 'created' | 'updated';
+    timestamp: number;
+  }[]>([]);
   const { toast } = useToast();
   
-  // Load content from storage service
   useEffect(() => {
     loadContent();
     loadNavigation();
     
-    // Subscribe to content changes
-    const unsubscribeAdded = storageService.addEventListener('content-added', () => {
+    const unsubscribeAdded = storageService.addEventListener('content-added', (item) => {
       loadContent();
       loadNavigation();
+      
+      setRecentActions(prev => [
+        { item, action: 'created', timestamp: Date.now() },
+        ...prev.slice(0, 4)
+      ]);
     });
-    const unsubscribeUpdated = storageService.addEventListener('content-updated', () => {
+    
+    const unsubscribeUpdated = storageService.addEventListener('content-updated', (item) => {
       loadContent();
       loadNavigation();
+      
+      setRecentActions(prev => [
+        { item, action: 'updated', timestamp: Date.now() },
+        ...prev.slice(0, 4)
+      ]);
     });
+    
     const unsubscribeDeleted = storageService.addEventListener('content-deleted', () => {
       loadContent();
       loadNavigation();
     });
+    
     const unsubscribeNavUpdated = storageService.addEventListener('navigation-updated', () => loadNavigation());
     
     return () => {
@@ -81,7 +96,6 @@ const AdminContent: React.FC = () => {
     setNavigationItems(navigation);
   };
   
-  // Filter content based on search, type filter, and active tab
   const filteredContent = contentItems.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType ? item.type === selectedType : true;
@@ -96,7 +110,6 @@ const AdminContent: React.FC = () => {
     return matchesSearch && matchesType && matchesLanguage && matchesTab;
   });
   
-  // Sort content
   const sortedContent = [...filteredContent].sort((a, b) => {
     const aValue = a[sortField];
     const bValue = b[sortField];
@@ -107,14 +120,12 @@ const AdminContent: React.FC = () => {
         : bValue.localeCompare(aValue);
     }
     
-    // Handle numbers or default to 0
     const aNum = aValue || 0;
     const bNum = bValue || 0;
     
     return sortDirection === 'asc' ? +aNum - +bNum : +bNum - +aNum;
   });
   
-  // Get unique content types for filter dropdown
   const contentTypes = Array.from(new Set(contentItems.map(item => item.type)));
   
   const handleSortChange = (field: keyof ContentItem) => {
@@ -127,7 +138,6 @@ const AdminContent: React.FC = () => {
   };
   
   const handleSaveContent = (values: any) => {
-    // In a real application, this would send the data to a backend API
     const placement = values.placement && (values.placement.pageId || values.placement.sectionId || values.placement.position) 
       ? values.placement 
       : undefined;
@@ -153,11 +163,42 @@ const AdminContent: React.FC = () => {
     
     setIsNewContentDialogOpen(false);
     
-    toast({
-      title: "Content created successfully",
-      description: `${values.title} has been added to the content library.`,
-      variant: "default",
-    });
+    const contentTypeLabel = values.type.toLowerCase();
+    const viewableTypes = ["blog post", "page", "service", "portfolio"];
+    
+    if (values.published && viewableTypes.includes(contentTypeLabel)) {
+      const viewPath = contentTypeLabel === "blog post" 
+        ? `/blog/${values.slug}` 
+        : contentTypeLabel === "page" 
+          ? `/${values.slug}` 
+          : `/${contentTypeLabel}/${values.slug}`;
+          
+      toast({
+        title: `${values.title} created successfully`,
+        description: (
+          <div className="mt-2 flex flex-col gap-2">
+            <p>This content is now published and visible on the website.</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2 text-xs"
+              onClick={() => window.open(viewPath, '_blank')}
+            >
+              View on website
+            </Button>
+          </div>
+        ),
+        variant: "default",
+      });
+    } else {
+      toast({
+        title: "Content created successfully",
+        description: values.published 
+          ? `${values.title} has been added to the content library and is published.`
+          : `${values.title} has been saved as a draft in the content library.`,
+        variant: "default",
+      });
+    }
   };
   
   const handleUpdateContent = (values: any) => {
@@ -181,7 +222,6 @@ const AdminContent: React.FC = () => {
       language: values.language,
       placement,
       published: values.published,
-      // Handle file uploads properly in a real application
       images: values.images?.map((img: File | string) => 
         typeof img === 'string' ? img : URL.createObjectURL(img)
       ) || itemToEdit.images,
@@ -194,11 +234,42 @@ const AdminContent: React.FC = () => {
     setIsEditContentDialogOpen(false);
     setItemToEdit(null);
     
-    toast({
-      title: "Content updated successfully",
-      description: `${values.title} has been updated.`,
-      variant: "default",
-    });
+    const contentTypeLabel = values.type.toLowerCase();
+    const viewableTypes = ["blog post", "page", "service", "portfolio"];
+    
+    if (values.published && viewableTypes.includes(contentTypeLabel)) {
+      const viewPath = contentTypeLabel === "blog post" 
+        ? `/blog/${values.slug}` 
+        : contentTypeLabel === "page" 
+          ? `/${values.slug}` 
+          : `/${contentTypeLabel}/${values.slug}`;
+          
+      toast({
+        title: `${values.title} updated successfully`,
+        description: (
+          <div className="mt-2 flex flex-col gap-2">
+            <p>The updated content is now visible on the website.</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2 text-xs"
+              onClick={() => window.open(viewPath, '_blank')}
+            >
+              View on website
+            </Button>
+          </div>
+        ),
+        variant: "default",
+      });
+    } else {
+      toast({
+        title: "Content updated successfully",
+        description: values.published 
+          ? `${values.title} has been updated and is published.`
+          : `${values.title} has been updated and saved as a draft.`,
+        variant: "default",
+      });
+    }
   };
   
   const handleEdit = (item: ContentItem) => {
@@ -234,7 +305,7 @@ const AdminContent: React.FC = () => {
       case "Blog Post": return "default";
       case "Portfolio": return "success";
       case "Service": return "secondary";
-      case "Page": return "outline"; // Changed from "blue" to "outline"
+      case "Page": return "outline";
       default: return "outline";
     }
   };
@@ -260,6 +331,47 @@ const AdminContent: React.FC = () => {
             </Button>
           </div>
         </div>
+        
+        {recentActions.length > 0 && (
+          <div className="mb-6 p-4 border border-border rounded-lg bg-muted/30">
+            <h3 className="text-sm font-medium mb-2">Recent Activity</h3>
+            <ul className="space-y-2">
+              {recentActions.map((action, i) => (
+                <li key={i} className="text-sm flex items-center justify-between">
+                  <div>
+                    <span className="font-medium">{action.item.title}</span>
+                    <span className="text-muted-foreground"> was {action.action} </span>
+                    <span className="text-xs text-muted-foreground">
+                      ({new Date(action.timestamp).toLocaleTimeString()})
+                    </span>
+                  </div>
+                  {action.item.published && 
+                   (action.item.type === "Blog Post" || 
+                    action.item.type === "Page" || 
+                    action.item.type === "Service" || 
+                    action.item.type === "Portfolio") && 
+                   action.item.slug && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="text-xs h-7"
+                      onClick={() => {
+                        const path = action.item.type === "Blog Post" 
+                          ? `/blog/${action.item.slug}`
+                          : action.item.type === "Page"
+                            ? `/${action.item.slug}`
+                            : `/${action.item.type.toLowerCase()}/${action.item.slug}`;
+                        window.open(path, '_blank');
+                      }}
+                    >
+                      View
+                    </Button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
           <TabsList className="w-full mb-6">
@@ -459,7 +571,6 @@ const AdminContent: React.FC = () => {
         </div>
       </div>
 
-      {/* New Content Dialog */}
       <Dialog open={isNewContentDialogOpen} onOpenChange={setIsNewContentDialogOpen}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -475,7 +586,6 @@ const AdminContent: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Content Dialog */}
       <Dialog open={isEditContentDialogOpen} onOpenChange={setIsEditContentDialogOpen}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -516,7 +626,6 @@ const AdminContent: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -534,7 +643,6 @@ const AdminContent: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Navigation Manager Dialog */}
       <Dialog open={isNavigationDialogOpen} onOpenChange={setIsNavigationDialogOpen}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>

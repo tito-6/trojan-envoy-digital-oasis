@@ -7,11 +7,14 @@ import BlogGrid from "@/components/blog/BlogGrid";
 import BlogSidebar from "@/components/blog/BlogSidebar";
 import { useLanguage } from "@/lib/i18n";
 import { storageService } from "@/lib/storage";
-import { ContentItem } from "@/lib/types";
+import { ContentItem, BlogCategory } from "@/lib/types";
 
 const Blog: React.FC = () => {
-  const { t } = useLanguage();
-  const [blogStats, setBlogStats] = useState({
+  const { currentLanguage } = useLanguage();
+  const [blogStats, setBlogStats] = useState<{
+    total: number;
+    categories: BlogCategory[];
+  }>({
     total: 0,
     categories: []
   });
@@ -21,22 +24,29 @@ const Blog: React.FC = () => {
     const allContent = storageService.getAllContent();
     const blogPosts = allContent.filter(item => 
       item.type === "Blog Post" && 
-      item.published === true
+      item.published === true &&
+      (!item.language || item.language === currentLanguage)
     );
     
-    const categories = blogPosts.reduce((acc: {name: string, count: number}[], post) => {
+    // Process categories from the blog post keywords
+    const categoryMap = new Map<string, number>();
+    
+    blogPosts.forEach(post => {
       if (post.seoKeywords && post.seoKeywords.length > 0) {
         post.seoKeywords.forEach(keyword => {
-          const existingCategory = acc.find(cat => cat.name === keyword);
-          if (existingCategory) {
-            existingCategory.count += 1;
-          } else {
-            acc.push({ name: keyword, count: 1 });
-          }
+          const count = categoryMap.get(keyword) || 0;
+          categoryMap.set(keyword, count + 1);
         });
+      } else if (post.category) {
+        // Also consider the category field if keywords aren't available
+        const count = categoryMap.get(post.category) || 0;
+        categoryMap.set(post.category, count + 1);
       }
-      return acc;
-    }, []);
+    });
+    
+    const categories: BlogCategory[] = Array.from(categoryMap.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
     
     setBlogStats({
       total: blogPosts.length,
@@ -60,7 +70,7 @@ const Blog: React.FC = () => {
     window.scrollTo(0, 0);
 
     return () => observer.disconnect();
-  }, []);
+  }, [currentLanguage]);
 
   return (
     <div className="min-h-screen">

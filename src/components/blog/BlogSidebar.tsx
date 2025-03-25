@@ -24,7 +24,7 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({ blogStats }) => {
     { name: "Security", count: 4 },
   ];
   
-  // Sample popular posts
+  // Sample popular posts - ideally these would come from the CMS too
   const popularPosts = [
     { title: "10 SEO Strategies for 2023", slug: "seo-strategies-2023", date: "Nov 5, 2023" },
     { title: "The Future of Mobile App Development", slug: "future-mobile-app-development", date: "Oct 28, 2023" },

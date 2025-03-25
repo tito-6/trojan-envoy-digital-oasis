@@ -93,14 +93,19 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
   const [pages, setPages] = useState<ContentItem[]>([]);
   const [pageSections, setPageSections] = useState<ContentItem[]>([]);
   const [activeTab, setActiveTab] = useState("basic");
-  
+  const [formErrors, setFormErrors] = useState<{
+    slug?: string;
+    keywords?: string;
+    placement?: string;
+  }>({});
+
   useEffect(() => {
     const allPages = storageService.getContentByType("Page");
     const allSections = storageService.getContentByType("Page Section");
     setPages(allPages);
     setPageSections(allSections);
   }, []);
-  
+
   const form = useForm<ContentFormValues>({
     resolver: zodResolver(contentFormSchema),
     defaultValues: {
@@ -121,9 +126,9 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       placementPosition: initialValues?.placement?.position,
     },
   });
-  
+
   const contentType = form.watch("type");
-  
+
   useEffect(() => {
     if (autoGenerateSlug) {
       const title = form.watch("title");
@@ -133,35 +138,39 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
           .replace(/\s+/g, '-'); // Replace spaces with hyphens
         setSlugInput(generatedSlug);
         form.setValue("slug", generatedSlug);
+        
+        if (formErrors.slug) {
+          setFormErrors(prev => ({ ...prev, slug: undefined }));
+        }
       }
     }
-  }, [form.watch("title"), autoGenerateSlug, form]);
-  
+  }, [form.watch("title"), autoGenerateSlug, form, formErrors.slug]);
+
   const addKeyword = () => {
     if (keywordInput.trim() && !keywords.includes(keywordInput.trim())) {
       setKeywords([...keywords, keywordInput.trim()]);
       setKeywordInput("");
     }
   };
-  
+
   const removeKeyword = (keyword: string) => {
     setKeywords(keywords.filter(k => k !== keyword));
   };
-  
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const newImages = Array.from(e.target.files);
       setImages([...images, ...newImages]);
     }
   };
-  
+
   const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const newDocuments = Array.from(e.target.files);
       setDocuments([...documents, ...newDocuments]);
     }
   };
-  
+
   const addVideo = () => {
     if (videoInput.trim() && !videos.includes(videoInput.trim())) {
       if (videoInput.includes("youtube.com") || videoInput.includes("youtu.be")) {
@@ -176,28 +185,28 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       }
     }
   };
-  
+
   const removeVideo = (video: string) => {
     setVideos(videos.filter(v => v !== video));
   };
-  
+
   const removeImage = (index: number) => {
     const newImages = [...images];
     newImages.splice(index, 1);
     setImages(newImages);
   };
-  
+
   const removeDocument = (index: number) => {
     const newDocuments = [...documents];
     newDocuments.splice(index, 1);
     setDocuments(newDocuments);
   };
-  
+
   const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSlugInput(e.target.value);
     form.setValue("slug", e.target.value);
   };
-  
+
   const toggleAutoGenerateSlug = () => {
     setAutoGenerateSlug(!autoGenerateSlug);
     if (!autoGenerateSlug) {
@@ -207,8 +216,53 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       form.setValue("slug", generatedSlug);
     }
   };
-  
+
+  const validateBeforeSubmit = () => {
+    const newErrors: {
+      slug?: string;
+      keywords?: string;
+      placement?: string;
+    } = {};
+    
+    if ((contentType === "Page" || contentType === "Blog Post" || 
+         contentType === "Service" || contentType === "Portfolio") && 
+        !slugInput.trim()) {
+      newErrors.slug = "A URL slug is required for this content type";
+    }
+    
+    if (contentType === "Blog Post" && keywords.length === 0) {
+      newErrors.keywords = "Adding categories/keywords helps organize and find your content";
+    }
+    
+    if (contentType === "Page Section" && 
+        !form.getValues("placementPageId") && 
+        !form.getValues("placementSectionId")) {
+      newErrors.placement = "Consider setting where this section should appear";
+    }
+    
+    setFormErrors(newErrors);
+    
+    return !newErrors.slug;
+  };
+
   const onSubmit = (values: ContentFormValues) => {
+    if (!validateBeforeSubmit()) {
+      toast({
+        title: "Please fix the errors before saving",
+        description: "Some required fields need your attention",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (formErrors.keywords || formErrors.placement) {
+      toast({
+        title: "Content will be saved with recommendations",
+        description: "We've noted some suggestions to improve your content organization",
+        variant: "default",
+      });
+    }
+    
     onSave({
       ...values,
       keywords,
@@ -224,7 +278,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       },
     });
   };
-  
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -815,3 +869,4 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
 };
 
 export default ContentForm;
+
