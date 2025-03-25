@@ -173,14 +173,12 @@ if (typeof window !== 'undefined') {
 }
 
 // Subscribe to language changes for RTL support
-useLanguage.subscribe(
-  (state) => state.currentLanguage,
-  (currentLang) => {
-    const isRTL = availableLanguages.find(lang => lang.code === currentLang)?.rtl;
-    if (isRTL) {
-      document.documentElement.dir = 'rtl';
-    } else {
-      document.documentElement.dir = 'ltr';
-    }
+useLanguage.subscribe((state) => {
+  const currentLang = state.currentLanguage;
+  const isRTL = availableLanguages.find(lang => lang.code === currentLang)?.rtl;
+  if (isRTL) {
+    document.documentElement.dir = 'rtl';
+  } else {
+    document.documentElement.dir = 'ltr';
   }
-);
+});
