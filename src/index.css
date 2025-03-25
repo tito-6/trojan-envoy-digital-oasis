@@ -150,3 +150,29 @@ html {
     transform: translateY(0);
   }
 }
+
+/* Tech icons animation */
+.animate-tech-icon {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+}
+
+/* Pulse soft animation */
+@keyframes pulseSoft {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.animate-pulse-soft {
+  animation: pulseSoft 3s infinite ease-in-out;
+}
+
+/* Float animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float 6s infinite ease-in-out;
+}
