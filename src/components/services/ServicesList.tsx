@@ -1,6 +1,7 @@
+
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Code, Smartphone, Paintbrush, BarChart, Globe, ShoppingCart } from "lucide-react";
+import { ArrowRight, Code, Smartphone, Paintbrush, BarChart, Globe, ShoppingCart, FileText } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/lib/i18n";
 import { storageService } from "@/lib/storage";
@@ -18,6 +19,8 @@ interface ServiceCardProps {
 const ServiceCard: React.FC<ServiceCardProps> = ({ 
   title, description, icon, features, link, delay 
 }) => {
+  const { t } = useLanguage();
+  
   return (
     <Card className={`overflow-hidden group hover:border-primary/50 hover:shadow-lg transition-all duration-300 should-animate delay-${delay}`}>
       <CardHeader className="pb-4">
@@ -43,7 +46,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           to={link}
           className="inline-flex items-center gap-1.5 text-sm font-medium"
         >
-          Learn More
+          {t('learn.more')}
           <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
         </Link>
       </CardContent>
@@ -59,6 +62,7 @@ const getIconForService = (title: string) => {
   if (normalizedTitle.includes('market')) return <BarChart className="w-5 h-5 text-primary" />;
   if (normalizedTitle.includes('seo')) return <Globe className="w-5 h-5 text-primary" />;
   if (normalizedTitle.includes('commerce')) return <ShoppingCart className="w-5 h-5 text-primary" />;
+  if (normalizedTitle.includes('content')) return <FileText className="w-5 h-5 text-primary" />;
   return <Code className="w-5 h-5 text-primary" />;
 };
 
@@ -138,7 +142,7 @@ const ServicesList: React.FC = () => {
                 title={service.title}
                 description={service.description}
                 icon={getIconForService(service.title)}
-                features={features.length > 0 ? features : ["Service details coming soon"]}
+                features={features.length > 0 ? features : [t('service.details')]}
                 link={`/services/${service.slug || service.title.toLowerCase().replace(/\s+/g, '-')}`}
                 delay={index * 100}
               />

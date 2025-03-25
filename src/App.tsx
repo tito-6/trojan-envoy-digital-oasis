@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
 import Services from "./pages/Services";
+import ServiceDetail from "./pages/ServiceDetail";
 import Portfolio from "./pages/Portfolio";
 import PortfolioItem from "./pages/PortfolioItem";
 import Blog from "./pages/Blog";
@@ -72,6 +73,9 @@ const App = () => {
             
             <Route path="/services" element={<Services />} />
             {createLocalizedRoutes("/services", Services)}
+            
+            <Route path="/services/:slug" element={<ServiceDetail />} />
+            {createLocalizedRoutes("/services/:slug", ServiceDetail)}
             
             <Route path="/about" element={<About />} />
             {createLocalizedRoutes("/about", About)}

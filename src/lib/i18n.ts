@@ -44,10 +44,12 @@ const translations: Translations = {
     'hero.cta': 'Discuss Your Project',
     'hero.description': 'We create exceptional digital experiences through innovative software development, strategic marketing, and cutting-edge design.',
     'partners.title': 'Certified Partners With Leading Platforms',
+    'partners.certified': 'Certified',
     
     // Services Section
     'services.title': 'Our Services',
     'services.subtitle': 'Comprehensive digital solutions for your business',
+    'services.description': 'We offer a wide range of services to help your business achieve its digital goals.',
     'services.web.title': 'Web Development',
     'services.web.description': 'Custom websites with pixel-perfect design and optimized performance',
     'services.mobile.title': 'Mobile Development',
@@ -56,6 +58,12 @@ const translations: Translations = {
     'services.digital.description': 'Data-driven strategies to grow your online presence',
     'services.ui.title': 'UI/UX Design',
     'services.ui.description': 'Intuitive interfaces and exceptional user experiences',
+    'services.seo.title': 'SEO Optimization',
+    'services.seo.description': 'Improve your search rankings and drive organic traffic',
+    'services.ecommerce.title': 'E-Commerce Solutions',
+    'services.ecommerce.description': 'Custom online stores and shopping experiences',
+    'services.content.title': 'Content Creation',
+    'services.content.description': 'Engaging content that connects with your audience',
     
     // About Section
     'about.title': 'About Trojan Envoy',
@@ -90,6 +98,39 @@ const translations: Translations = {
     
     // Explore services button
     'explore.services': 'Explore Our Services',
+    
+    // Service pages
+    'service.details': 'Service Details',
+    'service.features': 'Key Features',
+    'service.benefits': 'Benefits',
+    'service.process': 'Our Process',
+    'service.cta': 'Ready to get started?',
+    'service.contact': 'Contact us today',
+    
+    // Services CTA
+    'services.cta.title': 'Ready to Transform Your Digital Presence?',
+    'services.cta.description': 'Partner with us to leverage our expertise and propel your business forward. Our team is ready to help you achieve your digital goals with tailored solutions that drive results.',
+    'services.cta.features.title1': 'Tailored solutions for your unique business needs',
+    'services.cta.features.title2': 'Experienced team of professionals',
+    'services.cta.features.title3': 'Results-driven approach',
+    'services.cta.features.title4': 'Transparent communication',
+    'services.cta.features.title5': 'Ongoing support and maintenance',
+    'services.cta.features.title6': 'Competitive pricing',
+    'services.cta.button.primary': 'Get Started',
+    'services.cta.button.secondary': 'View Our Work',
+    
+    // Contact form on services page
+    'services.form.title': 'Request a Free Consultation',
+    'services.form.name': 'Your Name',
+    'services.form.name.placeholder': 'John Doe',
+    'services.form.email': 'Email Address',
+    'services.form.email.placeholder': 'john@example.com',
+    'services.form.service': 'Service of Interest',
+    'services.form.service.placeholder': 'Select a service',
+    'services.form.submit': 'Request Consultation',
+    
+    // Learn more button
+    'learn.more': 'Learn More',
   },
   es,
   fr,
@@ -187,4 +228,3 @@ useLanguage.subscribe((state) => {
     document.documentElement.dir = 'ltr';
   }
 });
-

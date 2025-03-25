@@ -22,7 +22,7 @@ const ServicesHero: React.FC = () => {
         </h1>
         
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto should-animate">
-          {t('hero.description')}
+          {t('services.description')}
         </p>
       </div>
     </section>

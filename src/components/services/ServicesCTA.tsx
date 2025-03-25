@@ -3,119 +3,113 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/lib/i18n";
 
 const ServicesCTA: React.FC = () => {
   const { t } = useLanguage();
   
-  const benefits = [
-    "Tailored solutions for your unique business needs",
-    "Experienced team of professionals",
-    "Results-driven approach",
-    "Transparent communication",
-    "Ongoing support and maintenance",
-    "Competitive pricing",
+  const features = [
+    t('services.cta.features.title1'),
+    t('services.cta.features.title2'),
+    t('services.cta.features.title3'),
+    t('services.cta.features.title4'),
+    t('services.cta.features.title5'),
+    t('services.cta.features.title6')
   ];
   
   return (
-    <section className="py-16 md:py-24 bg-secondary/30">
+    <section className="py-16 md:py-24 bg-card">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="should-animate">
-            <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
-              Ready to Transform Your
-              <span className="block text-gradient">Digital Presence?</span>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          <div className="space-y-6 should-animate">
+            <h2 className="text-3xl md:text-4xl font-display font-bold">
+              {t('services.cta.title')}
             </h2>
             
-            <p className="text-muted-foreground mb-8">
-              Partner with us to leverage our expertise and propel your business forward. 
-              Our team is ready to help you achieve your digital goals with tailored solutions 
-              that drive results.
+            <p className="text-muted-foreground">
+              {t('services.cta.description')}
             </p>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-              {benefits.map((benefit) => (
-                <div key={benefit} className="flex items-start gap-2">
-                  <div className="mt-1 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <Check className="w-3 h-3 text-primary" />
-                  </div>
-                  <span className="text-sm">{benefit}</span>
-                </div>
+            <ul className="space-y-3 pt-4">
+              {features.map((feature, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  <Check className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                  <span>{feature}</span>
+                </li>
               ))}
-            </div>
+            </ul>
             
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button asChild size="lg">
-                <Link to="/contact">
-                  Get Started
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Link>
-              </Button>
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <Link
+                to="/contact"
+                className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity inline-flex items-center justify-center gap-2"
+              >
+                {t('services.cta.button.primary')}
+                <ArrowRight className="w-4 h-4" />
+              </Link>
               
-              <Button variant="outline" asChild size="lg">
-                <Link to="/portfolio">
-                  View Our Work
-                </Link>
-              </Button>
+              <Link
+                to="/portfolio"
+                className="bg-secondary text-secondary-foreground px-6 py-3 rounded-lg font-medium hover:bg-secondary/80 transition-colors inline-flex items-center justify-center"
+              >
+                {t('services.cta.button.secondary')}
+              </Link>
             </div>
           </div>
           
-          <div className="relative should-animate">
-            <div className="bg-card p-8 rounded-xl border border-border shadow-md">
-              <h3 className="text-xl font-display font-bold mb-6">Request a Free Consultation</h3>
-              
-              <form className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-2">
-                    Your Name
-                  </label>
-                  <input
-                    id="name"
-                    type="text"
-                    className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    placeholder="John Doe"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-2">
-                    Email Address
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    placeholder="john@example.com"
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="service" className="block text-sm font-medium mb-2">
-                    Service of Interest
-                  </label>
-                  <select
-                    id="service"
-                    className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  >
-                    <option value="">Select a service</option>
-                    <option value="web">Web Development</option>
-                    <option value="mobile">Mobile Development</option>
-                    <option value="ui-ux">UI/UX Design</option>
-                    <option value="marketing">Digital Marketing</option>
-                    <option value="seo">SEO Services</option>
-                    <option value="ecommerce">E-commerce Solutions</option>
-                  </select>
-                </div>
-                
-                <Button type="submit" className="w-full">
-                  Request Consultation
-                </Button>
-              </form>
-            </div>
+          <div className="bg-background border border-border rounded-xl p-6 lg:p-8 should-animate delay-200">
+            <h3 className="text-xl font-semibold mb-6">
+              {t('services.form.title')}
+            </h3>
             
-            {/* Decorative elements */}
-            <div className="absolute -z-10 -top-4 -left-4 w-24 h-24 rounded-full bg-primary/5 blur-2xl"></div>
-            <div className="absolute -z-10 -bottom-4 -right-4 w-32 h-32 rounded-full bg-accent/5 blur-2xl"></div>
+            <form className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="name" className="text-sm font-medium">
+                  {t('services.form.name')}
+                </label>
+                <Input 
+                  id="name" 
+                  placeholder={t('services.form.name.placeholder')} 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium">
+                  {t('services.form.email')}
+                </label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder={t('services.form.email.placeholder')} 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="service" className="text-sm font-medium">
+                  {t('services.form.service')}
+                </label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('services.form.service.placeholder')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="web">{t('services.web.title')}</SelectItem>
+                    <SelectItem value="mobile">{t('services.mobile.title')}</SelectItem>
+                    <SelectItem value="ui">{t('services.ui.title')}</SelectItem>
+                    <SelectItem value="digital">{t('services.digital.title')}</SelectItem>
+                    <SelectItem value="seo">{t('services.seo.title')}</SelectItem>
+                    <SelectItem value="ecommerce">{t('services.ecommerce.title')}</SelectItem>
+                    <SelectItem value="content">{t('services.content.title')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <Button type="submit" className="w-full mt-2 bg-primary text-primary-foreground hover:opacity-90">
+                {t('services.form.submit')}
+              </Button>
+            </form>
           </div>
         </div>
       </div>

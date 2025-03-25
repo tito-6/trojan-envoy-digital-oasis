@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Award, Check } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 
 const Hero: React.FC = () => {
@@ -40,6 +40,7 @@ const Hero: React.FC = () => {
     { 
       name: "Google", 
       color: "#4285F4",
+      badge: true,
       logo: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 272 92" width="100" height="32">
           <path fill="#EA4335" d="M115.75 47.18c0 12.77-9.99 22.18-22.25 22.18s-22.25-9.41-22.25-22.18C71.25 34.32 81.24 25 93.5 25s22.25 9.32 22.25 22.18zm-9.74 0c0-7.98-5.79-13.44-12.51-13.44S80.99 39.2 80.99 47.18c0 7.9 5.79 13.44 12.51 13.44s12.51-5.55 12.51-13.44z"/>
@@ -54,6 +55,7 @@ const Hero: React.FC = () => {
     { 
       name: "Meta", 
       color: "#0081FB",
+      badge: true,
       logo: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 725 198" width="92" height="32">
           <path d="M30.877 197.194C43.346 192.968 54.809 186.59 54.809 169.585V101.2H84.138V198H0V101.2H30.877V197.194Z" fill="#0081FB"/>
@@ -72,6 +74,7 @@ const Hero: React.FC = () => {
     { 
       name: "SEMrush", 
       color: "#FF642D",
+      badge: true,
       logo: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 113 31" width="98" height="32">
           <path fill="#FF642D" d="M45.53 9.679c-6.411 0-10.843 4.053-10.843 9.85 0 5.796 4.432 9.925 10.843 9.925 6.411 0 10.843-4.129 10.843-9.925 0-5.797-4.432-9.85-10.843-9.85zm0 15.494c-2.812 0-4.963-2.33-4.963-5.644 0-3.314 2.151-5.572 4.963-5.572 2.812 0 4.963 2.258 4.963 5.572 0 3.314-2.151 5.644-4.963 5.644zM23.193 10.038h-6.752v19.153h5.733V22.73c0-.664.354-1.066.911-1.066.557 0 .91.402.91 1.066v6.461h5.734v-8.046c0-3.162-2.379-5.156-5.506-5.156-1.201 0-1.961.325-2.031.325V10.038zm38.665 0v19.153h5.734V10.038h-5.734zm14.399 0l-6.373 19.153h5.733l3.809-13.39 3.922 13.39h5.848l-7.131-19.153h-5.808zm17.77 0v19.153h5.734V10.038h-5.734zM4.963 10.038H0v19.153h11.467v-4.394H4.963V10.038zm106.289 0v19.153H113V10.038h-1.748zM93.14 19.602c1.595 0 2.885-1.215 2.885-2.716 0-1.5-1.29-2.715-2.885-2.715-1.594 0-2.884 1.215-2.884 2.715 0 1.501 1.29 2.716 2.884 2.716z"/>
@@ -81,6 +84,7 @@ const Hero: React.FC = () => {
     { 
       name: "AWS", 
       color: "#FF9900",
+      badge: true,
       logo: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 125 75" width="78" height="32">
           <path d="M35.1 31.982h-4.968v14.061h4.938c3.563 0 5.356-2.555 5.356-7.07-.001-4.438-1.794-6.991-5.326-6.991zm-1.646 11.471h-1.106V34.573h1.106c2.333 0 3.597 1.686 3.597 4.401 0 2.776-1.264 4.479-3.597 4.479z" fill="#252F3E"/>
@@ -97,6 +101,7 @@ const Hero: React.FC = () => {
     { 
       name: "Magento", 
       color: "#F46F25",
+      badge: true,
       logo: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 80" width="32" height="32">
           <path fill="#F46F25" d="M35 0l-5.4 3.125v59.027l5.4 3.083 5.4-3.083V3.125zM22.3 6.25L16.9 9.375v49.653l5.4 3.124 5.4-3.124V9.375zM47.7 6.25l-5.4 3.125v49.653l5.4 3.124 5.4-3.124V9.375zM53.1 62.152l5.4 3.124 5.4-3.124V12.5L58.5 9.375V56.25zM6.6 12.5v49.652l5.4 3.124 5.4-3.124V12.5L12 9.375zM0 18.75v43.402l5.4 3.125V15.625zM64.6 18.75v43.402l5.4 3.125V15.625z"/>
@@ -106,6 +111,7 @@ const Hero: React.FC = () => {
     { 
       name: "WordPress", 
       color: "#21759B",
+      badge: true,
       logo: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="32" height="32">
           <path fill="#21759B" d="M128 0C57.29 0 0 57.29 0 128s57.29 128 128 128 128-57.29 128-128S198.71 0 128 0zM19.71 128c0-17.36 3.96-33.81 11.01-48.5l60.56 165.83C47.02 222.23 19.71 178.87 19.71 128zm108.29 108.04c-11.75 0-23.06-1.71-33.76-4.87l35.87-104.25 36.75 100.82.92 2.26c-12.48 3.93-25.84 6.04-39.78 6.04zm16.06-158.67c7.25-.38 13.77-1.14 13.77-1.14 6.47-.76 5.71-10.29-.76-9.91 0 0-19.47 1.53-32.05 1.53-11.82 0-31.67-1.53-31.67-1.53-6.48-.38-7.25 9.53-.76 9.91 0 0 6.14.76 12.62 1.14l18.77 51.49-26.39 79.1-43.95-130.59c7.25-.38 13.77-1.14 13.77-1.14 6.47-.76 5.71-10.29-.76-9.91 0 0-19.48 1.53-32.05 1.53-2.25 0-4.9-.06-7.73-.15 21.49-32.66 58.47-54.18 100.38-54.18 31.29 0 59.77 11.96 81.13 31.53-.51-.03-1.02-.1-1.54-.1-11.82 0-20.19 10.29-20.19 21.34 0 9.91 5.72 18.29 11.82 28.2 4.58 8.01 9.91 18.29 9.91 33.1 0 10.29-3.96 22.18-9.14 38.82l-12.02 40.14-43.41-129.05zm87.03-4.48c13.05 23.92 20.48 51.43 20.48 80.71 0 61.7-33.46 115.53-83.05 144.28l50.99-147.45c9.52-23.78 12.68-42.84 12.68-59.77 0-5.9-.38-11.36-1.1-16.77z"/>
@@ -115,6 +121,7 @@ const Hero: React.FC = () => {
     { 
       name: "ERC", 
       color: "#6E3CA3",
+      badge: true,
       logo: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="32" height="32">
           <path fill="#6E3CA3" d="M32 0C14.327 0 0 14.327 0 32s14.327 32 32 32 32-14.327 32-32S49.673 0 32 0zm0 58C17.641 58 6 46.359 6 32S17.641 6 32 6s26 11.641 26 26-11.641 26-26 26z"/>
@@ -125,6 +132,7 @@ const Hero: React.FC = () => {
     { 
       name: "Shopify", 
       color: "#7AB55C",
+      badge: true,
       logo: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 109.5 124.5" width="32" height="32">
           <path fill="#95BF47" d="M95.97 23.3c-.07-.67-.67-1.03-1.13-1.03-.47 0-9.39-.67-9.39-.67s-6.22-6.22-6.89-6.89c-.67-.67-1.93-.47-2.42-.33-.07 0-1.27.4-3.29 1.03-1.97-5.66-5.43-10.85-11.58-10.85h-.53c-1.73-2.26-3.93-3.3-5.79-3.3-14.26 0-21.08 17.9-23.22 27.01-5.53 1.73-9.46 2.93-9.99 3.1-3.09.97-3.19 1.07-3.59 3.99C17.5 38.34 9 109.5 9 109.5l72.5 13.53V23.1c-.2.13-.27.13-.27.13s-1.2.07-1.27.07zM67.12 19.31c-1.6.5-3.39 1.07-5.36 1.67v-1.13c0-3.59-.5-6.49-1.33-8.79 3.29.5 5.49 4.09 6.69 8.25zM56.7 11.62c.9 2.26 1.47 5.49 1.47 9.89v.67c-3.59 1.1-7.49 2.32-11.38 3.53 2.19-8.41 6.32-12.55 9.91-14.08zM48.88 4.37c.9 0 1.8.33 2.69.97-4.15 1.97-8.55 6.95-10.45 16.86-2.76.87-5.49 1.7-8.15 2.53 2.26-7.79 7.69-20.38 15.91-20.38z"/>
@@ -136,6 +144,7 @@ const Hero: React.FC = () => {
     { 
       name: "Wix", 
       color: "#0C6EFC",
+      badge: true,
       logo: (
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 135" width="92" height="32">
           <path d="M166.5 91.1L139.8 39h-12.8l-26.7 52.1L74.8 39H54l40.7 82.4h10.4l28.5-52 28.5 52h10.4L213.2 39h-20.7l-26 52.1zM356.8 39h-17.9v82.4h17.9V39zM336.8 19.4c0 6 4.9 10.9 10.9 10.9 6 0 10.9-4.9 10.9-10.9 0-6-4.9-10.9-10.9-10.9-6 0-10.9 4.9-10.9 10.9zM404.7 38c-9.1 0-17.1 2.4-23.6 7-6.2 4.3-10.6 10.4-13.1 18l-.2.6h19.5l.1-.3c1.6-4 4-7 7.3-9 3.2-1.9 7.1-2.9 11.5-2.9 4.6 0 8.4 1.1 11.3 3.3 2.9 2.2 4.4 5.1 4.4 8.8v3.8l-21.6 1.3c-9.6.6-17.3 2.9-22.7 6.8-5.7 4.2-8.5 10.2-8.5 18.2 0 7.5 2.5 13.5 7.4 17.8 4.9 4.3 11.6 6.4 19.7 6.4 5.7 0 10.8-1.1 15.2-3.2 4.4-2.1 7.9-5.3 10.4-9.3l.2 2.6v8.2h17.5V66.9c0-9.4-2.9-16.7-8.5-21.6-5.6-4.9-13.8-7.3-26.3-7.3zm18.5 45.7c0 5.5-2.2 10.2-6.5 13.7-4.1 3.4-9.4 5.2-15.6 5.2-3.7 0-6.8-.9-9.1-2.6-2.3-1.7-3.5-4-3.5-6.8 0-3.3 1.5-5.9 4.5-7.7 2.8-1.7 6.9-2.8 12.4-3.1l17.7-1.1v2.4h.1zM483.6 38c-9.1 0-17.1 2.4-23.6 7-6.2 4.3-10.6 10.4-13.1 18l-.2.6h19.5l.1-.3c1.6-4 4-7 7.3-9 3.2-1.9 7.1-2.9 11.5-2.9 4.6 0 8.4 1.1 11.3 3.3 2.9 2.2 4.4 5.1 4.4 8.8v3.8l-21.6 1.3c-9.6.6-17.3 2.9-22.7 6.8-5.7 4.2-8.5 10.2-8.5 18.2 0 7.5 2.5 13.5 7.4 17.8 4.9 4.3 11.6 6.4 19.7 6.4 5.7 0 10.8-1.1 15.2-3.2 4.4-2.1 7.9-5.3 10.4-9.3l.2 2.6v8.2h17.5V66.9c0-9.4-2.9-16.7-8.5-21.6-5.7-4.9-13.8-7.3-26.3-7.3zm18.4 45.7c0 5.5-2.2 10.2-6.5 13.7-4.1 3.4-9.4 5.2-15.6 5.2-3.7 0-6.8-.9-9.1-2.6-2.3-1.7-3.5-4-3.5-6.8 0-3.3 1.5-5.9 4.5-7.7 2.8-1.7 6.9-2.8 12.4-3.1l17.7-1.1v2.4h.1zM281 38c-8.4 0-15.6 2.6-21.2 7.7-5.3 4.8-8.2 11.3-8.5 19.1l-.1 1.2v.7c0 9.4 3.1 16.9 9.1 22.2 6 5.2 14.6 7.8 25.5 7.8 9.1 0 16.8-1.7 22.6-5.1l.3-.2V75.3l-.7.5c-2.7 1.8-5.8 3.2-9.3 4.3-3.2 1-6.5 1.5-9.9 1.5-5.8 0-10.2-1.3-13.1-3.8-2.9-2.5-4.4-6.2-4.6-11.1V66h39.9v-8.8c0-6.5-2.5-11.7-7.6-15.6-5-3.7-11.8-5.6-20.4-5.6zm-10.2 19.7c.6-3.3 2.1-5.9 4.6-7.8 2.5-1.9 5.7-2.8 9.4-2.8 3.6 0 6.5.9 8.6 2.8 2.1 1.8 3.3 4.4 3.6 7.8h-26.2z" fill="#0C6EFC"/>
@@ -172,7 +181,7 @@ const Hero: React.FC = () => {
       <div className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-block px-4 py-1.5 rounded-full bg-secondary mb-6 text-sm font-medium animate-fade-in">
-            Premium Software Development & Digital Marketing
+            {t('hero.subtitle')}
           </div>
           
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold leading-tight tracking-tight mb-6 animate-fade-in delay-100">
@@ -181,7 +190,7 @@ const Hero: React.FC = () => {
           </h1>
           
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-in delay-200">
-            {t('hero.description') || "We create exceptional digital experiences through innovative software development, strategic marketing, and cutting-edge design."}
+            {t('hero.description')}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in delay-300">
@@ -197,20 +206,20 @@ const Hero: React.FC = () => {
               to="/services"
               className="bg-secondary text-secondary-foreground px-8 py-3 rounded-lg font-medium hover:bg-secondary/80 transition-colors"
             >
-              {t('nav.services')}
+              {t('explore.services')}
             </Link>
           </div>
           
-          {/* Trusted by logos */}
+          {/* Trusted by logos with certification badges */}
           <div className="mt-16 md:mt-24">
             <p className="text-sm text-muted-foreground mb-6 animate-fade-in delay-400">
-              {t('partners.title') || "Certified Partners With Leading Platforms"}
+              {t('partners.title')}
             </p>
             <div className="flex flex-wrap justify-center items-center gap-8 md:gap-10 animate-fade-in delay-500">
               {partnerLogos.map((logo, index) => (
                 <div 
                   key={logo.name} 
-                  className="flex items-center justify-center hover:scale-110 transition-transform duration-300"
+                  className="relative flex flex-col items-center justify-center hover:scale-110 transition-transform duration-300 group"
                   style={{ 
                     animationDelay: `${500 + (index * 100)}ms`,
                     opacity: 0,
@@ -218,6 +227,14 @@ const Hero: React.FC = () => {
                   }}
                 >
                   {logo.logo}
+                  {logo.badge && (
+                    <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full p-1 scale-0 group-hover:scale-100 transition-transform duration-300">
+                      <Award className="w-3 h-3" />
+                    </div>
+                  )}
+                  <span className="absolute -bottom-2 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-background/80 px-1 rounded text-primary">
+                    {t('partners.certified')}
+                  </span>
                 </div>
               ))}
             </div>
@@ -229,4 +246,3 @@ const Hero: React.FC = () => {
 };
 
 export default Hero;
-
