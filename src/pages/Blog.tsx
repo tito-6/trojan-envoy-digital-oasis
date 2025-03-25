@@ -9,6 +9,7 @@ import BlogSidebar from "@/components/blog/BlogSidebar";
 import { useLanguage } from "@/lib/i18n";
 import { storageService } from "@/lib/storage";
 import { ContentItem, BlogCategory } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 const Blog: React.FC = () => {
   const { currentLanguage } = useLanguage();
@@ -19,6 +20,7 @@ const Blog: React.FC = () => {
   const category = categoryPath ? categoryPath[1] : '';
   const tagPath = location.pathname.match(/\/tag\/(.+)/);
   const tag = tagPath ? tagPath[1] : '';
+  const { toast } = useToast();
   
   const [blogStats, setBlogStats] = useState<{
     total: number;
@@ -37,6 +39,8 @@ const Blog: React.FC = () => {
         item.published === true &&
         (!item.language || item.language === currentLanguage)
       );
+      
+      console.log("Found blog posts:", blogPosts.length);
       
       // Process categories from the blog post keywords
       const categoryMap = new Map<string, number>();
@@ -62,11 +66,13 @@ const Blog: React.FC = () => {
         total: blogPosts.length,
         categories
       });
+      
+      console.log("Blog stats updated:", { total: blogPosts.length, categories: categories.length });
     };
     
     loadBlogStats();
     
-    // Subscribe to content changes
+    // Subscribe to content changes for real-time updates
     const unsubscribe = storageService.addEventListener('content-updated', loadBlogStats);
     const unsubscribeAdded = storageService.addEventListener('content-added', loadBlogStats);
     const unsubscribeDeleted = storageService.addEventListener('content-deleted', loadBlogStats);

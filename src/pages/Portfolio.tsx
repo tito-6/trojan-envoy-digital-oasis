@@ -6,10 +6,12 @@ import PortfolioGallery from "@/components/portfolio/PortfolioGallery";
 import PortfolioHero from "@/components/portfolio/PortfolioHero";
 import PortfolioFilters from "@/components/portfolio/PortfolioFilters";
 import { useLanguage } from "@/lib/i18n";
+import { useToast } from "@/hooks/use-toast";
 
 const Portfolio: React.FC = () => {
   const { t } = useLanguage();
   const [activeFilter, setActiveFilter] = useState("all");
+  const { toast } = useToast();
 
   useEffect(() => {
     // Add fade-in animation to elements with the fade-in-element class
@@ -33,6 +35,7 @@ const Portfolio: React.FC = () => {
 
   const handleFilterChange = (filter: string) => {
     setActiveFilter(filter);
+    console.log("Portfolio filter changed to:", filter);
   };
 
   return (

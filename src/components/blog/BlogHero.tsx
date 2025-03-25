@@ -12,18 +12,18 @@ const BlogHero: React.FC<BlogHeroProps> = ({ searchTerm, category, tag }) => {
   const { t } = useLanguage();
   
   // Change the title based on filters
-  let title = "Our Blog";
-  let subtitle = "Explore our articles, guides, and insights on digital trends, technology, and business strategies.";
+  let title = t("Our Blog");
+  let subtitle = t("Explore our articles, guides, and insights on digital trends, technology, and business strategies.");
   
   if (searchTerm) {
-    title = `Search Results: "${searchTerm}"`;
-    subtitle = "Browse articles matching your search query";
+    title = t(`Search Results: "${searchTerm}"`);
+    subtitle = t("Browse articles matching your search query");
   } else if (category) {
-    title = `Category: ${category.charAt(0).toUpperCase() + category.slice(1)}`;
-    subtitle = `Browse all articles in the ${category} category`;
+    title = t(`Category: ${category.charAt(0).toUpperCase() + category.slice(1)}`);
+    subtitle = t(`Browse all articles in the ${category} category`);
   } else if (tag) {
-    title = `Tag: ${tag.charAt(0).toUpperCase() + tag.slice(1)}`;
-    subtitle = `Browse all articles with the ${tag} tag`;
+    title = t(`Tag: ${tag.charAt(0).toUpperCase() + tag.slice(1)}`);
+    subtitle = t(`Browse all articles with the ${tag} tag`);
   }
   
   return (

@@ -88,11 +88,14 @@ const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({ activeFilter }) => 
       });
       
       setPortfolioItems(sortedItems);
+      
+      // Log for debugging
+      console.log("Loaded portfolio items:", sortedItems);
     };
     
     loadPortfolioItems();
     
-    // Subscribe to content changes
+    // Subscribe to content changes for real-time updates
     const unsubscribe = storageService.addEventListener('content-updated', loadPortfolioItems);
     const unsubscribeAdded = storageService.addEventListener('content-added', loadPortfolioItems);
     const unsubscribeDeleted = storageService.addEventListener('content-deleted', loadPortfolioItems);
@@ -111,55 +114,48 @@ const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({ activeFilter }) => 
     } else {
       setFilteredItems(portfolioItems.filter(item => {
         const categoryMatch = item.category && 
-          item.category.toLowerCase() === activeFilter;
+          item.category.toLowerCase() === activeFilter.toLowerCase();
         
         const keywordMatch = item.seoKeywords && 
-          item.seoKeywords.some(keyword => keyword.toLowerCase() === activeFilter);
+          item.seoKeywords.some(keyword => keyword.toLowerCase() === activeFilter.toLowerCase());
         
         return categoryMatch || keywordMatch;
       }));
     }
+    
+    // Log for debugging
+    console.log("Active filter:", activeFilter);
+    console.log("Filtered items:", filteredItems.length);
   }, [activeFilter, portfolioItems]);
-  
-  // If no real items are available yet, show a message
-  if (portfolioItems.length === 0) {
-    return (
-      <section className="py-16">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-muted-foreground">
-            No portfolio items found. Add some from the Content Management System.
-          </p>
-        </div>
-      </section>
-    );
-  }
   
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredItems.map((item, index) => (
-            <PortfolioItem
-              key={item.id}
-              title={item.title}
-              category={item.category || item.seoKeywords?.[0] || "Project"}
-              description={item.description}
-              image={item.images?.[0]}
-              delay={index * 100}
-              slug={item.slug || `project-${item.id}`}
-              externalUrl={item.content?.includes("http") ? item.content : undefined}
-            />
-          ))}
+          {filteredItems.length > 0 ? (
+            filteredItems.map((item, index) => (
+              <PortfolioItem
+                key={item.id}
+                title={item.title}
+                category={item.category || (item.seoKeywords && item.seoKeywords.length > 0 ? item.seoKeywords[0] : "Project")}
+                description={item.description}
+                image={item.images && item.images.length > 0 ? item.images[0] : undefined}
+                delay={index * 100}
+                slug={item.slug || `project-${item.id}`}
+                externalUrl={item.content?.includes("http") ? item.content : undefined}
+              />
+            ))
+          ) : (
+            <div className="col-span-3 text-center py-12">
+              <h3 className="text-xl font-medium mb-4">No projects found</h3>
+              <p className="text-muted-foreground">
+                {portfolioItems.length === 0 ? 
+                  "No portfolio items available. Add some from the Content Management System." : 
+                  "No projects match the selected filter. Try another category."}
+              </p>
+            </div>
+          )}
         </div>
-        
-        {filteredItems.length === 0 && (
-          <div className="text-center py-12">
-            <h3 className="text-xl font-medium mb-4">No projects found</h3>
-            <p className="text-muted-foreground">
-              No projects match the selected filter. Try another category.
-            </p>
-          </div>
-        )}
         
         <div className="mt-16 text-center should-animate">
           <p className="text-muted-foreground mb-6">

@@ -1,8 +1,8 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { storageService } from "@/lib/storage";
-import { useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface PortfolioFiltersProps {
   onFilterChange: (filter: string) => void;
@@ -10,33 +10,47 @@ interface PortfolioFiltersProps {
 
 const PortfolioFilters: React.FC<PortfolioFiltersProps> = ({ onFilterChange }) => {
   const [activeFilter, setActiveFilter] = useState("all");
-  const [categories, setCategories] = useState<string[]>([
-    "all", "web", "mobile", "ecommerce", "marketing", "branding"
-  ]);
+  const [categories, setCategories] = useState<string[]>(["all"]);
+  const { toast } = useToast();
   
   useEffect(() => {
     // Get portfolio categories from the CMS
-    const allContent = storageService.getAllContent();
-    const portfolioItems = allContent.filter(item => item.type === "Portfolio" && item.published);
-    
-    // Extract unique categories from portfolio items
-    const uniqueCategories = new Set<string>();
-    uniqueCategories.add("all");
-    
-    portfolioItems.forEach(item => {
-      if (item.category) {
-        uniqueCategories.add(item.category.toLowerCase());
-      }
+    const loadCategories = () => {
+      const allContent = storageService.getAllContent();
+      const portfolioItems = allContent.filter(item => item.type === "Portfolio" && item.published);
       
-      // Also add from keywords
-      if (item.seoKeywords && item.seoKeywords.length > 0) {
-        item.seoKeywords.forEach(keyword => {
-          uniqueCategories.add(keyword.toLowerCase());
-        });
-      }
-    });
+      // Extract unique categories from portfolio items
+      const uniqueCategories = new Set<string>();
+      uniqueCategories.add("all");
+      
+      portfolioItems.forEach(item => {
+        if (item.category) {
+          uniqueCategories.add(item.category.toLowerCase());
+        }
+        
+        // Also add from keywords
+        if (item.seoKeywords && item.seoKeywords.length > 0) {
+          item.seoKeywords.forEach(keyword => {
+            uniqueCategories.add(keyword.toLowerCase());
+          });
+        }
+      });
+      
+      setCategories(Array.from(uniqueCategories));
+    };
     
-    setCategories(Array.from(uniqueCategories));
+    loadCategories();
+    
+    // Subscribe to content changes for real-time updates
+    const unsubscribe = storageService.addEventListener('content-updated', loadCategories);
+    const unsubscribeAdded = storageService.addEventListener('content-added', loadCategories);
+    const unsubscribeDeleted = storageService.addEventListener('content-deleted', loadCategories);
+    
+    return () => {
+      unsubscribe();
+      unsubscribeAdded();
+      unsubscribeDeleted();
+    };
   }, []);
   
   const handleFilterClick = (filter: string) => {

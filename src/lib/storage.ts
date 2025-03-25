@@ -1,122 +1,7 @@
 import { ContentItem, ContactRequest, User, NavigationItem } from './types';
 
-// Initial sample data for content
-const initialContent: ContentItem[] = [
-  { id: 1, title: "Home Hero Section", type: "Page Section", description: "Main hero section for homepage", lastUpdated: "2023-11-05", published: true },
-  { id: 2, title: "About Us Page", type: "Page", description: "Company about page", lastUpdated: "2023-10-28", published: true, slug: "about", showInNavigation: true },
-  { id: 3, title: "Web Development Services", type: "Service", description: "Web development services", lastUpdated: "2023-10-15", published: true },
-  { id: 4, title: "Mobile App Development", type: "Service", description: "Mobile app development", lastUpdated: "2023-10-10", published: true },
-  { id: 5, title: "Digital Marketing Overview", type: "Service", description: "Digital marketing services", lastUpdated: "2023-09-22", published: true },
-  { id: 6, title: "E-commerce Project", type: "Portfolio", description: "E-commerce project showcase", lastUpdated: "2023-09-15", published: true },
-  { id: 7, title: "Healthcare Mobile App", type: "Portfolio", description: "Healthcare app showcase", lastUpdated: "2023-09-10", published: true },
-  
-  { 
-    id: 8, 
-    title: "10 Essential SEO Strategies for 2023", 
-    type: "Blog Post", 
-    subtitle: "By Sarah Johnson",
-    description: "Learn the most effective SEO strategies to boost your website's visibility and traffic in 2023.", 
-    content: "Search Engine Optimization continues to evolve in 2023. This article explores the most effective techniques to improve your website ranking and drive organic traffic. From technical SEO to content strategies, we cover it all.",
-    lastUpdated: "2023-08-28", 
-    publishDate: "2023-08-25",
-    published: true, 
-    language: "en",
-    seoKeywords: ["SEO", "Digital Marketing"],
-    images: ["https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c2VvfGVufDB8fDB8fHww"],
-    slug: "seo-strategies-2023"
-  },
-  { 
-    id: 9, 
-    title: "The Future of Mobile App Development", 
-    type: "Blog Post", 
-    subtitle: "By Michael Chen",
-    description: "Explore the emerging trends and technologies shaping the future of mobile application development.", 
-    content: "The mobile app development landscape is rapidly changing with new technologies and user expectations. This post examines upcoming trends like AI integration, cross-platform development advancements, and new design paradigms.",
-    lastUpdated: "2023-09-15", 
-    publishDate: "2023-09-10",
-    published: true, 
-    language: "en",
-    seoKeywords: ["Mobile Development", "Technology"],
-    images: ["https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8bW9iaWxlJTIwYXBwfGVufDB8fDB8fHww"],
-    slug: "future-mobile-development"
-  },
-  { 
-    id: 10, 
-    title: "Why UX Design is Crucial for Business Success", 
-    type: "Blog Post", 
-    subtitle: "By Emma Roberts",
-    description: "Discover why prioritizing user experience is essential for digital product success and customer retention.", 
-    content: "User experience design has become a critical differentiator in today's competitive digital landscape. This article explains how investment in UX directly impacts business metrics including conversion rates, customer loyalty, and brand perception.",
-    lastUpdated: "2023-10-05", 
-    publishDate: "2023-10-01",
-    published: true, 
-    language: "en",
-    seoKeywords: ["UX/UI", "Design"],
-    images: ["https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fHVzZXIlMjBleHBlcmllbmNlfGVufDB8fDB8fHww"],
-    slug: "ux-design-business-success"
-  },
-  { 
-    id: 11, 
-    title: "Effective Social Media Marketing Strategies", 
-    type: "Blog Post", 
-    subtitle: "By James Wilson",
-    description: "A comprehensive guide to creating effective social media marketing campaigns that drive engagement.", 
-    content: "Social media continues to be a powerful marketing channel for businesses of all sizes. This guide walks through platform-specific strategies, content planning, and performance measurement to help you maximize your social media ROI.",
-    lastUpdated: "2023-10-20", 
-    publishDate: "2023-10-15",
-    published: true, 
-    language: "en",
-    seoKeywords: ["Social Media", "Digital Marketing"],
-    images: ["https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c29jaWFsJTIwbWVkaWF8ZW58MHx8MHx8fDA%3D"],
-    slug: "social-media-marketing-strategies"
-  },
-  { 
-    id: 12, 
-    title: "E-commerce Optimization Tips for Higher Conversions", 
-    type: "Blog Post", 
-    subtitle: "By Alexandra Lopez",
-    description: "Practical tips to optimize your e-commerce store for better conversions and customer satisfaction.", 
-    content: "Converting visitors into customers is the ultimate goal of any e-commerce store. This article provides actionable optimization techniques for product pages, checkout processes, and overall site experience to boost your conversion rates.",
-    lastUpdated: "2023-11-10", 
-    publishDate: "2023-11-05",
-    published: true, 
-    language: "en",
-    seoKeywords: ["E-commerce", "Conversion Optimization"],
-    images: ["https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8ZWNvbW1lcmNlfGVufDB8fDB8fHww"],
-    slug: "ecommerce-optimization-tips"
-  },
-  { 
-    id: 13, 
-    title: "Cybersecurity Essentials for Small Businesses", 
-    type: "Blog Post", 
-    subtitle: "By David Miller",
-    description: "Essential cybersecurity best practices to protect your business and customers in the digital age.", 
-    content: "Small businesses are increasingly becoming targets for cyber attacks. This guide covers fundamental security practices, from password management to network security and employee training, that can help protect your business assets and customer data.",
-    lastUpdated: "2023-11-25", 
-    publishDate: "2023-11-20",
-    published: true, 
-    language: "en",
-    seoKeywords: ["Cybersecurity", "Business"],
-    images: ["https://images.unsplash.com/photo-1510511459019-5dda7724fd87?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8Y3liZXJzZWN1cml0eXxlbnwwfHwwfHx8MA%3D%3D"],
-    slug: "cybersecurity-essentials-small-business"
-  },
-  { 
-    id: 14, 
-    title: "Contact Information", 
-    type: "Page Section", 
-    description: "Contact info section", 
-    lastUpdated: "2023-08-15", 
-    published: true 
-  },
-  { 
-    id: 15, 
-    title: "Company Values", 
-    type: "Page Section", 
-    description: "Company values section", 
-    lastUpdated: "2023-08-05", 
-    published: true 
-  },
-];
+// Initial sample data for content - we'll keep this minimal
+const initialContent: ContentItem[] = [];
 
 // Initial navigation items
 const initialNavigation: NavigationItem[] = [
@@ -131,14 +16,10 @@ const initialNavigation: NavigationItem[] = [
 // Initial sample users
 const initialUsers: User[] = [
   { id: 1, name: "Admin User", email: "admin@trojan-envoy.com", role: "Admin", lastLogin: "2023-11-15" },
-  { id: 2, name: "Content Editor", email: "editor@trojan-envoy.com", role: "Editor", lastLogin: "2023-11-10" }
 ];
 
-// Initial sample contact requests
-const initialContacts: ContactRequest[] = [
-  { id: 1, name: "John Smith", email: "john@example.com", phone: "+1 555-123-4567", subject: "Project Inquiry", message: "I'd like to discuss a potential web project for my company.", status: "New", dateSubmitted: "2023-11-15" },
-  { id: 2, name: "Sarah Johnson", email: "sarah@example.com", phone: "+44 20 1234 5678", subject: "Service Question", message: "Can you provide more details about your digital marketing services?", status: "In Progress", dateSubmitted: "2023-11-14", assignedTo: 2 }
-];
+// Initial sample contact requests - empty now
+const initialContacts: ContactRequest[] = [];
 
 class StorageService {
   private contentKey = 'trojan-envoy-content';
@@ -216,7 +97,9 @@ class StorageService {
       lastUpdated: new Date().toISOString().split('T')[0],
       published: content.published ?? false,
       seoKeywords: content.seoKeywords || [],
-      slug: content.slug ? content.slug.toLowerCase().replace(/\s+/g, '-') : undefined,
+      slug: content.slug 
+        ? content.slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '') 
+        : content.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
       publishDate: content.type === 'Blog Post' ? 
         (content.publishDate || new Date().toISOString().split('T')[0]) : 
         content.publishDate
@@ -225,10 +108,10 @@ class StorageService {
     allContent.push(normalizedContent);
     localStorage.setItem(this.contentKey, JSON.stringify(allContent));
     
-    if (content.type === 'Page' && content.showInNavigation && content.slug) {
+    if (content.type === 'Page' && content.showInNavigation && normalizedContent.slug) {
       this.addNavigationItem({
         label: content.title,
-        path: `/${content.slug}`,
+        path: `/${normalizedContent.slug}`,
         order: this.getAllNavigationItems().length + 1
       });
     }
@@ -246,21 +129,28 @@ class StorageService {
     
     const originalContent = allContent[index];
     
+    let updatedSlug = originalContent.slug;
+    if (content.slug !== undefined) {
+      updatedSlug = content.slug
+        ? content.slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '')
+        : originalContent.slug;
+    } else if (content.title && !originalContent.slug) {
+      updatedSlug = content.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    }
+    
     const updatedContent: ContentItem = {
       ...originalContent,
       ...content,
       lastUpdated: new Date().toISOString().split('T')[0],
       seoKeywords: content.seoKeywords || originalContent.seoKeywords || [],
-      slug: content.slug ? 
-        content.slug.toLowerCase().replace(/\s+/g, '-') : 
-        originalContent.slug
+      slug: updatedSlug
     };
     
     allContent[index] = updatedContent;
     localStorage.setItem(this.contentKey, JSON.stringify(allContent));
     
     if (updatedContent.type === 'Page') {
-      const navItem = this.getNavigationItemByPath(`/${updatedContent.slug || ''}`);
+      const navItem = this.getNavigationItemByPath(`/${originalContent.slug || ''}`);
       
       if (updatedContent.showInNavigation && !navItem && updatedContent.slug) {
         this.addNavigationItem({

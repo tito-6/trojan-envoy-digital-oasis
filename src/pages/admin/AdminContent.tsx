@@ -15,10 +15,12 @@ import {
   ArrowUpDown,
   GanttChart,
   Globe,
-  Menu
+  Menu,
+  AlertCircle
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { storageService } from "@/lib/storage";
 import { ContentItem, NavigationItem } from "@/lib/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -59,6 +61,11 @@ const AdminContent: React.FC = () => {
         { item, action: 'created', timestamp: Date.now() },
         ...prev.slice(0, 4)
       ]);
+
+      toast({
+        title: "Content created",
+        description: `${item.title} has been successfully created and ${item.published ? 'published' : 'saved as draft'}.`,
+      });
     });
     
     const unsubscribeUpdated = storageService.addEventListener('content-updated', (item) => {
@@ -69,11 +76,21 @@ const AdminContent: React.FC = () => {
         { item, action: 'updated', timestamp: Date.now() },
         ...prev.slice(0, 4)
       ]);
+
+      toast({
+        title: "Content updated",
+        description: `${item.title} has been successfully updated.`,
+      });
     });
     
     const unsubscribeDeleted = storageService.addEventListener('content-deleted', () => {
       loadContent();
       loadNavigation();
+
+      toast({
+        title: "Content deleted",
+        description: "The content has been successfully removed.",
+      });
     });
     
     const unsubscribeNavUpdated = storageService.addEventListener('navigation-updated', () => loadNavigation());
@@ -89,11 +106,13 @@ const AdminContent: React.FC = () => {
   const loadContent = () => {
     const content = storageService.getAllContent();
     setContentItems(content);
+    console.log("Content loaded:", content.length);
   };
   
   const loadNavigation = () => {
     const navigation = storageService.getAllNavigationItems();
     setNavigationItems(navigation);
+    console.log("Navigation loaded:", navigation.length);
   };
   
   const filteredContent = contentItems.filter(item => {
@@ -138,6 +157,11 @@ const AdminContent: React.FC = () => {
   };
   
   const handleSaveContent = (values: any) => {
+    let slug = values.slug;
+    if (!slug && values.title) {
+      slug = values.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    }
+    
     const placement = values.placement && (values.placement.pageId || values.placement.sectionId || values.placement.position) 
       ? values.placement 
       : undefined;
@@ -152,13 +176,14 @@ const AdminContent: React.FC = () => {
       seoKeywords: values.keywords,
       content: values.content,
       published: values.published,
-      slug: values.slug,
+      slug: slug,
       showInNavigation: values.showInNavigation,
       language: values.language,
       placement,
       images: values.images?.map((img: File) => URL.createObjectURL(img)) || [],
       videos: values.videos || [],
-      documents: values.documents?.map((doc: File) => URL.createObjectURL(doc)) || []
+      documents: values.documents?.map((doc: File) => URL.createObjectURL(doc)) || [],
+      category: values.category
     });
     
     setIsNewContentDialogOpen(false);
@@ -168,10 +193,10 @@ const AdminContent: React.FC = () => {
     
     if (values.published && viewableTypes.includes(contentTypeLabel)) {
       const viewPath = contentTypeLabel === "blog post" 
-        ? `/blog/${values.slug}` 
+        ? `/blog/${slug}` 
         : contentTypeLabel === "page" 
-          ? `/${values.slug}` 
-          : `/${contentTypeLabel}/${values.slug}`;
+          ? `/${slug}` 
+          : `/${contentTypeLabel}/${slug}`;
           
       toast({
         title: `${values.title} created successfully`,
@@ -204,6 +229,11 @@ const AdminContent: React.FC = () => {
   const handleUpdateContent = (values: any) => {
     if (!itemToEdit) return;
     
+    let slug = values.slug;
+    if (!slug && values.title) {
+      slug = values.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    }
+    
     const placement = values.placement && (values.placement.pageId || values.placement.sectionId || values.placement.position) 
       ? values.placement 
       : undefined;
@@ -217,7 +247,7 @@ const AdminContent: React.FC = () => {
       seoDescription: values.seoDescription,
       seoKeywords: values.keywords,
       content: values.content,
-      slug: values.slug,
+      slug: slug,
       showInNavigation: values.showInNavigation,
       language: values.language,
       placement,
@@ -228,7 +258,8 @@ const AdminContent: React.FC = () => {
       videos: values.videos || itemToEdit.videos,
       documents: values.documents?.map((doc: File | string) => 
         typeof doc === 'string' ? doc : URL.createObjectURL(doc)
-      ) || itemToEdit.documents
+      ) || itemToEdit.documents,
+      category: values.category
     });
     
     setIsEditContentDialogOpen(false);
@@ -239,10 +270,10 @@ const AdminContent: React.FC = () => {
     
     if (values.published && viewableTypes.includes(contentTypeLabel)) {
       const viewPath = contentTypeLabel === "blog post" 
-        ? `/blog/${values.slug}` 
+        ? `/blog/${slug}` 
         : contentTypeLabel === "page" 
-          ? `/${values.slug}` 
-          : `/${contentTypeLabel}/${values.slug}`;
+          ? `/${slug}` 
+          : `/${contentTypeLabel}/${slug}`;
           
       toast({
         title: `${values.title} updated successfully`,
@@ -331,6 +362,15 @@ const AdminContent: React.FC = () => {
             </Button>
           </div>
         </div>
+        
+        {contentItems.length === 0 && (
+          <Alert className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              No content found in the system. Add your first content item by clicking the "Add New Content" button above.
+            </AlertDescription>
+          </Alert>
+        )}
         
         {recentActions.length > 0 && (
           <div className="mb-6 p-4 border border-border rounded-lg bg-muted/30">
@@ -613,7 +653,8 @@ const AdminContent: React.FC = () => {
                 slug: itemToEdit.slug || '',
                 showInNavigation: itemToEdit.showInNavigation || false,
                 language: itemToEdit.language || 'en',
-                placement: itemToEdit.placement
+                placement: itemToEdit.placement,
+                category: itemToEdit.category
               }}
               onSave={handleUpdateContent}
               onCancel={() => {
