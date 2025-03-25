@@ -1,16 +1,16 @@
 
 import React from "react";
 import { useLanguage } from "@/lib/i18n";
+import { CheckCircle } from "lucide-react";
 import { 
-  Chrome, 
-  Facebook, 
-  Search, 
-  Cloud, 
-  ShoppingBag, 
-  FileCode, 
-  Award,
-  CheckCircle
-} from "lucide-react";
+  FaGoogle, 
+  FaFacebook, 
+  FaSearchengin, 
+  FaAws, 
+  FaShopify, 
+  FaWordpress, 
+  FaAward 
+} from "react-icons/fa";
 
 const ServicesHero: React.FC = () => {
   const { t } = useLanguage();
@@ -41,7 +41,7 @@ const ServicesHero: React.FC = () => {
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
             <div className="flex flex-col items-center group hover:scale-110 transition-transform">
               <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-3">
-                <Chrome size={32} className="text-blue-600" />
+                <FaGoogle size={32} className="text-[#4285F4]" />
               </div>
               <span className="text-xs font-medium">Google</span>
               <div className="flex items-center text-green-600 mt-1">
@@ -52,7 +52,7 @@ const ServicesHero: React.FC = () => {
             
             <div className="flex flex-col items-center group hover:scale-110 transition-transform">
               <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-3">
-                <Facebook size={32} className="text-blue-800" />
+                <FaFacebook size={32} className="text-[#1877F2]" />
               </div>
               <span className="text-xs font-medium">Meta</span>
               <div className="flex items-center text-green-600 mt-1">
@@ -63,7 +63,7 @@ const ServicesHero: React.FC = () => {
             
             <div className="flex flex-col items-center group hover:scale-110 transition-transform">
               <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-3">
-                <Search size={32} className="text-green-600" />
+                <FaSearchengin size={32} className="text-[#5FB246]" />
               </div>
               <span className="text-xs font-medium">SEMrush</span>
               <div className="flex items-center text-green-600 mt-1">
@@ -74,7 +74,7 @@ const ServicesHero: React.FC = () => {
             
             <div className="flex flex-col items-center group hover:scale-110 transition-transform">
               <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mb-3">
-                <Cloud size={32} className="text-orange-500" />
+                <FaAws size={32} className="text-[#FF9900]" />
               </div>
               <span className="text-xs font-medium">AWS</span>
               <div className="flex items-center text-green-600 mt-1">
@@ -85,7 +85,7 @@ const ServicesHero: React.FC = () => {
             
             <div className="flex flex-col items-center group hover:scale-110 transition-transform">
               <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mb-3">
-                <ShoppingBag size={32} className="text-purple-600" />
+                <FaShopify size={32} className="text-[#7AB55C]" />
               </div>
               <span className="text-xs font-medium">Magento</span>
               <div className="flex items-center text-green-600 mt-1">
@@ -96,7 +96,7 @@ const ServicesHero: React.FC = () => {
             
             <div className="flex flex-col items-center group hover:scale-110 transition-transform">
               <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-3">
-                <FileCode size={32} className="text-blue-500" />
+                <FaWordpress size={32} className="text-[#21759B]" />
               </div>
               <span className="text-xs font-medium">WordPress</span>
               <div className="flex items-center text-green-600 mt-1">
@@ -107,7 +107,7 @@ const ServicesHero: React.FC = () => {
             
             <div className="flex flex-col items-center group hover:scale-110 transition-transform">
               <div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mb-3">
-                <Award size={32} className="text-yellow-600" />
+                <FaAward size={32} className="text-[#FFD700]" />
               </div>
               <span className="text-xs font-medium">{t('partners.title')}</span>
               <div className="flex items-center text-green-600 mt-1">
