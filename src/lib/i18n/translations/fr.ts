@@ -15,6 +15,8 @@ export const fr = {
   'hero.title': 'Solutions Numériques Premium',
   'hero.subtitle': 'Nous transformons la vision en excellence numérique',
   'hero.cta': 'Discuter de votre projet',
+  'hero.description': 'Nous créons des expériences numériques exceptionnelles grâce au développement logiciel innovant, au marketing stratégique et au design de pointe.',
+  'partners.title': 'Partenaires certifiés avec des plateformes de premier plan',
   
   // Services Section
   'services.title': 'Nos Services',
@@ -50,4 +52,15 @@ export const fr = {
   'footer.rights': 'Tous droits réservés',
   'footer.privacy': 'Politique de Confidentialité',
   'footer.terms': 'Conditions d\'Utilisation',
+  
+  // Additional sections
+  'references.title': 'Nos Références',
+  'references.subtitle': 'Approuvé par des marques de premier plan',
+  'caseStudies.title': 'Études de Cas',
+  'caseStudies.subtitle': 'Histoires de réussite de nos clients',
+  'faq.title': 'Questions Fréquentes',
+  'faq.subtitle': 'Réponses aux questions courantes',
+  
+  // Explore services button
+  'explore.services': 'Explorer Nos Services',
 };

@@ -15,6 +15,8 @@ export const de = {
   'hero.title': 'Premium Digitale Lösungen',
   'hero.subtitle': 'Wir verwandeln Vision in digitale Exzellenz',
   'hero.cta': 'Projekt besprechen',
+  'hero.description': 'Wir schaffen außergewöhnliche digitale Erlebnisse durch innovative Softwareentwicklung, strategisches Marketing und modernste Designs.',
+  'partners.title': 'Zertifizierte Partner führender Plattformen',
   
   // Services Section
   'services.title': 'Unsere Dienstleistungen',
@@ -50,4 +52,15 @@ export const de = {
   'footer.rights': 'Alle Rechte vorbehalten',
   'footer.privacy': 'Datenschutzrichtlinie',
   'footer.terms': 'Nutzungsbedingungen',
+  
+  // Additional sections
+  'references.title': 'Unsere Referenzen',
+  'references.subtitle': 'Vertraut von führenden Marken',
+  'caseStudies.title': 'Fallstudien',
+  'caseStudies.subtitle': 'Erfolgsgeschichten unserer Kunden',
+  'faq.title': 'Häufig gestellte Fragen',
+  'faq.subtitle': 'Antworten auf häufige Anfragen',
+  
+  // Explore services button
+  'explore.services': 'Entdecken Sie Unsere Dienstleistungen',
 };

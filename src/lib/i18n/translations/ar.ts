@@ -15,6 +15,8 @@ export const ar = {
   'hero.title': 'حلول رقمية متميزة',
   'hero.subtitle': 'نحول الرؤية إلى تميز رقمي',
   'hero.cta': 'ناقش مشروعك',
+  'hero.description': 'نحن نخلق تجارب رقمية استثنائية من خلال تطوير برمجيات مبتكرة وتسويق استراتيجي وتصميم متطور.',
+  'partners.title': 'شركاء معتمدون مع منصات رائدة',
   
   // Services Section
   'services.title': 'خدماتنا',
@@ -58,4 +60,7 @@ export const ar = {
   'caseStudies.subtitle': 'قصص نجاح عملائنا',
   'faq.title': 'الأسئلة المتكررة',
   'faq.subtitle': 'إجابات على الاستفسارات الشائعة',
+  
+  // Explore services button
+  'explore.services': 'استكشف خدماتنا',
 };

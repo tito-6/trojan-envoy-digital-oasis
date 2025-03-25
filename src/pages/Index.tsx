@@ -27,8 +27,11 @@ const Index: React.FC = () => {
     const elements = document.querySelectorAll(".should-animate");
     elements.forEach((el) => observer.observe(el));
 
+    // Set the page title based on current language
+    document.title = `${t('hero.title')} | Trojan Envoy`;
+
     return () => observer.disconnect();
-  }, []);
+  }, [t]);
 
   return (
     <div className="min-h-screen">

@@ -15,6 +15,8 @@ export const tr = {
   'hero.title': 'Premium Dijital Çözümler',
   'hero.subtitle': 'Vizyonu dijital mükemmelliğe dönüştürüyoruz',
   'hero.cta': 'Projenizi Tartışalım',
+  'hero.description': 'Yenilikçi yazılım geliştirme, stratejik pazarlama ve en son teknoloji tasarımlarla olağanüstü dijital deneyimler yaratıyoruz.',
+  'partners.title': 'Önde Gelen Platformlarla Sertifikalı İş Ortakları',
   
   // Services Section
   'services.title': 'Hizmetlerimiz',
@@ -58,4 +60,7 @@ export const tr = {
   'caseStudies.subtitle': 'Müşterilerimizin başarı hikayeleri',
   'faq.title': 'Sık Sorulan Sorular',
   'faq.subtitle': 'Yaygın sorulara yanıtlar',
+  
+  // Explore services button
+  'explore.services': 'Hizmetlerimizi Keşfedin',
 };

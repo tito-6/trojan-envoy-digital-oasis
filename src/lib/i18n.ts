@@ -42,6 +42,8 @@ const translations: Translations = {
     'hero.title': 'Premium Digital Solutions',
     'hero.subtitle': 'We transform vision into digital excellence',
     'hero.cta': 'Discuss Your Project',
+    'hero.description': 'We create exceptional digital experiences through innovative software development, strategic marketing, and cutting-edge design.',
+    'partners.title': 'Certified Partners With Leading Platforms',
     
     // Services Section
     'services.title': 'Our Services',
@@ -85,6 +87,9 @@ const translations: Translations = {
     'caseStudies.subtitle': 'Success stories of our clients',
     'faq.title': 'Frequently Asked Questions',
     'faq.subtitle': 'Answers to common inquiries',
+    
+    // Explore services button
+    'explore.services': 'Explore Our Services',
   },
   es,
   fr,
@@ -182,3 +187,4 @@ useLanguage.subscribe((state) => {
     document.documentElement.dir = 'ltr';
   }
 });
+

@@ -15,6 +15,8 @@ export const es = {
   'hero.title': 'Soluciones Digitales Premium',
   'hero.subtitle': 'Transformamos la visión en excelencia digital',
   'hero.cta': 'Discutir su proyecto',
+  'hero.description': 'Creamos experiencias digitales excepcionales a través del desarrollo de software innovador, marketing estratégico y diseño de vanguardia.',
+  'partners.title': 'Socios certificados con plataformas líderes',
   
   // Services Section
   'services.title': 'Nuestros Servicios',
@@ -50,4 +52,15 @@ export const es = {
   'footer.rights': 'Todos los derechos reservados',
   'footer.privacy': 'Política de Privacidad',
   'footer.terms': 'Términos de Servicio',
+  
+  // Additional sections
+  'references.title': 'Nuestras Referencias',
+  'references.subtitle': 'Confiado por marcas líderes',
+  'caseStudies.title': 'Casos de Estudio',
+  'caseStudies.subtitle': 'Historias de éxito de nuestros clientes',
+  'faq.title': 'Preguntas Frecuentes',
+  'faq.subtitle': 'Respuestas a consultas comunes',
+  
+  // Explore services button
+  'explore.services': 'Explorar Nuestros Servicios',
 };

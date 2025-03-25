@@ -14,16 +14,15 @@ const ServicesHero: React.FC = () => {
       
       <div className="container mx-auto px-4 text-center">
         <div className="inline-block px-4 py-1.5 rounded-full bg-secondary mb-4 text-sm font-medium should-animate">
-          Our Expertise
+          {t('services.subtitle')}
         </div>
         
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 should-animate">
-          Comprehensive <span className="text-gradient">Digital Services</span>
+          {t('services.title')} <span className="text-gradient">{t('services.subtitle')}</span>
         </h1>
         
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto should-animate">
-          We deliver end-to-end digital solutions tailored to your business needs, 
-          from development to marketing and beyond.
+          {t('hero.description')}
         </p>
       </div>
     </section>

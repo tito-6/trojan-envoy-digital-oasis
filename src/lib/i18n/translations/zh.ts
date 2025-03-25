@@ -15,6 +15,8 @@ export const zh = {
   'hero.title': '高端数字解决方案',
   'hero.subtitle': '我们将愿景转化为数字卓越',
   'hero.cta': '讨论您的项目',
+  'hero.description': '我们通过创新的软件开发、战略营销和尖端设计创造卓越的数字体验。',
+  'partners.title': '与领先平台的认证合作伙伴',
   
   // Services Section
   'services.title': '我们的服务',
@@ -50,4 +52,15 @@ export const zh = {
   'footer.rights': '版权所有',
   'footer.privacy': '隐私政策',
   'footer.terms': '服务条款',
+  
+  // Additional sections
+  'references.title': '我们的参考',
+  'references.subtitle': '受到领先品牌的信任',
+  'caseStudies.title': '案例研究',
+  'caseStudies.subtitle': '我们客户的成功故事',
+  'faq.title': '常见问题',
+  'faq.subtitle': '常见问题的答案',
+  
+  // Explore services button
+  'explore.services': '探索我们的服务',
 };
