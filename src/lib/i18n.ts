@@ -1,5 +1,9 @@
 
 import { create } from 'zustand';
+import { es } from './i18n/translations/es';
+import { fr } from './i18n/translations/fr';
+import { de } from './i18n/translations/de';
+import { zh } from './i18n/translations/zh';
 
 type LanguageCode = 'en' | 'es' | 'fr' | 'de' | 'zh';
 
@@ -18,7 +22,7 @@ interface LanguageState {
   t: (key: string) => string;
 }
 
-// Initial translations (we'll start with English only)
+// Initial translations with all languages
 const translations: Translations = {
   en: {
     // Navigation
@@ -28,6 +32,8 @@ const translations: Translations = {
     'nav.portfolio': 'Portfolio',
     'nav.blog': 'Blog',
     'nav.contact': 'Contact',
+    'nav.theme': 'Theme',
+    'nav.language': 'Language',
     
     // Hero Section
     'hero.title': 'Premium Digital Solutions',
@@ -69,12 +75,19 @@ const translations: Translations = {
     'footer.privacy': 'Privacy Policy',
     'footer.terms': 'Terms of Service',
   },
+  es,
+  fr,
+  de,
+  zh,
 };
 
 export const useLanguage = create<LanguageState>((set, get) => ({
   currentLanguage: 'en',
   translations,
-  setLanguage: (lang) => set({ currentLanguage: lang }),
+  setLanguage: (lang) => {
+    set({ currentLanguage: lang });
+    localStorage.setItem('preferred-language', lang);
+  },
   t: (key) => {
     const { currentLanguage, translations } = get();
     return translations[currentLanguage]?.[key] || key;
@@ -88,3 +101,11 @@ export const availableLanguages = [
   { code: 'de', name: 'Deutsch' },
   { code: 'zh', name: '中文' },
 ];
+
+// Initialize with saved language preference if available
+if (typeof window !== 'undefined') {
+  const savedLanguage = localStorage.getItem('preferred-language') as LanguageCode | null;
+  if (savedLanguage && ['en', 'es', 'fr', 'de', 'zh'].includes(savedLanguage)) {
+    useLanguage.getState().setLanguage(savedLanguage);
+  }
+}
