@@ -11,7 +11,7 @@ const LanguageSelector: React.FC = () => {
   const toggleDropdown = () => setIsOpen(!isOpen);
   const closeDropdown = () => setIsOpen(false);
 
-  const handleLanguageChange = (langCode: any) => {
+  const handleLanguageChange = (langCode: string) => {
     setLanguage(langCode);
     closeDropdown();
   };

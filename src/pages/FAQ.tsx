@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
 import { useLanguage } from "@/lib/i18n";
