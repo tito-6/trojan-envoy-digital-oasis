@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,55 +23,85 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X, Upload, Plus, FileText, Youtube } from "lucide-react";
+import { X, Upload, Plus, FileText, Youtube, Link, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { ContentType } from "@/lib/types";
 
 const contentFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
-  type: z.enum(["Page", "Page Section", "Service", "Portfolio", "Blog Post"]),
+  type: z.enum(["Page", "Page Section", "Service", "Portfolio", "Blog Post"] as const),
   subtitle: z.string().optional(),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
   seoTitle: z.string().optional(),
   seoDescription: z.string().optional(),
   seoKeywords: z.string().optional(),
   content: z.string().optional(),
+  published: z.boolean().default(true),
+  slug: z.string().optional(),
 });
 
 type ContentFormValues = z.infer<typeof contentFormSchema>;
 
 interface ContentFormProps {
+  initialValues?: Partial<ContentFormValues & { 
+    keywords: string[]; 
+    images: (File | string)[];
+    videos: string[];
+    documents: (File | string)[];
+    publishDate?: Date | string;
+  }>;
   onSave: (values: ContentFormValues & { 
     keywords: string[]; 
-    images: File[];
+    images: (File | string)[];
     videos: string[];
-    documents: File[];
-    publishDate?: Date;
+    documents: (File | string)[];
+    publishDate?: Date | string;
   }) => void;
   onCancel: () => void;
+  isEditing?: boolean;
 }
 
-const ContentForm: React.FC<ContentFormProps> = ({ onSave, onCancel }) => {
+const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCancel, isEditing = false }) => {
   const { toast } = useToast();
-  const [keywords, setKeywords] = useState<string[]>([]);
+  const [keywords, setKeywords] = useState<string[]>(initialValues?.keywords || []);
   const [keywordInput, setKeywordInput] = useState("");
-  const [images, setImages] = useState<File[]>([]);
-  const [documents, setDocuments] = useState<File[]>([]);
-  const [videos, setVideos] = useState<string[]>([]);
+  const [images, setImages] = useState<(File | string)[]>(initialValues?.images || []);
+  const [documents, setDocuments] = useState<(File | string)[]>(initialValues?.documents || []);
+  const [videos, setVideos] = useState<string[]>(initialValues?.videos || []);
   const [videoInput, setVideoInput] = useState("");
+  const [slugInput, setSlugInput] = useState(initialValues?.slug || "");
+  const [autoGenerateSlug, setAutoGenerateSlug] = useState(!initialValues?.slug);
   
   const form = useForm<ContentFormValues>({
     resolver: zodResolver(contentFormSchema),
     defaultValues: {
-      title: "",
-      type: "Page Section",
-      subtitle: "",
-      description: "",
-      seoTitle: "",
-      seoDescription: "",
-      seoKeywords: "",
-      content: "",
+      title: initialValues?.title || "",
+      type: (initialValues?.type as ContentType) || "Page Section",
+      subtitle: initialValues?.subtitle || "",
+      description: initialValues?.description || "",
+      seoTitle: initialValues?.seoTitle || "",
+      seoDescription: initialValues?.seoDescription || "",
+      seoKeywords: initialValues?.seoKeywords || "",
+      content: initialValues?.content || "",
+      published: initialValues?.published !== undefined ? initialValues.published : true,
+      slug: initialValues?.slug || "",
     },
   });
+  
+  // Auto-generate slug from title if enabled
+  useEffect(() => {
+    if (autoGenerateSlug) {
+      const title = form.watch("title");
+      if (title) {
+        const generatedSlug = title.toLowerCase()
+          .replace(/[^\w\s-]/g, '') // Remove special chars
+          .replace(/\s+/g, '-'); // Replace spaces with hyphens
+        setSlugInput(generatedSlug);
+        form.setValue("slug", generatedSlug);
+      }
+    }
+  }, [form.watch("title"), autoGenerateSlug, form]);
   
   const addKeyword = () => {
     if (keywordInput.trim() && !keywords.includes(keywordInput.trim())) {
@@ -129,6 +159,22 @@ const ContentForm: React.FC<ContentFormProps> = ({ onSave, onCancel }) => {
     setDocuments(newDocuments);
   };
   
+  const handleSlugChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSlugInput(e.target.value);
+    form.setValue("slug", e.target.value);
+  };
+  
+  const toggleAutoGenerateSlug = () => {
+    setAutoGenerateSlug(!autoGenerateSlug);
+    if (!autoGenerateSlug) {
+      // If enabling auto-generate, update the slug from the title
+      const title = form.watch("title");
+      const generatedSlug = title.toLowerCase().replace(/\s+/g, '-');
+      setSlugInput(generatedSlug);
+      form.setValue("slug", generatedSlug);
+    }
+  };
+  
   const onSubmit = (values: ContentFormValues) => {
     onSave({
       ...values,
@@ -136,6 +182,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ onSave, onCancel }) => {
       images,
       documents,
       videos,
+      slug: slugInput,
       publishDate: new Date(),
     });
   };
@@ -189,6 +236,33 @@ const ContentForm: React.FC<ContentFormProps> = ({ onSave, onCancel }) => {
           />
         </div>
         
+        {/* URL Slug field */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <FormLabel>URL Slug</FormLabel>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-muted-foreground">Auto-generate from title</span>
+              <Switch 
+                checked={autoGenerateSlug} 
+                onCheckedChange={toggleAutoGenerateSlug} 
+              />
+            </div>
+          </div>
+          <div className="flex items-center">
+            <span className="text-muted-foreground pr-1">/</span>
+            <Input
+              value={slugInput}
+              onChange={handleSlugChange}
+              disabled={autoGenerateSlug}
+              placeholder="page-url-slug"
+              className="flex-grow"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            This will be the URL of your content: example.com/{slugInput}
+          </p>
+        </div>
+        
         <FormField
           control={form.control}
           name="subtitle"
@@ -217,6 +291,27 @@ const ContentForm: React.FC<ContentFormProps> = ({ onSave, onCancel }) => {
                 />
               </FormControl>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="published"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Publishing Status</FormLabel>
+                <p className="text-sm text-muted-foreground">
+                  Set whether this content should be publicly visible
+                </p>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
             </FormItem>
           )}
         />
@@ -340,7 +435,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ onSave, onCancel }) => {
                 {images.map((image, index) => (
                   <div key={index} className="relative bg-secondary/40 rounded-md p-2">
                     <img
-                      src={URL.createObjectURL(image)}
+                      src={typeof image === 'string' ? image : URL.createObjectURL(image)}
                       alt={`Uploaded ${index + 1}`}
                       className="w-full h-20 object-cover rounded"
                     />
@@ -351,7 +446,11 @@ const ContentForm: React.FC<ContentFormProps> = ({ onSave, onCancel }) => {
                     >
                       <X className="h-3 w-3" />
                     </button>
-                    <p className="text-xs mt-1 truncate">{image.name}</p>
+                    <p className="text-xs mt-1 truncate">
+                      {typeof image === 'string' 
+                        ? image.split('/').pop() || image 
+                        : image.name}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -386,7 +485,11 @@ const ContentForm: React.FC<ContentFormProps> = ({ onSave, onCancel }) => {
                   <div key={index} className="flex items-center justify-between bg-secondary/40 rounded-md p-2">
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4" />
-                      <span className="text-sm truncate">{doc.name}</span>
+                      <span className="text-sm truncate">
+                        {typeof doc === 'string' 
+                          ? doc.split('/').pop() || doc 
+                          : doc.name}
+                      </span>
                     </div>
                     <button
                       type="button"
@@ -454,7 +557,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ onSave, onCancel }) => {
             Cancel
           </Button>
           <Button type="submit">
-            Save Content
+            {isEditing ? "Update Content" : "Save Content"}
           </Button>
         </div>
       </form>

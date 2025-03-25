@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Send, Check, AlertCircle } from "lucide-react";
+import { Send } from "lucide-react";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
 import ContactHero from "@/components/contact/ContactHero";
@@ -21,27 +21,68 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { storageService } from "@/lib/storage";
+
+// Define the country codes for the dropdown
+const countryCodes = [
+  { code: "+1", country: "US", label: "United States (+1)" },
+  { code: "+44", country: "UK", label: "United Kingdom (+44)" },
+  { code: "+91", country: "IN", label: "India (+91)" },
+  { code: "+61", country: "AU", label: "Australia (+61)" },
+  { code: "+33", country: "FR", label: "France (+33)" },
+  { code: "+49", country: "DE", label: "Germany (+49)" },
+  { code: "+86", country: "CN", label: "China (+86)" },
+  { code: "+81", country: "JP", label: "Japan (+81)" },
+  { code: "+82", country: "KR", label: "South Korea (+82)" },
+  { code: "+55", country: "BR", label: "Brazil (+55)" },
+];
 
 // Define the phone number regex for different countries
 const phoneRegexMap: Record<string, RegExp> = {
-  US: /^(\+1|1)?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$/, // US
-  UK: /^(\+44|44)?[-.\s]?0?[-.\s]?\d{2,4}[-.\s]?\d{3}[-.\s]?\d{3,4}$/, // UK
-  IN: /^(\+91|91)?[-.\s]?\d{3}[-.\s]?\d{3}[-.\s]?\d{4}$/, // India
-  // Add more countries as needed
-  DEFAULT: /^\+?[0-9]{1,4}?[-.\s]?\(?\d{1,}\)?[-.\s]?\d{1,}[-.\s]?\d{1,}$/, // Generic phone number
+  US: /^\d{10}$/, // US: 10 digits
+  UK: /^\d{10,11}$/, // UK: 10-11 digits
+  IN: /^\d{10}$/, // India: 10 digits
+  AU: /^\d{9,10}$/, // Australia: 9-10 digits
+  FR: /^\d{9}$/, // France: 9 digits
+  DE: /^\d{10,11}$/, // Germany: 10-11 digits
+  CN: /^\d{11}$/, // China: 11 digits
+  JP: /^\d{10,11}$/, // Japan: 10-11 digits
+  KR: /^\d{9,10}$/, // South Korea: 9-10 digits
+  BR: /^\d{10,11}$/, // Brazil: 10-11 digits
+  DEFAULT: /^\d{7,15}$/, // Generic: 7-15 digits
 };
 
 const contactSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   email: z.string().email({ message: "Invalid email address" }),
-  phone: z.string().refine((val) => {
-    // Get user's country (in a real app, you might get this from their browser or IP)
-    const userCountry = "DEFAULT";
-    const regex = phoneRegexMap[userCountry] || phoneRegexMap.DEFAULT;
-    return regex.test(val);
+  countryCode: z.string().default("+1"),
+  phoneNumber: z.string().refine((val) => {
+    // This will be validated with the selected country code
+    return true;
   }, { message: "Invalid phone number format" }),
   subject: z.string().min(2, { message: "Subject is required" }),
   message: z.string().min(10, { message: "Message must be at least 10 characters" }),
+})
+.refine((data) => {
+  // Get the country from the country code
+  const countryObj = countryCodes.find(c => c.code === data.countryCode);
+  const country = countryObj ? countryObj.country : "DEFAULT";
+  
+  // Get the regex for that country
+  const regex = phoneRegexMap[country] || phoneRegexMap.DEFAULT;
+  
+  // Test the phone number against the regex
+  return regex.test(data.phoneNumber.replace(/\D/g, ''));
+}, {
+  message: "Invalid phone number for the selected country",
+  path: ["phoneNumber"]
 });
 
 type ContactFormData = z.infer<typeof contactSchema>;
@@ -56,7 +97,8 @@ const Contact: React.FC = () => {
     defaultValues: {
       name: "",
       email: "",
-      phone: "",
+      countryCode: "+1",
+      phoneNumber: "",
       subject: "",
       message: "",
     },
@@ -65,21 +107,35 @@ const Contact: React.FC = () => {
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Format the phone number with country code
+    const fullPhoneNumber = `${data.countryCode} ${data.phoneNumber}`;
     
-    // In a real implementation, this would send the data to a server
-    console.log("Form data submitted:", data);
-    
-    // Success handling
-    toast({
-      title: "Message sent successfully!",
-      description: "We'll get back to you as soon as possible.",
-      variant: "default",
-    });
-    
-    form.reset();
-    setIsSubmitting(false);
+    try {
+      // Save to our storage service
+      storageService.addContactRequest({
+        name: data.name,
+        email: data.email,
+        phone: fullPhoneNumber,
+        subject: data.subject,
+        message: data.message,
+      });
+      
+      toast({
+        title: "Message sent successfully!",
+        description: "We'll get back to you as soon as possible.",
+        variant: "default",
+      });
+      
+      form.reset();
+    } catch (error) {
+      toast({
+        title: "Error sending message",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -150,19 +206,49 @@ const Contact: React.FC = () => {
                       )}
                     />
                     
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
-                          <FormControl>
-                            <Input placeholder="+1 (555) 123-4567" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="countryCode"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-1">
+                            <FormLabel>Country Code</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select country" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {countryCodes.map((country) => (
+                                  <SelectItem key={country.code} value={country.code}>
+                                    {country.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="phoneNumber"
+                        render={({ field }) => (
+                          <FormItem className="md:col-span-2">
+                            <FormLabel>Phone Number</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="(555) 123-4567" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                     
                     <FormField
                       control={form.control}

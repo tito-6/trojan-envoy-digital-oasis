@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ContentForm from "@/components/admin/ContentForm";
 import { useToast } from "@/hooks/use-toast";
@@ -13,32 +13,47 @@ import {
   Trash2, 
   Edit, 
   Filter,
-  ArrowUpDown
+  ArrowUpDown,
+  GanttChart
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-// Sample content data
-const initialContentItems = [
-  { id: 1, title: "Home Hero Section", type: "Page Section", lastUpdated: "2023-11-05" },
-  { id: 2, title: "About Us Page", type: "Page", lastUpdated: "2023-10-28" },
-  { id: 3, title: "Web Development Services", type: "Service", lastUpdated: "2023-10-15" },
-  { id: 4, title: "Mobile App Development", type: "Service", lastUpdated: "2023-10-10" },
-  { id: 5, title: "Digital Marketing Overview", type: "Service", lastUpdated: "2023-09-22" },
-  { id: 6, title: "E-commerce Project", type: "Portfolio", lastUpdated: "2023-09-15" },
-  { id: 7, title: "Healthcare Mobile App", type: "Portfolio", lastUpdated: "2023-09-10" },
-  { id: 8, title: "Top 10 SEO Strategies", type: "Blog Post", lastUpdated: "2023-08-28" },
-  { id: 9, title: "Contact Information", type: "Page Section", lastUpdated: "2023-08-15" },
-  { id: 10, title: "Company Values", type: "Page Section", lastUpdated: "2023-08-05" },
-];
+import { Input } from "@/components/ui/input";
+import { storageService } from "@/lib/storage";
+import { ContentItem } from "@/lib/types";
 
 const AdminContent: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [contentItems, setContentItems] = useState(initialContentItems);
+  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
   const [isNewContentDialogOpen, setIsNewContentDialogOpen] = useState(false);
+  const [isEditContentDialogOpen, setIsEditContentDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [itemToEdit, setItemToEdit] = useState<ContentItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const [sortField, setSortField] = useState<keyof ContentItem>('lastUpdated');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const { toast } = useToast();
+  
+  // Load content from storage service
+  useEffect(() => {
+    loadContent();
+    
+    // Subscribe to content changes
+    const unsubscribeAdded = storageService.addEventListener('content-added', () => loadContent());
+    const unsubscribeUpdated = storageService.addEventListener('content-updated', () => loadContent());
+    const unsubscribeDeleted = storageService.addEventListener('content-deleted', () => loadContent());
+    
+    return () => {
+      unsubscribeAdded();
+      unsubscribeUpdated();
+      unsubscribeDeleted();
+    };
+  }, []);
+  
+  const loadContent = () => {
+    const content = storageService.getAllContent();
+    setContentItems(content);
+  };
   
   // Filter content based on search and type filter
   const filteredContent = contentItems.filter(item => {
@@ -47,19 +62,54 @@ const AdminContent: React.FC = () => {
     return matchesSearch && matchesType;
   });
   
+  // Sort content
+  const sortedContent = [...filteredContent].sort((a, b) => {
+    const aValue = a[sortField];
+    const bValue = b[sortField];
+    
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortDirection === 'asc' 
+        ? aValue.localeCompare(bValue) 
+        : bValue.localeCompare(aValue);
+    }
+    
+    // Handle numbers or default to 0
+    const aNum = aValue || 0;
+    const bNum = bValue || 0;
+    
+    return sortDirection === 'asc' ? +aNum - +bNum : +bNum - +aNum;
+  });
+  
   // Get unique content types for filter dropdown
   const contentTypes = Array.from(new Set(contentItems.map(item => item.type)));
   
+  const handleSortChange = (field: keyof ContentItem) => {
+    if (field === sortField) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+  
   const handleSaveContent = (values: any) => {
     // In a real application, this would send the data to a backend API
-    const newContent = {
-      id: contentItems.length + 1,
+    const newContent = storageService.addContent({
       title: values.title,
       type: values.type,
-      lastUpdated: new Date().toISOString().split('T')[0],
-    };
+      subtitle: values.subtitle,
+      description: values.description,
+      seoTitle: values.seoTitle,
+      seoDescription: values.seoDescription,
+      seoKeywords: values.keywords,
+      content: values.content,
+      published: true,
+      slug: values.title.toLowerCase().replace(/\s+/g, '-'),
+      images: values.images?.map((img: File) => URL.createObjectURL(img)) || [],
+      videos: values.videos || [],
+      documents: values.documents?.map((doc: File) => URL.createObjectURL(doc)) || []
+    });
     
-    setContentItems([newContent, ...contentItems]);
     setIsNewContentDialogOpen(false);
     
     toast({
@@ -67,6 +117,44 @@ const AdminContent: React.FC = () => {
       description: `${values.title} has been added to the content library.`,
       variant: "default",
     });
+  };
+  
+  const handleUpdateContent = (values: any) => {
+    if (!itemToEdit) return;
+    
+    const updatedContent = storageService.updateContent(itemToEdit.id, {
+      title: values.title,
+      type: values.type,
+      subtitle: values.subtitle,
+      description: values.description,
+      seoTitle: values.seoTitle,
+      seoDescription: values.seoDescription,
+      seoKeywords: values.keywords,
+      content: values.content,
+      slug: values.title.toLowerCase().replace(/\s+/g, '-'),
+      // Handle file uploads properly in a real application
+      images: values.images?.map((img: File | string) => 
+        typeof img === 'string' ? img : URL.createObjectURL(img)
+      ) || itemToEdit.images,
+      videos: values.videos || itemToEdit.videos,
+      documents: values.documents?.map((doc: File | string) => 
+        typeof doc === 'string' ? doc : URL.createObjectURL(doc)
+      ) || itemToEdit.documents
+    });
+    
+    setIsEditContentDialogOpen(false);
+    setItemToEdit(null);
+    
+    toast({
+      title: "Content updated successfully",
+      description: `${values.title} has been updated.`,
+      variant: "default",
+    });
+  };
+  
+  const handleEdit = (item: ContentItem) => {
+    setItemToEdit(item);
+    setIsEditContentDialogOpen(true);
   };
   
   const confirmDelete = (id: number) => {
@@ -77,16 +165,28 @@ const AdminContent: React.FC = () => {
   const handleDelete = () => {
     if (itemToDelete) {
       const deletedItem = contentItems.find(item => item.id === itemToDelete);
-      setContentItems(contentItems.filter(item => item.id !== itemToDelete));
+      const success = storageService.deleteContent(itemToDelete);
       
-      toast({
-        title: "Content deleted",
-        description: `"${deletedItem?.title}" has been removed.`,
-        variant: "default",
-      });
+      if (success) {
+        toast({
+          title: "Content deleted",
+          description: `"${deletedItem?.title}" has been removed.`,
+          variant: "default",
+        });
+      }
       
       setIsDeleteDialogOpen(false);
       setItemToDelete(null);
+    }
+  };
+  
+  const getTypeVariant = (type: string) => {
+    switch (type) {
+      case "Blog Post": return "default";
+      case "Portfolio": return "success";
+      case "Service": return "secondary";
+      case "Page": return "blue";
+      default: return "outline";
     }
   };
   
@@ -96,10 +196,16 @@ const AdminContent: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <h1 className="text-2xl font-display font-bold">Content Management</h1>
           
-          <Button onClick={() => setIsNewContentDialogOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Content
-          </Button>
+          <div className="flex space-x-2">
+            <Button onClick={() => setIsNewContentDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Content
+            </Button>
+            <Button variant="outline">
+              <GanttChart className="w-4 h-4 mr-2" />
+              Content Structure
+            </Button>
+          </div>
         </div>
         
         <div className="bg-card border border-border rounded-lg shadow-sm">
@@ -107,10 +213,10 @@ const AdminContent: React.FC = () => {
             <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <input
+                <Input
                   type="text"
                   placeholder="Search content..."
-                  className="w-full pl-10 pr-4 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full pl-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -137,25 +243,31 @@ const AdminContent: React.FC = () => {
               <thead>
                 <tr className="border-b border-border bg-secondary/30">
                   <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1 cursor-pointer">
+                    <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('id')}>
                       <span>ID</span>
                       <ArrowUpDown className="w-3 h-3" />
                     </div>
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1 cursor-pointer">
+                    <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('title')}>
                       <span>TITLE</span>
                       <ArrowUpDown className="w-3 h-3" />
                     </div>
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1 cursor-pointer">
+                    <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('type')}>
                       <span>TYPE</span>
                       <ArrowUpDown className="w-3 h-3" />
                     </div>
                   </th>
                   <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1 cursor-pointer">
+                    <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('published')}>
+                      <span>STATUS</span>
+                      <ArrowUpDown className="w-3 h-3" />
+                    </div>
+                  </th>
+                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
+                    <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('lastUpdated')}>
                       <span>LAST UPDATED</span>
                       <ArrowUpDown className="w-3 h-3" />
                     </div>
@@ -166,8 +278,8 @@ const AdminContent: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredContent.length > 0 ? (
-                  filteredContent.map((item) => (
+                {sortedContent.length > 0 ? (
+                  sortedContent.map((item) => (
                     <tr key={item.id} className="border-b border-border last:border-0 hover:bg-secondary/20">
                       <td className="py-3 px-4 text-sm">{item.id}</td>
                       <td className="py-3 px-4">
@@ -183,19 +295,24 @@ const AdminContent: React.FC = () => {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-sm">
-                        <Badge variant={
-                          item.type === "Blog Post" ? "default" : 
-                          item.type === "Portfolio" ? "success" : 
-                          item.type === "Service" ? "secondary" : 
-                          "outline"
-                        }>
+                        <Badge variant={getTypeVariant(item.type)}>
                           {item.type}
+                        </Badge>
+                      </td>
+                      <td className="py-3 px-4 text-sm">
+                        <Badge variant={item.published ? "success" : "outline"}>
+                          {item.published ? "Published" : "Draft"}
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-sm">{item.lastUpdated}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleEdit(item)}
+                          >
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button 
@@ -212,7 +329,7 @@ const AdminContent: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
                       No content found matching your criteria
                     </td>
                   </tr>
@@ -230,7 +347,7 @@ const AdminContent: React.FC = () => {
               <Button variant="outline" size="sm" disabled>
                 Previous
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" disabled={filteredContent.length === contentItems.length}>
                 Next
               </Button>
             </div>
@@ -248,6 +365,39 @@ const AdminContent: React.FC = () => {
             onSave={handleSaveContent}
             onCancel={() => setIsNewContentDialogOpen(false)}
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Content Dialog */}
+      <Dialog open={isEditContentDialogOpen} onOpenChange={setIsEditContentDialogOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Content</DialogTitle>
+          </DialogHeader>
+          {itemToEdit && (
+            <ContentForm 
+              initialValues={{
+                title: itemToEdit.title,
+                type: itemToEdit.type,
+                subtitle: itemToEdit.subtitle || '',
+                description: itemToEdit.description,
+                seoTitle: itemToEdit.seoTitle || '',
+                seoDescription: itemToEdit.seoDescription || '',
+                seoKeywords: itemToEdit.seoKeywords?.join(', ') || '',
+                content: itemToEdit.content || '',
+                keywords: itemToEdit.seoKeywords || [],
+                images: itemToEdit.images || [],
+                videos: itemToEdit.videos || [],
+                documents: itemToEdit.documents || []
+              }}
+              onSave={handleUpdateContent}
+              onCancel={() => {
+                setIsEditContentDialogOpen(false);
+                setItemToEdit(null);
+              }}
+              isEditing={true}
+            />
+          )}
         </DialogContent>
       </Dialog>
 
