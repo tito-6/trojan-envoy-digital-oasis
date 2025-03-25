@@ -706,41 +706,39 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                 />
                 
                 {contentType === "Page Section" && (
-                  <>
-                    <FormField
-                      control={form.control}
-                      name="placementPosition"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Position on Page</FormLabel>
-                          <Select 
-                            onValueChange={field.onChange} 
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select position" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectGroup>
-                                <SelectItem value="top">Top of Page</SelectItem>
-                                <SelectItem value="middle">Middle of Page</SelectItem>
-                                <SelectItem value="bottom">Bottom of Page</SelectItem>
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Choose where on the page this section should appear
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </>
+                  <FormField
+                    control={form.control}
+                    name="placementPosition"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Position on Page</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select position" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectItem value="top">Top of Page</SelectItem>
+                              <SelectItem value="middle">Middle of Page</SelectItem>
+                              <SelectItem value="bottom">Bottom of Page</SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>
+                          Choose where on the page this section should appear
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 )}
                 
-                {contentType !== "Page" && contentType !== "Page Section" && (
+                {(contentType === "Blog Post" || contentType === "Service" || contentType === "Portfolio") && (
                   <div className="bg-muted/50 p-4 rounded-md">
                     <p className="text-sm">
                       {contentType === "Blog Post" ? (
@@ -767,40 +765,38 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
             )}
             
             {contentType === "Page Section" && (
-              <>
-                <FormField
-                  control={form.control}
-                  name="placementSectionId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Place in Section</FormLabel>
-                      <Select 
-                        onValueChange={(value) => field.onChange(parseInt(value))} 
-                        value={field.value?.toString()}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a section" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectGroup>
-                            {pageSections.map(section => (
-                              <SelectItem key={section.id} value={section.id.toString()}>
-                                {section.title}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                      <FormDescription>
-                        Choose which section this content should appear in
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
+              <FormField
+                control={form.control}
+                name="placementSectionId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Place in Section</FormLabel>
+                    <Select 
+                      onValueChange={(value) => field.onChange(parseInt(value))} 
+                      value={field.value?.toString()}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a section" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectGroup>
+                          {pageSections.map(section => (
+                            <SelectItem key={section.id} value={section.id.toString()}>
+                              {section.title}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Choose which section this content should appear in
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
           </TabsContent>
         </Tabs>
