@@ -90,7 +90,7 @@ const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({ activeFilter }) => 
       setPortfolioItems(sortedItems);
       
       // Log for debugging
-      console.log("Loaded portfolio items:", sortedItems);
+      console.log("Loaded portfolio items:", sortedItems.length);
     };
     
     loadPortfolioItems();

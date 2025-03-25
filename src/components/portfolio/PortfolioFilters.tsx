@@ -19,6 +19,8 @@ const PortfolioFilters: React.FC<PortfolioFiltersProps> = ({ onFilterChange }) =
       const allContent = storageService.getAllContent();
       const portfolioItems = allContent.filter(item => item.type === "Portfolio" && item.published);
       
+      console.log("Portfolio items for categories:", portfolioItems.length);
+      
       // Extract unique categories from portfolio items
       const uniqueCategories = new Set<string>();
       uniqueCategories.add("all");
@@ -37,6 +39,7 @@ const PortfolioFilters: React.FC<PortfolioFiltersProps> = ({ onFilterChange }) =
       });
       
       setCategories(Array.from(uniqueCategories));
+      console.log("Portfolio categories loaded:", Array.from(uniqueCategories));
     };
     
     loadCategories();
@@ -56,6 +59,7 @@ const PortfolioFilters: React.FC<PortfolioFiltersProps> = ({ onFilterChange }) =
   const handleFilterClick = (filter: string) => {
     setActiveFilter(filter);
     onFilterChange(filter);
+    console.log("Filter clicked:", filter);
   };
   
   return (

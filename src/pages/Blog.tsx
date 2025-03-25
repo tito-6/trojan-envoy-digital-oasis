@@ -17,9 +17,9 @@ const Blog: React.FC = () => {
   const location = useLocation();
   const searchTerm = searchParams.get('search') || '';
   const categoryPath = location.pathname.match(/\/category\/(.+)/);
-  const category = categoryPath ? categoryPath[1] : '';
+  const category = categoryPath ? categoryPath[1] : searchParams.get('category') || '';
   const tagPath = location.pathname.match(/\/tag\/(.+)/);
-  const tag = tagPath ? tagPath[1] : '';
+  const tag = tagPath ? tagPath[1] : searchParams.get('tag') || '';
   const { toast } = useToast();
   
   const [blogStats, setBlogStats] = useState<{
@@ -31,8 +31,45 @@ const Blog: React.FC = () => {
   });
 
   useEffect(() => {
+    // Add example blog posts if none exist
+    const addExampleBlogPostsIfEmpty = async () => {
+      const allContent = storageService.getAllContent();
+      const blogPosts = allContent.filter(item => item.type === "Blog Post");
+      
+      if (blogPosts.length === 0) {
+        // Add some example blog posts
+        storageService.addContent({
+          title: "How to Choose the Right Technology Stack for Your Project",
+          type: "Blog Post",
+          description: "A comprehensive guide to selecting technologies that align with your business goals",
+          content: "<p>Choosing the right technology stack is crucial for the success of your project. Here are the key factors to consider:</p><h3>1. Project Requirements</h3><p>Start by analyzing what your project actually needs to accomplish.</p><h3>2. Development Timeline</h3><p>Consider how quickly you need to launch.</p><h3>3. Team Expertise</h3><p>Leverage what your team already knows or what skills are readily available.</p><h3>4. Scalability</h3><p>Plan for growth from the beginning.</p><h3>5. Long-term Maintenance</h3><p>Consider the future support and updates needed.</p>",
+          seoKeywords: ["technology", "development", "programming"],
+          category: "Technology",
+          author: "Alex Johnson",
+          publishDate: new Date().toISOString().split('T')[0],
+          published: true
+        });
+        
+        storageService.addContent({
+          title: "5 UX Design Trends to Watch in 2023",
+          type: "Blog Post",
+          description: "Explore the latest user experience design trends that are shaping digital products this year",
+          content: "<p>As digital experiences evolve, here are the top UX design trends making waves this year:</p><h3>1. Dark Mode Everywhere</h3><p>More apps and websites are implementing dark mode options for users.</p><h3>2. Voice User Interfaces</h3><p>Voice-controlled interfaces are becoming mainstream.</p><h3>3. Micro-interactions</h3><p>Small animations that delight users are increasingly important.</p><h3>4. 3D Elements</h3><p>Three-dimensional graphics are enhancing flat design.</p><h3>5. Minimalism 2.0</h3><p>Simplicity continues to reign but with more personality.</p>",
+          seoKeywords: ["design", "UX", "trends"],
+          category: "Design",
+          author: "Maria Chen",
+          publishDate: new Date().toISOString().split('T')[0],
+          published: true
+        });
+        
+        console.log("Example blog posts added");
+      }
+    };
+    
     // Get blog statistics for the sidebar
     const loadBlogStats = () => {
+      addExampleBlogPostsIfEmpty();
+      
       const allContent = storageService.getAllContent();
       const blogPosts = allContent.filter(item => 
         item.type === "Blog Post" && 
@@ -46,15 +83,16 @@ const Blog: React.FC = () => {
       const categoryMap = new Map<string, number>();
       
       blogPosts.forEach(post => {
-        if (post.seoKeywords && post.seoKeywords.length > 0) {
+        if (post.category) {
+          // Priority to the category field
+          const count = categoryMap.get(post.category) || 0;
+          categoryMap.set(post.category, count + 1);
+        } else if (post.seoKeywords && post.seoKeywords.length > 0) {
+          // Fall back to keywords if no category
           post.seoKeywords.forEach(keyword => {
             const count = categoryMap.get(keyword) || 0;
             categoryMap.set(keyword, count + 1);
           });
-        } else if (post.category) {
-          // Also consider the category field if keywords aren't available
-          const count = categoryMap.get(post.category) || 0;
-          categoryMap.set(post.category, count + 1);
         }
       });
       
