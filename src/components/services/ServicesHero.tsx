@@ -8,7 +8,8 @@ import {
   Cloud, 
   ShoppingBag, 
   FileCode, 
-  Award
+  Award,
+  CheckCircle
 } from "lucide-react";
 
 const ServicesHero: React.FC = () => {
@@ -36,35 +37,83 @@ const ServicesHero: React.FC = () => {
         
         {/* Partner Logos Section */}
         <div className="mt-12 mb-8">
-          <p className="text-sm text-muted-foreground mb-6">{t('home.trusted.by')}</p>
+          <p className="text-sm uppercase font-semibold text-muted-foreground mb-6">{t('partners.title')}</p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
-            <div className="flex flex-col items-center">
-              <Chrome size={40} className="text-blue-500 mb-2" />
+            <div className="flex flex-col items-center group hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+                <Chrome size={32} className="text-blue-600" />
+              </div>
               <span className="text-xs font-medium">Google</span>
+              <div className="flex items-center text-green-600 mt-1">
+                <CheckCircle size={12} className="mr-1" />
+                <span className="text-[10px] uppercase font-bold">{t('partners.certified')}</span>
+              </div>
             </div>
-            <div className="flex flex-col items-center">
-              <Facebook size={40} className="text-blue-600 mb-2" />
+            
+            <div className="flex flex-col items-center group hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+                <Facebook size={32} className="text-blue-800" />
+              </div>
               <span className="text-xs font-medium">Meta</span>
+              <div className="flex items-center text-green-600 mt-1">
+                <CheckCircle size={12} className="mr-1" />
+                <span className="text-[10px] uppercase font-bold">{t('partners.certified')}</span>
+              </div>
             </div>
-            <div className="flex flex-col items-center">
-              <Search size={40} className="text-green-500 mb-2" />
+            
+            <div className="flex flex-col items-center group hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-3">
+                <Search size={32} className="text-green-600" />
+              </div>
               <span className="text-xs font-medium">SEMrush</span>
+              <div className="flex items-center text-green-600 mt-1">
+                <CheckCircle size={12} className="mr-1" />
+                <span className="text-[10px] uppercase font-bold">{t('partners.certified')}</span>
+              </div>
             </div>
-            <div className="flex flex-col items-center">
-              <Cloud size={40} className="text-orange-500 mb-2" />
+            
+            <div className="flex flex-col items-center group hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mb-3">
+                <Cloud size={32} className="text-orange-500" />
+              </div>
               <span className="text-xs font-medium">AWS</span>
+              <div className="flex items-center text-green-600 mt-1">
+                <CheckCircle size={12} className="mr-1" />
+                <span className="text-[10px] uppercase font-bold">{t('partners.certified')}</span>
+              </div>
             </div>
-            <div className="flex flex-col items-center">
-              <ShoppingBag size={40} className="text-purple-500 mb-2" />
+            
+            <div className="flex flex-col items-center group hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mb-3">
+                <ShoppingBag size={32} className="text-purple-600" />
+              </div>
               <span className="text-xs font-medium">Magento</span>
+              <div className="flex items-center text-green-600 mt-1">
+                <CheckCircle size={12} className="mr-1" />
+                <span className="text-[10px] uppercase font-bold">{t('partners.certified')}</span>
+              </div>
             </div>
-            <div className="flex flex-col items-center">
-              <FileCode size={40} className="text-blue-400 mb-2" />
+            
+            <div className="flex flex-col items-center group hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-3">
+                <FileCode size={32} className="text-blue-500" />
+              </div>
               <span className="text-xs font-medium">WordPress</span>
+              <div className="flex items-center text-green-600 mt-1">
+                <CheckCircle size={12} className="mr-1" />
+                <span className="text-[10px] uppercase font-bold">{t('partners.certified')}</span>
+              </div>
             </div>
-            <div className="flex flex-col items-center">
-              <Award size={40} className="text-yellow-500 mb-2" />
-              <span className="text-xs font-medium">Certification</span>
+            
+            <div className="flex flex-col items-center group hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mb-3">
+                <Award size={32} className="text-yellow-600" />
+              </div>
+              <span className="text-xs font-medium">{t('partners.title')}</span>
+              <div className="flex items-center text-green-600 mt-1">
+                <CheckCircle size={12} className="mr-1" />
+                <span className="text-[10px] uppercase font-bold">{t('partners.certified')}</span>
+              </div>
             </div>
           </div>
         </div>
