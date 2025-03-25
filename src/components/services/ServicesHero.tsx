@@ -1,6 +1,15 @@
 
 import React from "react";
 import { useLanguage } from "@/lib/i18n";
+import { 
+  Chrome, 
+  Facebook, 
+  Search, 
+  Cloud, 
+  ShoppingBag, 
+  FileCode, 
+  Award
+} from "lucide-react";
 
 const ServicesHero: React.FC = () => {
   const { t } = useLanguage();
@@ -21,9 +30,44 @@ const ServicesHero: React.FC = () => {
           {t('services.title')} <span className="text-gradient">{t('services.subtitle')}</span>
         </h1>
         
-        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto should-animate">
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 should-animate">
           {t('services.description')}
         </p>
+        
+        {/* Partner Logos Section */}
+        <div className="mt-12 mb-8">
+          <p className="text-sm text-muted-foreground mb-6">{t('home.trusted.by')}</p>
+          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+            <div className="flex flex-col items-center">
+              <Chrome size={40} className="text-blue-500 mb-2" />
+              <span className="text-xs font-medium">Google</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <Facebook size={40} className="text-blue-600 mb-2" />
+              <span className="text-xs font-medium">Meta</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <Search size={40} className="text-green-500 mb-2" />
+              <span className="text-xs font-medium">SEMrush</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <Cloud size={40} className="text-orange-500 mb-2" />
+              <span className="text-xs font-medium">AWS</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <ShoppingBag size={40} className="text-purple-500 mb-2" />
+              <span className="text-xs font-medium">Magento</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <FileCode size={40} className="text-blue-400 mb-2" />
+              <span className="text-xs font-medium">WordPress</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <Award size={40} className="text-yellow-500 mb-2" />
+              <span className="text-xs font-medium">Certification</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
