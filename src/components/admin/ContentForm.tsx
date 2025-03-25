@@ -765,6 +765,43 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                 </p>
               </div>
             )}
+            
+            {contentType !== "Page" && contentType === "Page Section" && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="placementSectionId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Place in Section</FormLabel>
+                      <Select 
+                        onValueChange={(value) => field.onChange(parseInt(value))} 
+                        value={field.value?.toString()}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a section" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectGroup>
+                            {pageSections.map(section => (
+                              <SelectItem key={section.id} value={section.id.toString()}>
+                                {section.title}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Choose which section this content should appear in
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
           </TabsContent>
         </Tabs>
         
@@ -782,3 +819,4 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
 };
 
 export default ContentForm;
+
