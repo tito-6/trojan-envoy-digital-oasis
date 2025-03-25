@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
 import PortfolioGallery from "@/components/portfolio/PortfolioGallery";
@@ -9,6 +9,7 @@ import { useLanguage } from "@/lib/i18n";
 
 const Portfolio: React.FC = () => {
   const { t } = useLanguage();
+  const [activeFilter, setActiveFilter] = useState("all");
 
   useEffect(() => {
     // Add fade-in animation to elements with the fade-in-element class
@@ -30,14 +31,18 @@ const Portfolio: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
+  const handleFilterChange = (filter: string) => {
+    setActiveFilter(filter);
+  };
+
   return (
     <div className="min-h-screen">
       <Header />
       
       <main>
         <PortfolioHero />
-        <PortfolioFilters />
-        <PortfolioGallery />
+        <PortfolioFilters onFilterChange={handleFilterChange} />
+        <PortfolioGallery activeFilter={activeFilter} />
       </main>
       
       <Footer />

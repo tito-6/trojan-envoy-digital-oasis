@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, User } from "lucide-react";
@@ -60,7 +61,7 @@ const BlogPost: React.FC<BlogPostProps> = ({
             </div>
             
             <Link 
-              to={`/blog/${slug || title.toLowerCase().replace(/\s+/g, '-')}`}
+              to={`/blog/${slug}`}
               className="inline-flex items-center gap-1 text-primary hover:underline font-medium"
             >
               Read
@@ -73,8 +74,15 @@ const BlogPost: React.FC<BlogPostProps> = ({
   );
 };
 
-const BlogGrid: React.FC = () => {
+interface BlogGridProps {
+  searchTerm?: string;
+  category?: string;
+  tag?: string;
+}
+
+const BlogGrid: React.FC<BlogGridProps> = ({ searchTerm = '', category = '', tag = '' }) => {
   const [blogPosts, setBlogPosts] = useState<ContentItem[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<ContentItem[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const { currentLanguage } = useLanguage();
@@ -117,28 +125,70 @@ const BlogGrid: React.FC = () => {
     };
   }, [currentLanguage]);
   
+  // Filter posts based on search term, category, and tag
+  useEffect(() => {
+    let filtered = [...blogPosts];
+    
+    // Apply search filter
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(post => 
+        post.title.toLowerCase().includes(search) || 
+        post.description.toLowerCase().includes(search) || 
+        (post.content && post.content.toLowerCase().includes(search))
+      );
+    }
+    
+    // Apply category filter
+    if (category) {
+      filtered = filtered.filter(post => 
+        (post.category && post.category.toLowerCase() === category.toLowerCase()) ||
+        (post.seoKeywords && post.seoKeywords.some(kw => kw.toLowerCase() === category.toLowerCase()))
+      );
+    }
+    
+    // Apply tag filter
+    if (tag) {
+      filtered = filtered.filter(post => 
+        post.seoKeywords && post.seoKeywords.some(kw => kw.toLowerCase() === tag.toLowerCase())
+      );
+    }
+    
+    setFilteredPosts(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [blogPosts, searchTerm, category, tag]);
+  
   // Pagination logic
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
-  const currentPosts = blogPosts.slice(indexOfFirstPost, indexOfLastPost);
-  const totalPages = Math.ceil(blogPosts.length / postsPerPage);
+  const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
   
   const paginate = (pageNumber: number) => {
     setCurrentPage(pageNumber);
     window.scrollTo(0, 0);
   };
   
-  // If there are no blog posts from storage, use fallback data
+  // If loading
   if (loading) {
     return <div className="flex justify-center items-center py-12">Loading blog posts...</div>;
   }
   
-  if (currentPosts.length === 0 && !loading) {
+  // If there are no filtered posts
+  if (filteredPosts.length === 0) {
     return (
       <div className="text-center py-12">
         <h3 className="text-xl font-medium mb-4">No blog posts found</h3>
         <p className="text-muted-foreground">
-          There are no published blog posts available at the moment.
+          {searchTerm ? (
+            `No results found for "${searchTerm}". Try a different search term.`
+          ) : category ? (
+            `No posts found in the category "${category}".`
+          ) : tag ? (
+            `No posts found with the tag "${tag}".`
+          ) : (
+            "There are no published blog posts available. Add some from the Content Management System."
+          )}
         </p>
       </div>
     );
@@ -146,6 +196,21 @@ const BlogGrid: React.FC = () => {
   
   return (
     <div className="space-y-8">
+      {(searchTerm || category || tag) && (
+        <div className="mb-6">
+          <h2 className="text-2xl font-display font-bold mb-2">
+            {searchTerm ? (
+              `Search results for "${searchTerm}"`
+            ) : category ? (
+              `Category: ${category}`
+            ) : (
+              `Tag: ${tag}`
+            )}
+          </h2>
+          <p className="text-muted-foreground">Found {filteredPosts.length} posts</p>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 gap-8">
         {currentPosts.map((post, index) => (
           <BlogPost
@@ -153,10 +218,10 @@ const BlogGrid: React.FC = () => {
             title={post.title}
             excerpt={post.description}
             date={post.publishDate || post.lastUpdated}
-            author={post.subtitle || "Admin"}
+            author={post.subtitle || post.author || "Admin"}
             slug={post.slug || `post-${post.id}`}
-            category={post.seoKeywords?.[0] || "Blog"}
-            featured={index === 0}
+            category={post.category || post.seoKeywords?.[0] || "Blog"}
+            featured={index === 0 && currentPage === 1}
             delay={index * 100}
             image={post.images?.[0]}
           />

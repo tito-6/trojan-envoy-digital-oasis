@@ -2,8 +2,29 @@
 import React from "react";
 import { useLanguage } from "@/lib/i18n";
 
-const BlogHero: React.FC = () => {
+interface BlogHeroProps {
+  searchTerm?: string;
+  category?: string;
+  tag?: string;
+}
+
+const BlogHero: React.FC<BlogHeroProps> = ({ searchTerm, category, tag }) => {
   const { t } = useLanguage();
+  
+  // Change the title based on filters
+  let title = "Our Blog";
+  let subtitle = "Explore our articles, guides, and insights on digital trends, technology, and business strategies.";
+  
+  if (searchTerm) {
+    title = `Search Results: "${searchTerm}"`;
+    subtitle = "Browse articles matching your search query";
+  } else if (category) {
+    title = `Category: ${category.charAt(0).toUpperCase() + category.slice(1)}`;
+    subtitle = `Browse all articles in the ${category} category`;
+  } else if (tag) {
+    title = `Tag: ${tag.charAt(0).toUpperCase() + tag.slice(1)}`;
+    subtitle = `Browse all articles with the ${tag} tag`;
+  }
   
   return (
     <section className="pt-32 pb-16 md:pt-40 md:pb-20 relative overflow-hidden">
@@ -14,16 +35,15 @@ const BlogHero: React.FC = () => {
       
       <div className="container mx-auto px-4 text-center">
         <div className="inline-block px-4 py-1.5 rounded-full bg-secondary mb-4 text-sm font-medium should-animate">
-          Our Blog
+          {searchTerm ? "Search Results" : category ? "Category" : tag ? "Tag" : "Blog"}
         </div>
         
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 should-animate">
-          Insights & Resources
+          {title}
         </h1>
         
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto should-animate">
-          Stay updated with the latest trends, expert insights, and practical tips 
-          in digital marketing and development.
+          {subtitle}
         </p>
       </div>
     </section>

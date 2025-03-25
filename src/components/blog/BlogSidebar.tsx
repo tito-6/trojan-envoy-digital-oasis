@@ -1,10 +1,12 @@
 
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Search, Tag, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BlogCategory } from "@/lib/types";
+import { BlogCategory, ContentItem } from "@/lib/types";
+import { storageService } from "@/lib/storage";
+import { useToast } from "@/hooks/use-toast";
 
 interface BlogSidebarProps {
   blogStats?: {
@@ -14,28 +16,43 @@ interface BlogSidebarProps {
 }
 
 const BlogSidebar: React.FC<BlogSidebarProps> = ({ blogStats }) => {
-  // Use provided categories from blogStats or fallback to sample data
-  const categories = blogStats?.categories || [
-    { name: "Development", count: 12 },
-    { name: "SEO", count: 8 },
-    { name: "Marketing", count: 10 },
-    { name: "UX/UI Design", count: 6 },
-    { name: "E-commerce", count: 7 },
-    { name: "Security", count: 4 },
-  ];
+  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
+  const { toast } = useToast();
   
-  // Sample popular posts - ideally these would come from the CMS too
-  const popularPosts = [
-    { title: "10 SEO Strategies for 2023", slug: "seo-strategies-2023", date: "Nov 5, 2023" },
-    { title: "The Future of Mobile App Development", slug: "future-mobile-app-development", date: "Oct 28, 2023" },
-    { title: "Why User Experience Matters", slug: "why-user-experience-matters", date: "Oct 15, 2023" },
-  ];
+  // Use provided categories from blogStats or fallback to empty array
+  const categories = blogStats?.categories || [];
   
-  // Sample tags
-  const tags = [
-    "Development", "SEO", "Marketing", "UX/UI", "Mobile", "Web", "E-commerce", 
-    "Security", "Analytics", "Social Media", "Content", "Branding"
-  ];
+  // Get popular posts from the CMS based on most recent
+  const allContent = storageService.getAllContent();
+  const popularPosts = allContent
+    .filter(item => item.type === "Blog Post" && item.published)
+    .sort((a, b) => {
+      const dateA = a.publishDate || a.lastUpdated;
+      const dateB = b.publishDate || b.lastUpdated;
+      return new Date(dateB).getTime() - new Date(dateA).getTime();
+    })
+    .slice(0, 3);
+  
+  // Extract tags from all blog posts
+  const tags = Array.from(
+    new Set(
+      allContent
+        .filter(item => item.type === "Blog Post" && item.published)
+        .flatMap(post => post.seoKeywords || [])
+    )
+  );
+  
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/blog?search=${encodeURIComponent(searchTerm)}`);
+      toast({
+        title: "Searching for",
+        description: searchTerm,
+      });
+    }
+  };
   
   return (
     <div className="space-y-8 should-animate">
@@ -44,14 +61,18 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({ blogStats }) => {
           <CardTitle>Search</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search posts..."
-              className="w-full pl-10 pr-4 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
+          <form onSubmit={handleSearch}>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Search posts..."
+                className="w-full pl-10 pr-4 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </form>
         </CardContent>
       </Card>
       
@@ -60,19 +81,25 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({ blogStats }) => {
           <CardTitle>Categories</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <ul className="divide-y divide-border">
-            {categories.map((category) => (
-              <li key={category.name}>
-                <Link
-                  to={`/blog/category/${category.name.toLowerCase()}`}
-                  className="flex items-center justify-between px-6 py-3 hover:bg-secondary/50 transition-colors"
-                >
-                  <span>{category.name}</span>
-                  <span className="text-sm text-muted-foreground">({category.count})</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {categories.length > 0 ? (
+            <ul className="divide-y divide-border">
+              {categories.map((category) => (
+                <li key={category.name}>
+                  <Link
+                    to={`/blog/category/${category.name.toLowerCase()}`}
+                    className="flex items-center justify-between px-6 py-3 hover:bg-secondary/50 transition-colors"
+                  >
+                    <span>{category.name}</span>
+                    <span className="text-sm text-muted-foreground">({category.count})</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="px-6 py-4 text-muted-foreground text-sm">
+              No categories found. Add some blog posts with keywords to create categories.
+            </div>
+          )}
         </CardContent>
       </Card>
       
@@ -81,21 +108,29 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({ blogStats }) => {
           <CardTitle>Popular Posts</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <ul className="divide-y divide-border">
-            {popularPosts.map((post) => (
-              <li key={post.slug} className="p-6">
-                <Link
-                  to={`/blog/${post.slug}`}
-                  className="group"
-                >
-                  <h4 className="font-medium group-hover:text-primary transition-colors mb-1">
-                    {post.title}
-                  </h4>
-                  <p className="text-sm text-muted-foreground">{post.date}</p>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {popularPosts.length > 0 ? (
+            <ul className="divide-y divide-border">
+              {popularPosts.map((post) => (
+                <li key={post.id} className="p-6">
+                  <Link
+                    to={`/blog/${post.slug || `post-${post.id}`}`}
+                    className="group"
+                  >
+                    <h4 className="font-medium group-hover:text-primary transition-colors mb-1">
+                      {post.title}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {post.publishDate || post.lastUpdated}
+                    </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="px-6 py-4 text-muted-foreground text-sm">
+              No blog posts found. Add some from the Content Management System.
+            </div>
+          )}
         </CardContent>
       </Card>
       
@@ -107,17 +142,23 @@ const BlogSidebar: React.FC<BlogSidebarProps> = ({ blogStats }) => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <Link
-                key={tag}
-                to={`/blog/tag/${tag.toLowerCase()}`}
-                className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs hover:bg-primary hover:text-primary-foreground transition-colors"
-              >
-                {tag}
-              </Link>
-            ))}
-          </div>
+          {tags.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <Link
+                  key={tag}
+                  to={`/blog/tag/${tag.toLowerCase()}`}
+                  className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs hover:bg-primary hover:text-primary-foreground transition-colors"
+                >
+                  {tag}
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="text-muted-foreground text-sm">
+              No tags found. Add some blog posts with keywords to create tags.
+            </div>
+          )}
         </CardContent>
       </Card>
       

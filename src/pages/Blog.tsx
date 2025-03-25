@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
 import BlogHero from "@/components/blog/BlogHero";
@@ -11,6 +12,14 @@ import { ContentItem, BlogCategory } from "@/lib/types";
 
 const Blog: React.FC = () => {
   const { currentLanguage } = useLanguage();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const searchTerm = searchParams.get('search') || '';
+  const categoryPath = location.pathname.match(/\/category\/(.+)/);
+  const category = categoryPath ? categoryPath[1] : '';
+  const tagPath = location.pathname.match(/\/tag\/(.+)/);
+  const tag = tagPath ? tagPath[1] : '';
+  
   const [blogStats, setBlogStats] = useState<{
     total: number;
     categories: BlogCategory[];
@@ -21,37 +30,46 @@ const Blog: React.FC = () => {
 
   useEffect(() => {
     // Get blog statistics for the sidebar
-    const allContent = storageService.getAllContent();
-    const blogPosts = allContent.filter(item => 
-      item.type === "Blog Post" && 
-      item.published === true &&
-      (!item.language || item.language === currentLanguage)
-    );
+    const loadBlogStats = () => {
+      const allContent = storageService.getAllContent();
+      const blogPosts = allContent.filter(item => 
+        item.type === "Blog Post" && 
+        item.published === true &&
+        (!item.language || item.language === currentLanguage)
+      );
+      
+      // Process categories from the blog post keywords
+      const categoryMap = new Map<string, number>();
+      
+      blogPosts.forEach(post => {
+        if (post.seoKeywords && post.seoKeywords.length > 0) {
+          post.seoKeywords.forEach(keyword => {
+            const count = categoryMap.get(keyword) || 0;
+            categoryMap.set(keyword, count + 1);
+          });
+        } else if (post.category) {
+          // Also consider the category field if keywords aren't available
+          const count = categoryMap.get(post.category) || 0;
+          categoryMap.set(post.category, count + 1);
+        }
+      });
+      
+      const categories: BlogCategory[] = Array.from(categoryMap.entries())
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+      
+      setBlogStats({
+        total: blogPosts.length,
+        categories
+      });
+    };
     
-    // Process categories from the blog post keywords
-    const categoryMap = new Map<string, number>();
+    loadBlogStats();
     
-    blogPosts.forEach(post => {
-      if (post.seoKeywords && post.seoKeywords.length > 0) {
-        post.seoKeywords.forEach(keyword => {
-          const count = categoryMap.get(keyword) || 0;
-          categoryMap.set(keyword, count + 1);
-        });
-      } else if (post.category) {
-        // Also consider the category field if keywords aren't available
-        const count = categoryMap.get(post.category) || 0;
-        categoryMap.set(post.category, count + 1);
-      }
-    });
-    
-    const categories: BlogCategory[] = Array.from(categoryMap.entries())
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count);
-    
-    setBlogStats({
-      total: blogPosts.length,
-      categories
-    });
+    // Subscribe to content changes
+    const unsubscribe = storageService.addEventListener('content-updated', loadBlogStats);
+    const unsubscribeAdded = storageService.addEventListener('content-added', loadBlogStats);
+    const unsubscribeDeleted = storageService.addEventListener('content-deleted', loadBlogStats);
     
     // Add fade-in animation to elements
     const observer = new IntersectionObserver((entries) => {
@@ -69,7 +87,12 @@ const Blog: React.FC = () => {
     // Scroll to top on page load
     window.scrollTo(0, 0);
 
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      unsubscribe();
+      unsubscribeAdded();
+      unsubscribeDeleted();
+    };
   }, [currentLanguage]);
 
   return (
@@ -77,10 +100,18 @@ const Blog: React.FC = () => {
       <Header />
       
       <main>
-        <BlogHero />
+        <BlogHero 
+          searchTerm={searchTerm}
+          category={category}
+          tag={tag}
+        />
         <div className="container mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-12 gap-8">
           <div className="lg:col-span-8">
-            <BlogGrid />
+            <BlogGrid 
+              searchTerm={searchTerm}
+              category={category}
+              tag={tag}
+            />
           </div>
           <div className="lg:col-span-4">
             <BlogSidebar blogStats={blogStats} />

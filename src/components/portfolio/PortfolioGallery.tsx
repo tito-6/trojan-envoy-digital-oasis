@@ -1,26 +1,35 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { storageService } from "@/lib/storage";
+import { ContentItem } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 interface PortfolioItemProps {
   title: string;
   category: string;
   description: string;
-  image: string;
+  image?: string;
   delay: number;
+  slug: string;
+  externalUrl?: string;
 }
 
 const PortfolioItem: React.FC<PortfolioItemProps> = ({ 
-  title, category, description, image, delay 
+  title, category, description, image, delay, slug, externalUrl
 }) => {
   return (
     <Card className={`overflow-hidden hover:shadow-lg transition-all duration-300 should-animate delay-${delay}`}>
       <div className="relative aspect-video overflow-hidden bg-secondary">
-        <div className="absolute inset-0 flex items-center justify-center bg-muted-foreground/10">
-          <span className="text-muted-foreground">Project Image</span>
-        </div>
+        {image ? (
+          <img src={image} alt={title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted-foreground/10">
+            <span className="text-muted-foreground">Project Image</span>
+          </div>
+        )}
       </div>
       
       <CardContent className="p-6">
@@ -31,21 +40,23 @@ const PortfolioItem: React.FC<PortfolioItemProps> = ({
           
           <div className="mt-auto flex justify-between items-center pt-4">
             <Link 
-              to={`/portfolio/${title.toLowerCase().replace(/\s+/g, '-')}`}
+              to={`/portfolio/${slug}`}
               className="inline-flex items-center gap-1.5 text-sm font-medium hover:underline"
             >
               View Project
               <ArrowRight className="w-4 h-4" />
             </Link>
             
-            <a 
-              href="#" 
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
+            {externalUrl && (
+              <a 
+                href={externalUrl} 
+                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            )}
           </div>
         </div>
       </CardContent>
@@ -53,59 +64,102 @@ const PortfolioItem: React.FC<PortfolioItemProps> = ({
   );
 };
 
-const PortfolioGallery: React.FC = () => {
-  // Sample portfolio items
-  const portfolioItems = [
-    {
-      title: "E-commerce Platform",
-      category: "Web Development",
-      description: "A fully responsive e-commerce platform with advanced filtering and secure payment processing.",
-      image: "ecommerce.jpg",
-    },
-    {
-      title: "Healthcare Mobile App",
-      category: "Mobile Apps",
-      description: "A patient-centered mobile application for healthcare providers with appointment scheduling and telehealth features.",
-      image: "healthcare.jpg",
-    },
-    {
-      title: "Real Estate Website",
-      category: "Web Development",
-      description: "A premium real estate website with property listings, virtual tours, and agent profiles.",
-      image: "realestate.jpg",
-    },
-    {
-      title: "Food Delivery App",
-      category: "Mobile Apps",
-      description: "A food delivery application with real-time order tracking and seamless payment integration.",
-      image: "foodapp.jpg",
-    },
-    {
-      title: "Corporate Rebrand",
-      category: "Branding",
-      description: "Complete corporate rebranding including logo design, visual identity, and brand guidelines.",
-      image: "branding.jpg",
-    },
-    {
-      title: "Marketing Campaign",
-      category: "Digital Marketing",
-      description: "A multi-channel digital marketing campaign that increased client's conversion rates by 45%.",
-      image: "marketing.jpg",
-    },
-  ];
+interface PortfolioGalleryProps {
+  activeFilter: string;
+}
+
+const PortfolioGallery: React.FC<PortfolioGalleryProps> = ({ activeFilter }) => {
+  const [portfolioItems, setPortfolioItems] = useState<ContentItem[]>([]);
+  const [filteredItems, setFilteredItems] = useState<ContentItem[]>([]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Load portfolio items from CMS
+    const loadPortfolioItems = () => {
+      const allContent = storageService.getAllContent();
+      const items = allContent.filter(item => 
+        item.type === "Portfolio" && 
+        item.published === true
+      );
+      
+      // Sort by the most recently updated
+      const sortedItems = [...items].sort((a, b) => {
+        return new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime();
+      });
+      
+      setPortfolioItems(sortedItems);
+    };
+    
+    loadPortfolioItems();
+    
+    // Subscribe to content changes
+    const unsubscribe = storageService.addEventListener('content-updated', loadPortfolioItems);
+    const unsubscribeAdded = storageService.addEventListener('content-added', loadPortfolioItems);
+    const unsubscribeDeleted = storageService.addEventListener('content-deleted', loadPortfolioItems);
+    
+    return () => {
+      unsubscribe();
+      unsubscribeAdded();
+      unsubscribeDeleted();
+    };
+  }, []);
+  
+  useEffect(() => {
+    // Filter items when the active filter changes
+    if (activeFilter === "all") {
+      setFilteredItems(portfolioItems);
+    } else {
+      setFilteredItems(portfolioItems.filter(item => {
+        const categoryMatch = item.category && 
+          item.category.toLowerCase() === activeFilter;
+        
+        const keywordMatch = item.seoKeywords && 
+          item.seoKeywords.some(keyword => keyword.toLowerCase() === activeFilter);
+        
+        return categoryMatch || keywordMatch;
+      }));
+    }
+  }, [activeFilter, portfolioItems]);
+  
+  // If no real items are available yet, show a message
+  if (portfolioItems.length === 0) {
+    return (
+      <section className="py-16">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-muted-foreground">
+            No portfolio items found. Add some from the Content Management System.
+          </p>
+        </div>
+      </section>
+    );
+  }
   
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {portfolioItems.map((item, index) => (
+          {filteredItems.map((item, index) => (
             <PortfolioItem
-              key={item.title}
-              {...item}
+              key={item.id}
+              title={item.title}
+              category={item.category || item.seoKeywords?.[0] || "Project"}
+              description={item.description}
+              image={item.images?.[0]}
               delay={index * 100}
+              slug={item.slug || `project-${item.id}`}
+              externalUrl={item.content?.includes("http") ? item.content : undefined}
             />
           ))}
         </div>
+        
+        {filteredItems.length === 0 && (
+          <div className="text-center py-12">
+            <h3 className="text-xl font-medium mb-4">No projects found</h3>
+            <p className="text-muted-foreground">
+              No projects match the selected filter. Try another category.
+            </p>
+          </div>
+        )}
         
         <div className="mt-16 text-center should-animate">
           <p className="text-muted-foreground mb-6">

@@ -1,9 +1,10 @@
-
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Code, Smartphone, Paintbrush, BarChart, Globe, ShoppingCart } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/lib/i18n";
+import { storageService } from "@/lib/storage";
+import { ContentItem } from "@/lib/types";
 
 interface ServiceCardProps {
   title: string;
@@ -50,101 +51,99 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   );
 };
 
+const getIconForService = (title: string) => {
+  const normalizedTitle = title.toLowerCase();
+  if (normalizedTitle.includes('web')) return <Code className="w-5 h-5 text-primary" />;
+  if (normalizedTitle.includes('mobile')) return <Smartphone className="w-5 h-5 text-primary" />;
+  if (normalizedTitle.includes('ui') || normalizedTitle.includes('ux') || normalizedTitle.includes('design')) return <Paintbrush className="w-5 h-5 text-primary" />;
+  if (normalizedTitle.includes('market')) return <BarChart className="w-5 h-5 text-primary" />;
+  if (normalizedTitle.includes('seo')) return <Globe className="w-5 h-5 text-primary" />;
+  if (normalizedTitle.includes('commerce')) return <ShoppingCart className="w-5 h-5 text-primary" />;
+  return <Code className="w-5 h-5 text-primary" />;
+};
+
 const ServicesList: React.FC = () => {
   const { t } = useLanguage();
+  const [services, setServices] = useState<ContentItem[]>([]);
   
-  const services = [
-    {
-      title: "Web Development",
-      description: "Custom websites with pixel-perfect design and optimized performance",
-      icon: <Code className="w-5 h-5 text-primary" />,
-      features: [
-        "Responsive design for all devices",
-        "CMS integration",
-        "E-commerce functionality",
-        "Fast loading and optimized performance",
-        "SEO-friendly structure"
-      ],
-      link: "/services/web-development",
-    },
-    {
-      title: "Mobile Development",
-      description: "Native and cross-platform mobile applications",
-      icon: <Smartphone className="w-5 h-5 text-primary" />,
-      features: [
-        "iOS and Android development",
-        "Cross-platform solutions",
-        "User-centric interfaces",
-        "Offline capabilities",
-        "App store optimization"
-      ],
-      link: "/services/mobile-development",
-    },
-    {
-      title: "UI/UX Design",
-      description: "Intuitive interfaces and exceptional user experiences",
-      icon: <Paintbrush className="w-5 h-5 text-primary" />,
-      features: [
-        "User research and testing",
-        "Wireframing and prototyping",
-        "Visual design and branding",
-        "Interaction design",
-        "Accessibility compliance"
-      ],
-      link: "/services/ui-ux-design",
-    },
-    {
-      title: "Digital Marketing",
-      description: "Data-driven strategies to grow your online presence",
-      icon: <BarChart className="w-5 h-5 text-primary" />,
-      features: [
-        "Search engine optimization (SEO)",
-        "Pay-per-click advertising (PPC)",
-        "Social media marketing",
-        "Content marketing",
-        "Analytics and reporting"
-      ],
-      link: "/services/digital-marketing",
-    },
-    {
-      title: "SEO Services",
-      description: "Boost visibility and drive organic traffic to your website",
-      icon: <Globe className="w-5 h-5 text-primary" />,
-      features: [
-        "Keyword research and analysis",
-        "On-page and off-page optimization",
-        "Technical SEO audits",
-        "Local SEO strategies",
-        "Rank tracking and reporting"
-      ],
-      link: "/services/seo-services",
-    },
-    {
-      title: "E-commerce Solutions",
-      description: "End-to-end online shopping experiences that convert",
-      icon: <ShoppingCart className="w-5 h-5 text-primary" />,
-      features: [
-        "Custom e-commerce development",
-        "Payment gateway integration",
-        "Inventory management",
-        "Mobile shopping experiences",
-        "Conversion rate optimization"
-      ],
-      link: "/services/ecommerce-solutions",
-    },
-  ];
-
+  useEffect(() => {
+    const loadServices = () => {
+      const allContent = storageService.getAllContent();
+      const serviceItems = allContent.filter(item => 
+        item.type === "Service" && item.published === true
+      );
+      
+      const sortedServices = [...serviceItems].sort((a, b) => {
+        if (a.order !== undefined && b.order !== undefined) {
+          return a.order - b.order;
+        }
+        return a.title.localeCompare(b.title);
+      });
+      
+      setServices(sortedServices);
+    };
+    
+    loadServices();
+    
+    const unsubscribe = storageService.addEventListener('content-updated', loadServices);
+    const unsubscribeAdded = storageService.addEventListener('content-added', loadServices);
+    const unsubscribeDeleted = storageService.addEventListener('content-deleted', loadServices);
+    
+    return () => {
+      unsubscribe();
+      unsubscribeAdded();
+      unsubscribeDeleted();
+    };
+  }, []);
+  
+  const parseFeatures = (content?: string): string[] => {
+    if (!content) return [];
+    
+    if (content.includes('- ') || content.includes('• ')) {
+      return content
+        .split(/\n/)
+        .map(line => line.replace(/^[-•]\s*/, '').trim())
+        .filter(Boolean);
+    }
+    
+    return content
+      .split(/\n/)
+      .map(line => line.trim())
+      .filter(Boolean)
+      .slice(0, 5);
+  };
+  
+  if (services.length === 0) {
+    return (
+      <section className="py-16 md:py-24">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-muted-foreground">
+            No services found. Add some from the Content Management System.
+          </p>
+        </div>
+      </section>
+    );
+  }
+  
   return (
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {services.map((service, index) => (
-            <ServiceCard
-              key={service.title}
-              {...service}
-              delay={index * 100}
-            />
-          ))}
+          {services.map((service, index) => {
+            const features = parseFeatures(service.content);
+            
+            return (
+              <ServiceCard
+                key={service.id}
+                title={service.title}
+                description={service.description}
+                icon={getIconForService(service.title)}
+                features={features.length > 0 ? features : ["Service details coming soon"]}
+                link={`/services/${service.slug || service.title.toLowerCase().replace(/\s+/g, '-')}`}
+                delay={index * 100}
+              />
+            );
+          })}
         </div>
       </div>
     </section>
