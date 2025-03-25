@@ -4,7 +4,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import ContentForm from "@/components/admin/ContentForm";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { 
   Plus, 
   Search, 
@@ -14,39 +14,60 @@ import {
   Edit, 
   Filter,
   ArrowUpDown,
-  GanttChart
+  GanttChart,
+  Globe,
+  Menu
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { storageService } from "@/lib/storage";
-import { ContentItem } from "@/lib/types";
+import { ContentItem, NavigationItem } from "@/lib/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Label } from "@/components/ui/label";
+import { availableLanguages } from "@/lib/i18n";
 
 const AdminContent: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [contentItems, setContentItems] = useState<ContentItem[]>([]);
+  const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
   const [isNewContentDialogOpen, setIsNewContentDialogOpen] = useState(false);
   const [isEditContentDialogOpen, setIsEditContentDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isNavigationDialogOpen, setIsNavigationDialogOpen] = useState(false);
   const [itemToEdit, setItemToEdit] = useState<ContentItem | null>(null);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [sortField, setSortField] = useState<keyof ContentItem>('lastUpdated');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [activeTab, setActiveTab] = useState("all");
   const { toast } = useToast();
   
   // Load content from storage service
   useEffect(() => {
     loadContent();
+    loadNavigation();
     
     // Subscribe to content changes
-    const unsubscribeAdded = storageService.addEventListener('content-added', () => loadContent());
-    const unsubscribeUpdated = storageService.addEventListener('content-updated', () => loadContent());
-    const unsubscribeDeleted = storageService.addEventListener('content-deleted', () => loadContent());
+    const unsubscribeAdded = storageService.addEventListener('content-added', () => {
+      loadContent();
+      loadNavigation();
+    });
+    const unsubscribeUpdated = storageService.addEventListener('content-updated', () => {
+      loadContent();
+      loadNavigation();
+    });
+    const unsubscribeDeleted = storageService.addEventListener('content-deleted', () => {
+      loadContent();
+      loadNavigation();
+    });
+    const unsubscribeNavUpdated = storageService.addEventListener('navigation-updated', () => loadNavigation());
     
     return () => {
       unsubscribeAdded();
       unsubscribeUpdated();
       unsubscribeDeleted();
+      unsubscribeNavUpdated();
     };
   }, []);
   
@@ -55,11 +76,24 @@ const AdminContent: React.FC = () => {
     setContentItems(content);
   };
   
-  // Filter content based on search and type filter
+  const loadNavigation = () => {
+    const navigation = storageService.getAllNavigationItems();
+    setNavigationItems(navigation);
+  };
+  
+  // Filter content based on search, type filter, and active tab
   const filteredContent = contentItems.filter(item => {
     const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = selectedType ? item.type === selectedType : true;
-    return matchesSearch && matchesType;
+    const matchesLanguage = selectedLanguage ? item.language === selectedLanguage : true;
+    const matchesTab = activeTab === "all" || 
+                       (activeTab === "pages" && item.type === "Page") ||
+                       (activeTab === "sections" && item.type === "Page Section") ||
+                       (activeTab === "blog" && item.type === "Blog Post") ||
+                       (activeTab === "services" && item.type === "Service") ||
+                       (activeTab === "portfolio" && item.type === "Portfolio");
+    
+    return matchesSearch && matchesType && matchesLanguage && matchesTab;
   });
   
   // Sort content
@@ -94,6 +128,10 @@ const AdminContent: React.FC = () => {
   
   const handleSaveContent = (values: any) => {
     // In a real application, this would send the data to a backend API
+    const placement = values.placement && (values.placement.pageId || values.placement.sectionId || values.placement.position) 
+      ? values.placement 
+      : undefined;
+    
     const newContent = storageService.addContent({
       title: values.title,
       type: values.type,
@@ -103,8 +141,11 @@ const AdminContent: React.FC = () => {
       seoDescription: values.seoDescription,
       seoKeywords: values.keywords,
       content: values.content,
-      published: true,
-      slug: values.title.toLowerCase().replace(/\s+/g, '-'),
+      published: values.published,
+      slug: values.slug,
+      showInNavigation: values.showInNavigation,
+      language: values.language,
+      placement,
       images: values.images?.map((img: File) => URL.createObjectURL(img)) || [],
       videos: values.videos || [],
       documents: values.documents?.map((doc: File) => URL.createObjectURL(doc)) || []
@@ -122,6 +163,10 @@ const AdminContent: React.FC = () => {
   const handleUpdateContent = (values: any) => {
     if (!itemToEdit) return;
     
+    const placement = values.placement && (values.placement.pageId || values.placement.sectionId || values.placement.position) 
+      ? values.placement 
+      : undefined;
+    
     const updatedContent = storageService.updateContent(itemToEdit.id, {
       title: values.title,
       type: values.type,
@@ -131,7 +176,11 @@ const AdminContent: React.FC = () => {
       seoDescription: values.seoDescription,
       seoKeywords: values.keywords,
       content: values.content,
-      slug: values.title.toLowerCase().replace(/\s+/g, '-'),
+      slug: values.slug,
+      showInNavigation: values.showInNavigation,
+      language: values.language,
+      placement,
+      published: values.published,
       // Handle file uploads properly in a real application
       images: values.images?.map((img: File | string) => 
         typeof img === 'string' ? img : URL.createObjectURL(img)
@@ -201,12 +250,27 @@ const AdminContent: React.FC = () => {
               <Plus className="w-4 h-4 mr-2" />
               Add New Content
             </Button>
+            <Button variant="outline" onClick={() => setIsNavigationDialogOpen(true)}>
+              <Menu className="w-4 h-4 mr-2" />
+              Manage Navigation
+            </Button>
             <Button variant="outline">
               <GanttChart className="w-4 h-4 mr-2" />
               Content Structure
             </Button>
           </div>
         </div>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList className="w-full mb-6">
+            <TabsTrigger value="all" className="flex-1">All Content</TabsTrigger>
+            <TabsTrigger value="pages" className="flex-1">Pages</TabsTrigger>
+            <TabsTrigger value="sections" className="flex-1">Page Sections</TabsTrigger>
+            <TabsTrigger value="blog" className="flex-1">Blog Posts</TabsTrigger>
+            <TabsTrigger value="services" className="flex-1">Services</TabsTrigger>
+            <TabsTrigger value="portfolio" className="flex-1">Portfolio</TabsTrigger>
+          </TabsList>
+        </Tabs>
         
         <div className="bg-card border border-border rounded-lg shadow-sm">
           <div className="p-4 border-b border-border">
@@ -222,18 +286,36 @@ const AdminContent: React.FC = () => {
                 />
               </div>
               
-              <div className="relative">
-                <select
-                  className="w-full md:w-48 px-4 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none pl-4 pr-10"
-                  value={selectedType || ""}
-                  onChange={(e) => setSelectedType(e.target.value || null)}
-                >
-                  <option value="">All Types</option>
-                  {contentTypes.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-                <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative">
+                  <select
+                    className="w-full md:w-48 px-4 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none pl-4 pr-10"
+                    value={selectedType || ""}
+                    onChange={(e) => setSelectedType(e.target.value || null)}
+                  >
+                    <option value="">All Types</option>
+                    {contentTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                  <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
+                </div>
+                
+                {activeTab === "blog" && (
+                  <div className="relative">
+                    <select
+                      className="w-full md:w-48 px-4 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none pl-4 pr-10"
+                      value={selectedLanguage || ""}
+                      onChange={(e) => setSelectedLanguage(e.target.value || null)}
+                    >
+                      <option value="">All Languages</option>
+                      {availableLanguages.map(lang => (
+                        <option key={lang.code} value={lang.code}>{lang.name}</option>
+                      ))}
+                    </select>
+                    <Globe className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -266,6 +348,14 @@ const AdminContent: React.FC = () => {
                       <ArrowUpDown className="w-3 h-3" />
                     </div>
                   </th>
+                  {activeTab === "blog" && (
+                    <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
+                      <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('language')}>
+                        <span>LANGUAGE</span>
+                        <ArrowUpDown className="w-3 h-3" />
+                      </div>
+                    </th>
+                  )}
                   <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
                     <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('lastUpdated')}>
                       <span>LAST UPDATED</span>
@@ -292,6 +382,9 @@ const AdminContent: React.FC = () => {
                             <FileText className="w-4 h-4 text-gray-500" />
                           )}
                           <span className="font-medium">{item.title}</span>
+                          {item.type === "Page" && item.showInNavigation && (
+                            <Badge variant="secondary" className="ml-2">In Navigation</Badge>
+                          )}
                         </div>
                       </td>
                       <td className="py-3 px-4 text-sm">
@@ -304,6 +397,17 @@ const AdminContent: React.FC = () => {
                           {item.published ? "Published" : "Draft"}
                         </Badge>
                       </td>
+                      {activeTab === "blog" && (
+                        <td className="py-3 px-4 text-sm">
+                          {item.language ? (
+                            <Badge variant="secondary">
+                              {availableLanguages.find(lang => lang.code === item.language)?.name || item.language}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">Default</span>
+                          )}
+                        </td>
+                      )}
                       <td className="py-3 px-4 text-sm">{item.lastUpdated}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
@@ -329,7 +433,7 @@ const AdminContent: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={activeTab === "blog" ? 7 : 6} className="py-8 text-center text-muted-foreground">
                       No content found matching your criteria
                     </td>
                   </tr>
@@ -357,9 +461,12 @@ const AdminContent: React.FC = () => {
 
       {/* New Content Dialog */}
       <Dialog open={isNewContentDialogOpen} onOpenChange={setIsNewContentDialogOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Content</DialogTitle>
+            <DialogDescription>
+              Create new content that will be instantly available on your website
+            </DialogDescription>
           </DialogHeader>
           <ContentForm 
             onSave={handleSaveContent}
@@ -370,9 +477,12 @@ const AdminContent: React.FC = () => {
 
       {/* Edit Content Dialog */}
       <Dialog open={isEditContentDialogOpen} onOpenChange={setIsEditContentDialogOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Content</DialogTitle>
+            <DialogDescription>
+              Make changes to your content. All updates will be immediately reflected on your website.
+            </DialogDescription>
           </DialogHeader>
           {itemToEdit && (
             <ContentForm 
@@ -388,7 +498,12 @@ const AdminContent: React.FC = () => {
                 keywords: itemToEdit.seoKeywords || [],
                 images: itemToEdit.images || [],
                 videos: itemToEdit.videos || [],
-                documents: itemToEdit.documents || []
+                documents: itemToEdit.documents || [],
+                published: itemToEdit.published,
+                slug: itemToEdit.slug || '',
+                showInNavigation: itemToEdit.showInNavigation || false,
+                language: itemToEdit.language || 'en',
+                placement: itemToEdit.placement
               }}
               onSave={handleUpdateContent}
               onCancel={() => {
@@ -414,6 +529,66 @@ const AdminContent: React.FC = () => {
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
               Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Navigation Manager Dialog */}
+      <Dialog open={isNavigationDialogOpen} onOpenChange={setIsNavigationDialogOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Manage Navigation</DialogTitle>
+            <DialogDescription>
+              Organize and customize your website's main navigation menu
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="bg-muted p-4 rounded-md">
+              <p className="text-sm">
+                The navigation menu is automatically updated when you create or edit pages with the "Show in Navigation" option enabled.
+              </p>
+            </div>
+            
+            <div className="border rounded-md">
+              <div className="p-3 border-b bg-secondary/20">
+                <div className="grid grid-cols-6 gap-2 text-sm font-medium">
+                  <div className="col-span-1">Order</div>
+                  <div className="col-span-2">Label</div>
+                  <div className="col-span-2">Path</div>
+                  <div className="col-span-1">Actions</div>
+                </div>
+              </div>
+              
+              <div className="divide-y">
+                {navigationItems.length > 0 ? (
+                  navigationItems
+                    .sort((a, b) => a.order - b.order)
+                    .map((item) => (
+                      <div key={item.id} className="p-3 grid grid-cols-6 gap-2 items-center">
+                        <div className="col-span-1 text-sm">{item.order}</div>
+                        <div className="col-span-2 font-medium">{item.label}</div>
+                        <div className="col-span-2 text-sm text-muted-foreground">{item.path}</div>
+                        <div className="col-span-1 flex space-x-1">
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                ) : (
+                  <div className="p-6 text-center text-muted-foreground">
+                    No navigation items found
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex justify-end">
+            <Button onClick={() => setIsNavigationDialogOpen(false)}>
+              Close
             </Button>
           </div>
         </DialogContent>

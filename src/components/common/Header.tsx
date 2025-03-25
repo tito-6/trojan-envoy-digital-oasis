@@ -6,10 +6,13 @@ import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import LanguageSelector from "@/components/ui/LanguageSelector";
 import { useLanguage } from "@/lib/i18n";
+import { storageService } from "@/lib/storage";
+import { NavigationItem } from "@/lib/types";
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -19,6 +22,25 @@ const Header: React.FC = () => {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Load navigation items from storage
+  useEffect(() => {
+    const loadNavigation = () => {
+      const items = storageService.getAllNavigationItems();
+      // Sort by order
+      const sortedItems = [...items].sort((a, b) => a.order - b.order);
+      setNavigationItems(sortedItems);
+    };
+    
+    loadNavigation();
+    
+    // Subscribe to navigation changes
+    const unsubscribe = storageService.addEventListener('navigation-updated', () => {
+      loadNavigation();
+    });
+    
+    return () => unsubscribe();
   }, []);
 
   const toggleMobileMenu = () => {
@@ -34,15 +56,6 @@ const Header: React.FC = () => {
     setIsMobileMenuOpen(false);
     document.body.style.overflow = "auto";
   };
-
-  const navItems = [
-    { label: t('nav.home'), path: "/" },
-    { label: t('nav.services'), path: "/services" },
-    { label: t('nav.about'), path: "/about" },
-    { label: t('nav.portfolio'), path: "/portfolio" },
-    { label: t('nav.blog'), path: "/blog" },
-    { label: t('nav.contact'), path: "/contact" },
-  ];
 
   return (
     <header
@@ -64,7 +77,7 @@ const Header: React.FC = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-1">
-            {navItems.map((item) => (
+            {navigationItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
@@ -106,7 +119,7 @@ const Header: React.FC = () => {
         )}
       >
         <nav className="flex flex-col gap-2">
-          {navItems.map((item) => (
+          {navigationItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}

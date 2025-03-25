@@ -1,18 +1,28 @@
 
-import { ContentItem, ContactRequest, User } from './types';
+import { ContentItem, ContactRequest, User, NavigationItem } from './types';
 
 // Initial sample data for content
 const initialContent: ContentItem[] = [
   { id: 1, title: "Home Hero Section", type: "Page Section", description: "Main hero section for homepage", lastUpdated: "2023-11-05", published: true },
-  { id: 2, title: "About Us Page", type: "Page", description: "Company about page", lastUpdated: "2023-10-28", published: true },
+  { id: 2, title: "About Us Page", type: "Page", description: "Company about page", lastUpdated: "2023-10-28", published: true, slug: "about", showInNavigation: true },
   { id: 3, title: "Web Development Services", type: "Service", description: "Web development services", lastUpdated: "2023-10-15", published: true },
   { id: 4, title: "Mobile App Development", type: "Service", description: "Mobile app development", lastUpdated: "2023-10-10", published: true },
   { id: 5, title: "Digital Marketing Overview", type: "Service", description: "Digital marketing services", lastUpdated: "2023-09-22", published: true },
   { id: 6, title: "E-commerce Project", type: "Portfolio", description: "E-commerce project showcase", lastUpdated: "2023-09-15", published: true },
   { id: 7, title: "Healthcare Mobile App", type: "Portfolio", description: "Healthcare app showcase", lastUpdated: "2023-09-10", published: true },
-  { id: 8, title: "Top 10 SEO Strategies", type: "Blog Post", description: "SEO strategies blog post", lastUpdated: "2023-08-28", published: true },
+  { id: 8, title: "Top 10 SEO Strategies", type: "Blog Post", description: "SEO strategies blog post", lastUpdated: "2023-08-28", published: true, language: "en" },
   { id: 9, title: "Contact Information", type: "Page Section", description: "Contact info section", lastUpdated: "2023-08-15", published: true },
   { id: 10, title: "Company Values", type: "Page Section", description: "Company values section", lastUpdated: "2023-08-05", published: true },
+];
+
+// Initial navigation items
+const initialNavigation: NavigationItem[] = [
+  { id: 1, label: "Home", path: "/", order: 1 },
+  { id: 2, label: "Services", path: "/services", order: 2 },
+  { id: 3, label: "About", path: "/about", order: 3 },
+  { id: 4, label: "Portfolio", path: "/portfolio", order: 4 },
+  { id: 5, label: "Blog", path: "/blog", order: 5 },
+  { id: 6, label: "Contact", path: "/contact", order: 6 },
 ];
 
 // Initial sample users
@@ -31,6 +41,7 @@ class StorageService {
   private contentKey = 'trojan-envoy-content';
   private usersKey = 'trojan-envoy-users';
   private contactsKey = 'trojan-envoy-contacts';
+  private navigationKey = 'trojan-envoy-navigation';
   private eventListeners: Record<string, Function[]> = {};
 
   constructor() {
@@ -49,6 +60,10 @@ class StorageService {
     
     if (!localStorage.getItem(this.contactsKey)) {
       localStorage.setItem(this.contactsKey, JSON.stringify(initialContacts));
+    }
+    
+    if (!localStorage.getItem(this.navigationKey)) {
+      localStorage.setItem(this.navigationKey, JSON.stringify(initialNavigation));
     }
   }
 
@@ -105,6 +120,15 @@ class StorageService {
     allContent.push(newContent);
     localStorage.setItem(this.contentKey, JSON.stringify(allContent));
     
+    // If this is a page and should be shown in navigation, add it to nav items
+    if (content.type === 'Page' && content.showInNavigation && content.slug) {
+      this.addNavigationItem({
+        label: content.title,
+        path: `/${content.slug}`,
+        order: this.getAllNavigationItems().length + 1
+      });
+    }
+    
     // Dispatch event for real-time updates
     this.dispatchEvent('content-added', newContent);
     
@@ -117,14 +141,40 @@ class StorageService {
     
     if (index === -1) return null;
     
+    const originalContent = allContent[index];
     const updatedContent = {
-      ...allContent[index],
+      ...originalContent,
       ...content,
       lastUpdated: new Date().toISOString().split('T')[0]
     };
     
     allContent[index] = updatedContent;
     localStorage.setItem(this.contentKey, JSON.stringify(allContent));
+    
+    // Handle navigation changes if this is a page and navigation status changed
+    if (updatedContent.type === 'Page') {
+      const navItem = this.getNavigationItemByPath(`/${updatedContent.slug || ''}`);
+      
+      // If should show in nav but no nav item exists
+      if (updatedContent.showInNavigation && !navItem && updatedContent.slug) {
+        this.addNavigationItem({
+          label: updatedContent.title,
+          path: `/${updatedContent.slug}`,
+          order: this.getAllNavigationItems().length + 1
+        });
+      } 
+      // If exists in nav but should not show or the path changed
+      else if (navItem) {
+        if (!updatedContent.showInNavigation) {
+          this.deleteNavigationItem(navItem.id);
+        } else if (originalContent.title !== updatedContent.title || originalContent.slug !== updatedContent.slug) {
+          this.updateNavigationItem(navItem.id, {
+            label: updatedContent.title,
+            path: `/${updatedContent.slug}`
+          });
+        }
+      }
+    }
     
     // Dispatch event for real-time updates
     this.dispatchEvent('content-updated', updatedContent);
@@ -134,14 +184,78 @@ class StorageService {
 
   deleteContent(id: number): boolean {
     const allContent = this.getAllContent();
+    const contentToDelete = allContent.find(item => item.id === id);
     const filteredContent = allContent.filter(item => item.id !== id);
     
     if (filteredContent.length === allContent.length) return false;
     
     localStorage.setItem(this.contentKey, JSON.stringify(filteredContent));
     
+    // If this was a page in navigation, remove from navigation
+    if (contentToDelete?.type === 'Page' && contentToDelete.showInNavigation && contentToDelete.slug) {
+      const navItem = this.getNavigationItemByPath(`/${contentToDelete.slug}`);
+      if (navItem) {
+        this.deleteNavigationItem(navItem.id);
+      }
+    }
+    
     // Dispatch event for real-time updates
     this.dispatchEvent('content-deleted', id);
+    
+    return true;
+  }
+
+  // NAVIGATION METHODS
+  getAllNavigationItems(): NavigationItem[] {
+    const navItems = localStorage.getItem(this.navigationKey);
+    return navItems ? JSON.parse(navItems) : [];
+  }
+
+  getNavigationItemById(id: number): NavigationItem | undefined {
+    return this.getAllNavigationItems().find(item => item.id === id);
+  }
+
+  getNavigationItemByPath(path: string): NavigationItem | undefined {
+    return this.getAllNavigationItems().find(item => item.path === path);
+  }
+
+  addNavigationItem(item: Omit<NavigationItem, 'id'>): NavigationItem {
+    const allItems = this.getAllNavigationItems();
+    const newId = allItems.length > 0 ? Math.max(...allItems.map(i => i.id)) + 1 : 1;
+    
+    const newItem: NavigationItem = { ...item, id: newId };
+    allItems.push(newItem);
+    localStorage.setItem(this.navigationKey, JSON.stringify(allItems));
+    
+    this.dispatchEvent('navigation-updated', this.getAllNavigationItems());
+    
+    return newItem;
+  }
+
+  updateNavigationItem(id: number, item: Partial<NavigationItem>): NavigationItem | null {
+    const allItems = this.getAllNavigationItems();
+    const index = allItems.findIndex(i => i.id === id);
+    
+    if (index === -1) return null;
+    
+    const updatedItem = { ...allItems[index], ...item };
+    allItems[index] = updatedItem;
+    localStorage.setItem(this.navigationKey, JSON.stringify(allItems));
+    
+    this.dispatchEvent('navigation-updated', this.getAllNavigationItems());
+    
+    return updatedItem;
+  }
+
+  deleteNavigationItem(id: number): boolean {
+    const allItems = this.getAllNavigationItems();
+    const filteredItems = allItems.filter(item => item.id !== id);
+    
+    if (filteredItems.length === allItems.length) return false;
+    
+    localStorage.setItem(this.navigationKey, JSON.stringify(filteredItems));
+    
+    this.dispatchEvent('navigation-updated', filteredItems);
     
     return true;
   }

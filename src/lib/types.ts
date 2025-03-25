@@ -1,6 +1,13 @@
 
 export type ContentType = 'Page' | 'Page Section' | 'Service' | 'Portfolio' | 'Blog Post';
 
+export type ContentPlacement = {
+  pageId?: number;
+  sectionId?: number;
+  position?: 'top' | 'middle' | 'bottom';
+  order?: number;
+};
+
 export interface ContentItem {
   id: number;
   title: string;
@@ -20,6 +27,9 @@ export interface ContentItem {
   published: boolean;
   order?: number;
   parentId?: number;
+  language?: string;
+  showInNavigation?: boolean;
+  placement?: ContentPlacement;
 }
 
 export interface User {
@@ -42,4 +52,13 @@ export interface ContactRequest {
   dateSubmitted: string;
   assignedTo?: number;
   notes?: string;
+}
+
+export interface NavigationItem {
+  id: number;
+  label: string;
+  path: string;
+  order: number;
+  parentId?: number;
+  children?: NavigationItem[];
 }
