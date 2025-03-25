@@ -30,6 +30,8 @@ export interface ContentItem {
   language?: string;
   showInNavigation?: boolean;
   placement?: ContentPlacement;
+  author?: string;
+  category?: string;
 }
 
 export interface User {
@@ -61,4 +63,9 @@ export interface NavigationItem {
   order: number;
   parentId?: number;
   children?: NavigationItem[];
+}
+
+export interface BlogCategory {
+  name: string;
+  count: number;
 }

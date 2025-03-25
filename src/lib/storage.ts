@@ -1,4 +1,3 @@
-
 import { ContentItem, ContactRequest, User, NavigationItem } from './types';
 
 // Initial sample data for content
@@ -10,9 +9,113 @@ const initialContent: ContentItem[] = [
   { id: 5, title: "Digital Marketing Overview", type: "Service", description: "Digital marketing services", lastUpdated: "2023-09-22", published: true },
   { id: 6, title: "E-commerce Project", type: "Portfolio", description: "E-commerce project showcase", lastUpdated: "2023-09-15", published: true },
   { id: 7, title: "Healthcare Mobile App", type: "Portfolio", description: "Healthcare app showcase", lastUpdated: "2023-09-10", published: true },
-  { id: 8, title: "Top 10 SEO Strategies", type: "Blog Post", description: "SEO strategies blog post", lastUpdated: "2023-08-28", published: true, language: "en" },
-  { id: 9, title: "Contact Information", type: "Page Section", description: "Contact info section", lastUpdated: "2023-08-15", published: true },
-  { id: 10, title: "Company Values", type: "Page Section", description: "Company values section", lastUpdated: "2023-08-05", published: true },
+  
+  { 
+    id: 8, 
+    title: "10 Essential SEO Strategies for 2023", 
+    type: "Blog Post", 
+    subtitle: "By Sarah Johnson",
+    description: "Learn the most effective SEO strategies to boost your website's visibility and traffic in 2023.", 
+    content: "Search Engine Optimization continues to evolve in 2023. This article explores the most effective techniques to improve your website ranking and drive organic traffic. From technical SEO to content strategies, we cover it all.",
+    lastUpdated: "2023-08-28", 
+    publishDate: "2023-08-25",
+    published: true, 
+    language: "en",
+    seoKeywords: ["SEO", "Digital Marketing"],
+    images: ["https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c2VvfGVufDB8fDB8fHww"],
+    slug: "seo-strategies-2023"
+  },
+  { 
+    id: 9, 
+    title: "The Future of Mobile App Development", 
+    type: "Blog Post", 
+    subtitle: "By Michael Chen",
+    description: "Explore the emerging trends and technologies shaping the future of mobile application development.", 
+    content: "The mobile app development landscape is rapidly changing with new technologies and user expectations. This post examines upcoming trends like AI integration, cross-platform development advancements, and new design paradigms.",
+    lastUpdated: "2023-09-15", 
+    publishDate: "2023-09-10",
+    published: true, 
+    language: "en",
+    seoKeywords: ["Mobile Development", "Technology"],
+    images: ["https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8bW9iaWxlJTIwYXBwfGVufDB8fDB8fHww"],
+    slug: "future-mobile-development"
+  },
+  { 
+    id: 10, 
+    title: "Why UX Design is Crucial for Business Success", 
+    type: "Blog Post", 
+    subtitle: "By Emma Roberts",
+    description: "Discover why prioritizing user experience is essential for digital product success and customer retention.", 
+    content: "User experience design has become a critical differentiator in today's competitive digital landscape. This article explains how investment in UX directly impacts business metrics including conversion rates, customer loyalty, and brand perception.",
+    lastUpdated: "2023-10-05", 
+    publishDate: "2023-10-01",
+    published: true, 
+    language: "en",
+    seoKeywords: ["UX/UI", "Design"],
+    images: ["https://images.unsplash.com/photo-1586717791821-3f44a563fa4c?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fHVzZXIlMjBleHBlcmllbmNlfGVufDB8fDB8fHww"],
+    slug: "ux-design-business-success"
+  },
+  { 
+    id: 11, 
+    title: "Effective Social Media Marketing Strategies", 
+    type: "Blog Post", 
+    subtitle: "By James Wilson",
+    description: "A comprehensive guide to creating effective social media marketing campaigns that drive engagement.", 
+    content: "Social media continues to be a powerful marketing channel for businesses of all sizes. This guide walks through platform-specific strategies, content planning, and performance measurement to help you maximize your social media ROI.",
+    lastUpdated: "2023-10-20", 
+    publishDate: "2023-10-15",
+    published: true, 
+    language: "en",
+    seoKeywords: ["Social Media", "Digital Marketing"],
+    images: ["https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8c29jaWFsJTIwbWVkaWF8ZW58MHx8MHx8fDA%3D"],
+    slug: "social-media-marketing-strategies"
+  },
+  { 
+    id: 12, 
+    title: "E-commerce Optimization Tips for Higher Conversions", 
+    type: "Blog Post", 
+    subtitle: "By Alexandra Lopez",
+    description: "Practical tips to optimize your e-commerce store for better conversions and customer satisfaction.", 
+    content: "Converting visitors into customers is the ultimate goal of any e-commerce store. This article provides actionable optimization techniques for product pages, checkout processes, and overall site experience to boost your conversion rates.",
+    lastUpdated: "2023-11-10", 
+    publishDate: "2023-11-05",
+    published: true, 
+    language: "en",
+    seoKeywords: ["E-commerce", "Conversion Optimization"],
+    images: ["https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8ZWNvbW1lcmNlfGVufDB8fDB8fHww"],
+    slug: "ecommerce-optimization-tips"
+  },
+  { 
+    id: 13, 
+    title: "Cybersecurity Essentials for Small Businesses", 
+    type: "Blog Post", 
+    subtitle: "By David Miller",
+    description: "Essential cybersecurity best practices to protect your business and customers in the digital age.", 
+    content: "Small businesses are increasingly becoming targets for cyber attacks. This guide covers fundamental security practices, from password management to network security and employee training, that can help protect your business assets and customer data.",
+    lastUpdated: "2023-11-25", 
+    publishDate: "2023-11-20",
+    published: true, 
+    language: "en",
+    seoKeywords: ["Cybersecurity", "Business"],
+    images: ["https://images.unsplash.com/photo-1510511459019-5dda7724fd87?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8Y3liZXJzZWN1cml0eXxlbnwwfHwwfHx8MA%3D%3D"],
+    slug: "cybersecurity-essentials-small-business"
+  },
+  { 
+    id: 14, 
+    title: "Contact Information", 
+    type: "Page Section", 
+    description: "Contact info section", 
+    lastUpdated: "2023-08-15", 
+    published: true 
+  },
+  { 
+    id: 15, 
+    title: "Company Values", 
+    type: "Page Section", 
+    description: "Company values section", 
+    lastUpdated: "2023-08-05", 
+    published: true 
+  },
 ];
 
 // Initial navigation items
