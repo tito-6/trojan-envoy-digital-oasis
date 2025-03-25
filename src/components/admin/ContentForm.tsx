@@ -47,6 +47,7 @@ const contentFormSchema = z.object({
   placementPageId: z.number().optional(),
   placementSectionId: z.number().optional(),
   placementPosition: z.enum(["top", "middle", "bottom"] as const).optional(),
+  category: z.string().optional(),
 });
 
 type ContentFormValues = z.infer<typeof contentFormSchema>;
@@ -98,6 +99,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     keywords?: string;
     placement?: string;
   }>({});
+  const [categoryInput, setCategoryInput] = useState(initialValues?.category || "");
 
   useEffect(() => {
     const allPages = storageService.getContentByType("Page");
@@ -124,6 +126,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       placementPageId: initialValues?.placement?.pageId,
       placementSectionId: initialValues?.placement?.sectionId,
       placementPosition: initialValues?.placement?.position,
+      category: initialValues?.category || "",
     },
   });
 
@@ -207,6 +210,11 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     form.setValue("slug", e.target.value);
   };
 
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCategoryInput(e.target.value);
+    form.setValue("category", e.target.value);
+  };
+
   const toggleAutoGenerateSlug = () => {
     setAutoGenerateSlug(!autoGenerateSlug);
     if (!autoGenerateSlug) {
@@ -276,6 +284,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
         sectionId: values.placementSectionId,
         position: values.placementPosition,
       },
+      category: categoryInput,
     });
   };
 
@@ -336,6 +345,29 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                 )}
               />
             </div>
+            
+            {(contentType === "Portfolio" || contentType === "Blog Post") && (
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter category" 
+                        value={categoryInput}
+                        onChange={handleCategoryChange}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Categorize your {contentType === "Portfolio" ? "portfolio item" : "blog post"} for better organization
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             
             {(contentType === "Page" || contentType === "Blog Post" || contentType === "Service" || contentType === "Portfolio") && (
               <div className="space-y-2">
@@ -869,4 +901,3 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
 };
 
 export default ContentForm;
-
