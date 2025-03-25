@@ -1,7 +1,10 @@
 
 import React, { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
+import ContentForm from "@/components/admin/ContentForm";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Plus, 
   Search, 
@@ -12,9 +15,10 @@ import {
   Filter,
   ArrowUpDown
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 // Sample content data
-const contentItems = [
+const initialContentItems = [
   { id: 1, title: "Home Hero Section", type: "Page Section", lastUpdated: "2023-11-05" },
   { id: 2, title: "About Us Page", type: "Page", lastUpdated: "2023-10-28" },
   { id: 3, title: "Web Development Services", type: "Service", lastUpdated: "2023-10-15" },
@@ -30,6 +34,11 @@ const contentItems = [
 const AdminContent: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [contentItems, setContentItems] = useState(initialContentItems);
+  const [isNewContentDialogOpen, setIsNewContentDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const { toast } = useToast();
   
   // Filter content based on search and type filter
   const filteredContent = contentItems.filter(item => {
@@ -41,13 +50,53 @@ const AdminContent: React.FC = () => {
   // Get unique content types for filter dropdown
   const contentTypes = Array.from(new Set(contentItems.map(item => item.type)));
   
+  const handleSaveContent = (values: any) => {
+    // In a real application, this would send the data to a backend API
+    const newContent = {
+      id: contentItems.length + 1,
+      title: values.title,
+      type: values.type,
+      lastUpdated: new Date().toISOString().split('T')[0],
+    };
+    
+    setContentItems([newContent, ...contentItems]);
+    setIsNewContentDialogOpen(false);
+    
+    toast({
+      title: "Content created successfully",
+      description: `${values.title} has been added to the content library.`,
+      variant: "default",
+    });
+  };
+  
+  const confirmDelete = (id: number) => {
+    setItemToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+  
+  const handleDelete = () => {
+    if (itemToDelete) {
+      const deletedItem = contentItems.find(item => item.id === itemToDelete);
+      setContentItems(contentItems.filter(item => item.id !== itemToDelete));
+      
+      toast({
+        title: "Content deleted",
+        description: `"${deletedItem?.title}" has been removed.`,
+        variant: "default",
+      });
+      
+      setIsDeleteDialogOpen(false);
+      setItemToDelete(null);
+    }
+  };
+  
   return (
     <AdminLayout>
       <div className="p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <h1 className="text-2xl font-display font-bold">Content Management</h1>
           
-          <Button>
+          <Button onClick={() => setIsNewContentDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add New Content
           </Button>
@@ -133,14 +182,28 @@ const AdminContent: React.FC = () => {
                           <span className="font-medium">{item.title}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-sm">{item.type}</td>
+                      <td className="py-3 px-4 text-sm">
+                        <Badge variant={
+                          item.type === "Blog Post" ? "default" : 
+                          item.type === "Portfolio" ? "success" : 
+                          item.type === "Service" ? "secondary" : 
+                          "outline"
+                        }>
+                          {item.type}
+                        </Badge>
+                      </td>
                       <td className="py-3 px-4 text-sm">{item.lastUpdated}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                             <Edit className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 text-destructive"
+                            onClick={() => confirmDelete(item.id)}
+                          >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -174,6 +237,37 @@ const AdminContent: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* New Content Dialog */}
+      <Dialog open={isNewContentDialogOpen} onOpenChange={setIsNewContentDialogOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Content</DialogTitle>
+          </DialogHeader>
+          <ContentForm 
+            onSave={handleSaveContent}
+            onCancel={() => setIsNewContentDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to delete this content? This action cannot be undone.</p>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

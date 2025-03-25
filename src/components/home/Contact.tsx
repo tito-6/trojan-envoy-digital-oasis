@@ -2,45 +2,77 @@
 import React, { useState } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+
+// Define the phone number regex for different countries
+const phoneRegexMap: Record<string, RegExp> = {
+  US: /^(\+1|1)?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$/, // US
+  UK: /^(\+44|44)?[-.\s]?0?[-.\s]?\d{2,4}[-.\s]?\d{3}[-.\s]?\d{3,4}$/, // UK
+  IN: /^(\+91|91)?[-.\s]?\d{3}[-.\s]?\d{3}[-.\s]?\d{4}$/, // India
+  // Add more countries as needed
+  DEFAULT: /^\+?[0-9]{1,4}?[-.\s]?\(?\d{1,}\)?[-.\s]?\d{1,}[-.\s]?\d{1,}$/, // Generic phone number
+};
+
+const contactSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  email: z.string().email({ message: "Invalid email address" }),
+  phone: z.string().refine((val) => {
+    // Get user's country (in a real app, you might get this from their browser or IP)
+    const userCountry = "DEFAULT";
+    const regex = phoneRegexMap[userCountry] || phoneRegexMap.DEFAULT;
+    return regex.test(val);
+  }, { message: "Invalid phone number format" }),
+  subject: z.string().min(2, { message: "Subject is required" }),
+  message: z.string().min(10, { message: "Message must be at least 10 characters" }),
+});
+
+type ContactFormData = z.infer<typeof contactSchema>;
 
 const Contact: React.FC = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    message: "",
-  });
-  
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const form = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      subject: "",
+      message: "",
+    },
+  });
   
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
     
     // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: "Message sent successfully!",
-        description: "We'll get back to you as soon as possible.",
-      });
-      
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        message: "",
-      });
-      
-      setIsSubmitting(false);
-    }, 1500);
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // In a real implementation, this would send the data to a server
+    console.log("Home contact form submitted:", data);
+    
+    toast({
+      title: "Message sent successfully!",
+      description: "We'll get back to you as soon as possible.",
+    });
+    
+    form.reset();
+    setIsSubmitting(false);
   };
 
   return (
@@ -89,73 +121,83 @@ const Contact: React.FC = () => {
           </div>
           
           <div>
-            <form onSubmit={handleSubmit} className="bg-card border border-border rounded-xl p-6 md:p-8">
-              <div className="grid grid-cols-1 gap-6">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-2">
-                    {t('contact.name')}
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2.5 rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-                    placeholder="John Doe"
-                  />
-                </div>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('contact.name')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-2">
-                    {t('contact.email')}
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2.5 rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-                    placeholder="john@example.com"
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('contact.email')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder="john@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
-                <div>
-                  <label htmlFor="subject" className="block text-sm font-medium mb-2">
-                    {t('contact.subject')}
-                  </label>
-                  <input
-                    type="text"
-                    id="subject"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2.5 rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-                    placeholder="Project Inquiry"
-                  />
-                </div>
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+1 (555) 123-4567" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium mb-2">
-                    {t('contact.message')}
-                  </label>
-                  <textarea
-                    id="message"
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    required
-                    rows={5}
-                    className="w-full px-4 py-2.5 rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all resize-none"
-                    placeholder="Tell us about your project..."
-                  ></textarea>
-                </div>
+                <FormField
+                  control={form.control}
+                  name="subject"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('contact.subject')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Project Inquiry" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
-                <button
+                <FormField
+                  control={form.control}
+                  name="message"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('contact.message')}</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Tell us about your project..." 
+                          rows={5}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <Button
                   type="submit"
                   disabled={isSubmitting}
                   className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-70 flex items-center justify-center"
@@ -165,9 +207,9 @@ const Contact: React.FC = () => {
                   ) : (
                     t('contact.submit')
                   )}
-                </button>
-              </div>
-            </form>
+                </Button>
+              </form>
+            </Form>
           </div>
         </div>
       </div>

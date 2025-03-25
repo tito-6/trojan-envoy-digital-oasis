@@ -13,12 +13,24 @@ const Admin: React.FC = () => {
     // Check if user is logged in using localStorage
     const checkAuth = () => {
       const adminToken = localStorage.getItem("admin-token");
-      if (adminToken) {
-        setIsLoggedIn(true);
-        toast({
-          title: "Authentication Restored",
-          description: "Welcome back to the admin dashboard.",
-        });
+      const adminUser = localStorage.getItem("admin-user");
+      
+      if (adminToken && adminUser) {
+        try {
+          // Verify the token is valid (in a real app, you'd verify this with the backend)
+          const userData = JSON.parse(adminUser);
+          if (userData.email) {
+            setIsLoggedIn(true);
+            toast({
+              title: "Authentication Restored",
+              description: `Welcome back, ${userData.name || userData.email}.`,
+            });
+          }
+        } catch (error) {
+          // Handle invalid stored data
+          localStorage.removeItem("admin-token");
+          localStorage.removeItem("admin-user");
+        }
       }
       setIsLoading(false);
     };

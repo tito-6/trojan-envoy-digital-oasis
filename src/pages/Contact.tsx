@@ -11,10 +11,35 @@ import ContactInfo from "@/components/contact/ContactInfo";
 import { useLanguage } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+
+// Define the phone number regex for different countries
+const phoneRegexMap: Record<string, RegExp> = {
+  US: /^(\+1|1)?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$/, // US
+  UK: /^(\+44|44)?[-.\s]?0?[-.\s]?\d{2,4}[-.\s]?\d{3}[-.\s]?\d{3,4}$/, // UK
+  IN: /^(\+91|91)?[-.\s]?\d{3}[-.\s]?\d{3}[-.\s]?\d{4}$/, // India
+  // Add more countries as needed
+  DEFAULT: /^\+?[0-9]{1,4}?[-.\s]?\(?\d{1,}\)?[-.\s]?\d{1,}[-.\s]?\d{1,}$/, // Generic phone number
+};
 
 const contactSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   email: z.string().email({ message: "Invalid email address" }),
+  phone: z.string().refine((val) => {
+    // Get user's country (in a real app, you might get this from their browser or IP)
+    const userCountry = "DEFAULT";
+    const regex = phoneRegexMap[userCountry] || phoneRegexMap.DEFAULT;
+    return regex.test(val);
+  }, { message: "Invalid phone number format" }),
   subject: z.string().min(2, { message: "Subject is required" }),
   message: z.string().min(10, { message: "Message must be at least 10 characters" }),
 });
@@ -26,13 +51,15 @@ const Contact: React.FC = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm<ContactFormData>({
+  const form = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      subject: "",
+      message: "",
+    },
   });
 
   const onSubmit = async (data: ContactFormData) => {
@@ -41,14 +68,17 @@ const Contact: React.FC = () => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     
-    // Success handling - in a real application, you would send this data to a backend
+    // In a real implementation, this would send the data to a server
+    console.log("Form data submitted:", data);
+    
+    // Success handling
     toast({
       title: "Message sent successfully!",
       description: "We'll get back to you as soon as possible.",
       variant: "default",
     });
     
-    reset();
+    form.reset();
     setIsSubmitting(false);
   };
 
@@ -90,98 +120,98 @@ const Contact: React.FC = () => {
                   Have a project in mind? Fill out the form and our team will get back to you within 24 hours.
                 </p>
                 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium mb-2">
-                      {t('contact.name')}
-                    </label>
-                    <input
-                      {...register("name")}
-                      id="name"
-                      type="text"
-                      className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                      placeholder="John Doe"
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('contact.name')}</FormLabel>
+                          <FormControl>
+                            <Input placeholder="John Doe" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                    {errors.name && (
-                      <p className="mt-1 text-sm text-destructive flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        {errors.name.message}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium mb-2">
-                      {t('contact.email')}
-                    </label>
-                    <input
-                      {...register("email")}
-                      id="email"
-                      type="email"
-                      className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                      placeholder="john@example.com"
+                    
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('contact.email')}</FormLabel>
+                          <FormControl>
+                            <Input placeholder="john@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                    {errors.email && (
-                      <p className="mt-1 text-sm text-destructive flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        {errors.email.message}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="subject" className="block text-sm font-medium mb-2">
-                      {t('contact.subject')}
-                    </label>
-                    <input
-                      {...register("subject")}
-                      id="subject"
-                      type="text"
-                      className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                      placeholder="Project Inquiry"
+                    
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input placeholder="+1 (555) 123-4567" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                    {errors.subject && (
-                      <p className="mt-1 text-sm text-destructive flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        {errors.subject.message}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <label htmlFor="message" className="block text-sm font-medium mb-2">
-                      {t('contact.message')}
-                    </label>
-                    <textarea
-                      {...register("message")}
-                      id="message"
-                      rows={5}
-                      className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-                      placeholder="Tell us about your project..."
-                    ></textarea>
-                    {errors.message && (
-                      <p className="mt-1 text-sm text-destructive flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" />
-                        {errors.message.message}
-                      </p>
-                    )}
-                  </div>
-                  
-                  <Button 
-                    type="submit" 
-                    className="w-full md:w-auto"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>Processing</>
-                    ) : (
-                      <>
-                        {t('contact.submit')}
-                        <Send className="ml-2 w-4 h-4" />
-                      </>
-                    )}
-                  </Button>
-                </form>
+                    
+                    <FormField
+                      control={form.control}
+                      name="subject"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('contact.subject')}</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Project Inquiry" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="message"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('contact.message')}</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Tell us about your project..." 
+                              rows={5}
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full md:w-auto"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>Processing</>
+                      ) : (
+                        <>
+                          {t('contact.submit')}
+                          <Send className="ml-2 w-4 h-4" />
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
               </div>
               
               <ContactInfo />
