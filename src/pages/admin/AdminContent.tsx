@@ -185,7 +185,7 @@ const AdminContent: React.FC = () => {
       case "Blog Post": return "default";
       case "Portfolio": return "success";
       case "Service": return "secondary";
-      case "Page": return "blue";
+      case "Page": return "outline"; // Changed from "blue" to "outline"
       default: return "outline";
     }
   };
