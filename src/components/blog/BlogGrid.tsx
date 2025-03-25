@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, User } from "lucide-react";
@@ -78,7 +77,7 @@ const BlogGrid: React.FC = () => {
   const [blogPosts, setBlogPosts] = useState<ContentItem[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const { language } = useLanguage();
+  const { currentLanguage } = useLanguage();
   const postsPerPage = 6;
   
   useEffect(() => {
@@ -90,7 +89,7 @@ const BlogGrid: React.FC = () => {
       const posts = allContent.filter(item => 
         item.type === "Blog Post" && 
         item.published === true &&
-        (!item.language || item.language === language)
+        (!item.language || item.language === currentLanguage)
       );
       
       // Sort by publishDate or lastUpdated (newest first)
@@ -116,7 +115,7 @@ const BlogGrid: React.FC = () => {
       unsubscribeAdded();
       unsubscribeDeleted();
     };
-  }, [language]);
+  }, [currentLanguage]);
   
   // Pagination logic
   const indexOfLastPost = currentPage * postsPerPage;

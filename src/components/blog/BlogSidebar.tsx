@@ -4,10 +4,18 @@ import { Link } from "react-router-dom";
 import { Search, Tag, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { BlogCategory } from "@/lib/types";
 
-const BlogSidebar: React.FC = () => {
-  // Sample categories
-  const categories = [
+interface BlogSidebarProps {
+  blogStats?: {
+    total: number;
+    categories: BlogCategory[];
+  };
+}
+
+const BlogSidebar: React.FC<BlogSidebarProps> = ({ blogStats }) => {
+  // Use provided categories from blogStats or fallback to sample data
+  const categories = blogStats?.categories || [
     { name: "Development", count: 12 },
     { name: "SEO", count: 8 },
     { name: "Marketing", count: 10 },
