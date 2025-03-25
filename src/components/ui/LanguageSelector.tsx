@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Globe } from "lucide-react";
-import { availableLanguages, useLanguage } from "@/lib/i18n";
+import { availableLanguages, useLanguage, LanguageCode } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 const LanguageSelector: React.FC = () => {
@@ -11,7 +11,7 @@ const LanguageSelector: React.FC = () => {
   const toggleDropdown = () => setIsOpen(!isOpen);
   const closeDropdown = () => setIsOpen(false);
 
-  const handleLanguageChange = (langCode: string) => {
+  const handleLanguageChange = (langCode: LanguageCode) => {
     setLanguage(langCode);
     closeDropdown();
   };
@@ -55,7 +55,7 @@ const LanguageSelector: React.FC = () => {
               {availableLanguages.map((lang) => (
                 <li key={lang.code}>
                   <button
-                    onClick={() => handleLanguageChange(lang.code)}
+                    onClick={() => handleLanguageChange(lang.code as LanguageCode)}
                     className={cn(
                       "w-full text-left px-4 py-2 text-sm transition-colors hover:bg-secondary",
                       currentLanguage === lang.code && "bg-secondary/50"
