@@ -766,7 +766,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
               </div>
             )}
             
-            {contentType !== "Page" && contentType === "Page Section" && (
+            {contentType === "Page Section" && (
               <>
                 <FormField
                   control={form.control}
@@ -819,4 +819,3 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
 };
 
 export default ContentForm;
-
