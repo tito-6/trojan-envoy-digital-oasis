@@ -55,28 +55,17 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
-// Updated schema with proper transformations
 const JobFormSchema = z.object({
   title: z.string().min(1, { message: "Title is required" }),
   department: z.string().min(1, { message: "Department is required" }),
   location: z.string().min(1, { message: "Location is required" }),
   type: z.enum(["Full-time", "Part-time", "Contract", "Remote"]),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
-  // Explicitly transform string inputs to string arrays
-  responsibilities: z.string()
-    .transform(val => val.split('\n').filter(Boolean)),
-  requirements: z.string()
-    .transform(val => val.split('\n').filter(Boolean)),
-  benefits: z.string()
-    .transform(val => val.split('\n').filter(Boolean))
-    .optional(),
-  // Explicitly transform string inputs to numbers or undefined
-  salaryMin: z.string()
-    .transform(val => val ? Number(val) : undefined)
-    .optional(),
-  salaryMax: z.string()
-    .transform(val => val ? Number(val) : undefined)
-    .optional(),
+  responsibilities: z.string().transform(val => val.split('\n').filter(Boolean)),
+  requirements: z.string().transform(val => val.split('\n').filter(Boolean)),
+  benefits: z.string().transform(val => val.split('\n').filter(Boolean)).optional(),
+  salaryMin: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+  salaryMax: z.string().optional().transform(val => val ? parseInt(val) : undefined),
   salaryCurrency: z.string().optional(),
   applicationUrl: z.string().url({ message: "Must be a valid URL" }).optional().or(z.literal('')),
   published: z.boolean().default(false),
@@ -180,7 +169,6 @@ const AdminJobs: React.FC = () => {
 
   const handleAddSubmit = (data: JobFormValues) => {
     try {
-      // Our schema has already transformed the strings to arrays and numbers
       const newJob: Omit<JobOpening, 'id' | 'createdAt' | 'updatedAt'> = {
         title: data.title,
         department: data.department,
@@ -189,7 +177,7 @@ const AdminJobs: React.FC = () => {
         description: data.description,
         responsibilities: data.responsibilities,
         requirements: data.requirements,
-        benefits: data.benefits || [],
+        benefits: data.benefits,
         salary: {
           min: data.salaryMin,
           max: data.salaryMax,
@@ -221,7 +209,6 @@ const AdminJobs: React.FC = () => {
     if (!selectedJob) return;
     
     try {
-      // Our schema has already transformed the strings to arrays and numbers
       const updatedJob: Partial<Omit<JobOpening, 'id' | 'createdAt' | 'updatedAt'>> = {
         title: data.title,
         department: data.department,
@@ -230,7 +217,7 @@ const AdminJobs: React.FC = () => {
         description: data.description,
         responsibilities: data.responsibilities,
         requirements: data.requirements,
-        benefits: data.benefits || [],
+        benefits: data.benefits,
         salary: {
           min: data.salaryMin,
           max: data.salaryMax,
