@@ -14,7 +14,7 @@ interface TeamMemberProps {
 
 const TeamMember: React.FC<TeamMemberProps> = ({ name, role, bio, delay }) => {
   return (
-    <Card className={`overflow-hidden group hover:shadow-lg transition-all duration-300 should-animate delay-${delay}`}>
+    <Card className={`overflow-hidden group hover:shadow-lg transition-all duration-300 should-animate delay-${delay} card-hover`}>
       <div className="aspect-square relative bg-secondary">
         <div className="absolute inset-0 flex items-center justify-center bg-muted-foreground/10">
           <span className="text-muted-foreground">Team Photo</span>

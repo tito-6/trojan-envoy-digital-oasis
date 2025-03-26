@@ -25,7 +25,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import CaseStudies from "./pages/CaseStudies";
+import CaseStudyDetail from "./pages/CaseStudyDetail";
 import FAQ from "./pages/FAQ";
+import Careers from "./pages/Careers";
 import { LanguageCode, availableLanguages } from "./lib/i18n";
 
 const queryClient = new QueryClient();
@@ -107,6 +109,12 @@ const App = () => {
             
             <Route path="/case-studies" element={<CaseStudies />} />
             {createLocalizedRoutes("/case-studies", CaseStudies)}
+            
+            <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
+            {createLocalizedRoutes("/case-studies/:slug", CaseStudyDetail)}
+            
+            <Route path="/careers" element={<Careers />} />
+            {createLocalizedRoutes("/careers", Careers)}
             
             <Route path="/faq" element={<FAQ />} />
             {createLocalizedRoutes("/faq", FAQ)}

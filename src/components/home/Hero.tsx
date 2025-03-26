@@ -5,7 +5,7 @@ import { ArrowRight, Award, Check } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { 
   FaGoogle, 
-  FaFacebook, 
+  FaMeta, 
   FaSearchengin, 
   FaAws, 
   FaShopify, 
@@ -33,7 +33,8 @@ import {
   SiGraphql,
   SiTailwindcss,
   SiFlutter,
-  SiKotlin
+  SiKotlin,
+  SiSemrush
 } from "react-icons/si";
 
 const Hero: React.FC = () => {
@@ -102,13 +103,13 @@ const Hero: React.FC = () => {
       bgColor: "bg-blue-100"
     },
     { 
-      Icon: FaFacebook, 
+      Icon: FaMeta, 
       name: "Meta", 
       color: "#1877F2",
       bgColor: "bg-blue-100"
     },
     { 
-      Icon: FaSearchengin, 
+      Icon: SiSemrush, 
       name: "SEMrush", 
       color: "#5FB246",
       bgColor: "bg-green-100"
@@ -165,7 +166,7 @@ const Hero: React.FC = () => {
   return (
     <div 
       ref={heroRef}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
+      className="relative min-h-screen flex flex-col justify-start overflow-hidden pt-20"
     >
       {/* Background Elements */}
       <div className="absolute inset-0 -z-10">
@@ -225,14 +226,14 @@ const Hero: React.FC = () => {
               {partnerIcons.map((item, index) => (
                 <div 
                   key={item.name} 
-                  className="relative flex flex-col items-center justify-center hover:scale-110 transition-transform duration-300 group"
+                  className="relative flex flex-col items-center justify-center transform transition-transform duration-300 hover:scale-110 group flip-card"
                   style={{ 
                     animationDelay: `${500 + (index * 100)}ms`,
                     opacity: 0,
                     animation: 'fadeInUp 0.6s ease forwards'
                   }}
                 >
-                  <div className={`w-16 h-16 rounded-full ${item.bgColor} flex items-center justify-center mb-3`}>
+                  <div className={`w-16 h-16 rounded-full ${item.bgColor} flex items-center justify-center mb-3 flip-card-inner`}>
                     <item.Icon size={32} style={{ color: item.color }} />
                   </div>
                   <span className="text-xs font-medium">{item.name}</span>
@@ -276,7 +277,7 @@ const Hero: React.FC = () => {
                 }}
               >
                 <div 
-                  className={`w-16 h-16 rounded-full bg-secondary/30 flex items-center justify-center mb-3 ${tech.animate}`}
+                  className={`w-16 h-16 rounded-full bg-secondary/30 flex items-center justify-center mb-3 ${tech.animate} hover:shadow-lg transition-all duration-300`}
                 >
                   <tech.Icon size={36} style={{ color: tech.color }} />
                 </div>

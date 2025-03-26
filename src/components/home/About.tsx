@@ -1,17 +1,18 @@
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Check, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 
 const About: React.FC = () => {
   const { t } = useLanguage();
+  const statsRef = useRef<HTMLDivElement>(null);
   
   const stats = [
-    { value: "10+", label: "Years Experience" },
-    { value: "200+", label: "Projects Completed" },
-    { value: "50+", label: "Team Members" },
-    { value: "98%", label: "Client Satisfaction" },
+    { value: "10+", label: "Years Experience", start: "0" },
+    { value: "200+", label: "Projects Completed", start: "0" },
+    { value: "50+", label: "Team Members", start: "0" },
+    { value: "98%", label: "Client Satisfaction", start: "0" },
   ];
   
   const keyPoints = [
@@ -22,6 +23,26 @@ const About: React.FC = () => {
     "Transparent communication",
     "Agile methodology",
   ];
+
+  useEffect(() => {
+    if (!statsRef.current) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const counterElements = entry.target.querySelectorAll('.counter');
+          counterElements.forEach((element) => {
+            element.classList.add('counter-animated');
+          });
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    observer.observe(statsRef.current);
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section className="section-padding bg-secondary/30">
@@ -68,29 +89,23 @@ const About: React.FC = () => {
             </Link>
           </div>
           
-          <div className="relative">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="stats-card bg-background p-6 rounded-xl border border-border">
-                <div className="grid grid-cols-1 gap-6">
-                  {stats.slice(0, 2).map((stat) => (
-                    <div key={stat.label} className="text-center">
-                      <div className="text-3xl md:text-4xl font-bold mb-1">{stat.value}</div>
-                      <div className="text-sm text-muted-foreground">{stat.label}</div>
-                    </div>
-                  ))}
+          <div className="relative" ref={statsRef}>
+            <div className="grid grid-cols-2 gap-6">
+              {stats.map((stat, index) => (
+                <div 
+                  key={stat.label} 
+                  className="card-hover stats-card bg-background p-6 rounded-xl border border-border h-full flex flex-col items-center justify-center text-center"
+                >
+                  <div 
+                    className="counter text-3xl md:text-4xl font-bold mb-2"
+                    data-start={stat.start}
+                    data-end={stat.value}
+                  >
+                    {stat.value}
+                  </div>
+                  <div className="text-sm text-muted-foreground">{stat.label}</div>
                 </div>
-              </div>
-              
-              <div className="stats-card bg-background p-6 rounded-xl border border-border mt-8">
-                <div className="grid grid-cols-1 gap-6">
-                  {stats.slice(2, 4).map((stat) => (
-                    <div key={stat.label} className="text-center">
-                      <div className="text-3xl md:text-4xl font-bold mb-1">{stat.value}</div>
-                      <div className="text-sm text-muted-foreground">{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              ))}
             </div>
             
             {/* Decorative elements */}

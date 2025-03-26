@@ -176,3 +176,46 @@ html {
 .animate-float {
   animation: float 6s infinite ease-in-out;
 }
+
+/* Card flip animation */
+.flip-card {
+  perspective: 1000px;
+}
+
+.flip-card-inner {
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.flip-card:hover .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+/* Count animation for About section */
+@keyframes countUp {
+  from {
+    content: attr(data-start);
+  }
+  to {
+    content: attr(data-end);
+  }
+}
+
+.counter::after {
+  content: attr(data-start);
+  animation: countUp 2s forwards;
+}
+
+.counter-animated::after {
+  content: attr(data-end);
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}

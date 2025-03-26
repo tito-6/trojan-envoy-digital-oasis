@@ -88,7 +88,7 @@ const CaseStudies: React.FC = () => {
             {caseStudies.map((study, index) => (
               <div 
                 key={study.id} 
-                className="grid md:grid-cols-2 gap-8 items-center p-6 rounded-xl border border-border hover:border-primary/50 transition-all"
+                className="grid md:grid-cols-2 gap-8 items-center p-6 rounded-xl border border-border hover:border-primary/50 transition-all card-hover"
               >
                 <div className={`${index % 2 === 1 ? 'md:order-2' : ''}`}>
                   <div className="bg-secondary/50 text-sm font-medium px-4 py-1.5 rounded-full inline-block mb-4">

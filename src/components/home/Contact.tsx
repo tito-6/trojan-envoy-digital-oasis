@@ -27,16 +27,21 @@ import { storageService } from "@/lib/storage";
 
 // Define the country codes for the dropdown
 const countryCodes = [
-  { code: "+1", country: "US", label: "United States (+1)" },
-  { code: "+44", country: "UK", label: "United Kingdom (+44)" },
-  { code: "+91", country: "IN", label: "India (+91)" },
-  { code: "+61", country: "AU", label: "Australia (+61)" },
-  { code: "+33", country: "FR", label: "France (+33)" },
-  { code: "+49", country: "DE", label: "Germany (+49)" },
-  { code: "+86", country: "CN", label: "China (+86)" },
-  { code: "+81", country: "JP", label: "Japan (+81)" },
-  { code: "+82", country: "KR", label: "South Korea (+82)" },
-  { code: "+55", country: "BR", label: "Brazil (+55)" },
+  { code: "+1", country: "US", label: "United States (+1)", flag: "🇺🇸" },
+  { code: "+44", country: "UK", label: "United Kingdom (+44)", flag: "🇬🇧" },
+  { code: "+91", country: "IN", label: "India (+91)", flag: "🇮🇳" },
+  { code: "+61", country: "AU", label: "Australia (+61)", flag: "🇦🇺" },
+  { code: "+33", country: "FR", label: "France (+33)", flag: "🇫🇷" },
+  { code: "+49", country: "DE", label: "Germany (+49)", flag: "🇩🇪" },
+  { code: "+86", country: "CN", label: "China (+86)", flag: "🇨🇳" },
+  { code: "+81", country: "JP", label: "Japan (+81)", flag: "🇯🇵" },
+  { code: "+82", country: "KR", label: "South Korea (+82)", flag: "🇰🇷" },
+  { code: "+55", country: "BR", label: "Brazil (+55)", flag: "🇧🇷" },
+  { code: "+52", country: "MX", label: "Mexico (+52)", flag: "🇲🇽" },
+  { code: "+34", country: "ES", label: "Spain (+34)", flag: "🇪🇸" },
+  { code: "+39", country: "IT", label: "Italy (+39)", flag: "🇮🇹" },
+  { code: "+7", country: "RU", label: "Russia (+7)", flag: "🇷🇺" },
+  { code: "+27", country: "ZA", label: "South Africa (+27)", flag: "🇿🇦" }
 ];
 
 // Define the phone number regex for different countries
@@ -51,6 +56,11 @@ const phoneRegexMap: Record<string, RegExp> = {
   JP: /^\d{10,11}$/, // Japan: 10-11 digits
   KR: /^\d{9,10}$/, // South Korea: 9-10 digits
   BR: /^\d{10,11}$/, // Brazil: 10-11 digits
+  MX: /^\d{10}$/, // Mexico: 10 digits
+  ES: /^\d{9}$/, // Spain: 9 digits
+  IT: /^\d{10}$/, // Italy: 10 digits
+  RU: /^\d{10}$/, // Russia: 10 digits
+  ZA: /^\d{9}$/, // South Africa: 9 digits
   DEFAULT: /^\d{7,15}$/, // Generic: 7-15 digits
 };
 
@@ -179,7 +189,7 @@ const Contact: React.FC = () => {
           
           <div>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-6 card-hover">
                 <FormField
                   control={form.control}
                   name="name"
@@ -224,7 +234,7 @@ const Contact: React.FC = () => {
                           <SelectContent>
                             {countryCodes.map((country) => (
                               <SelectItem key={country.code} value={country.code}>
-                                {country.label}
+                                <span className="mr-2">{country.flag}</span> {country.label}
                               </SelectItem>
                             ))}
                           </SelectContent>
