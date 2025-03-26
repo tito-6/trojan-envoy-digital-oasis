@@ -167,13 +167,11 @@ const configureContactStorage = () => {
   };
 
   // Add a new contact request
-  const addContactRequest = (requestData: Omit<ContactRequest, 'id' | 'status' | 'dateSubmitted'>): ContactRequest => {
+  const addContactRequest = (requestData: Omit<ContactRequest, 'id'>): ContactRequest => {
     const requests = getAllContactRequests();
     const newRequest: ContactRequest = {
       id: requests.length > 0 ? Math.max(...requests.map(r => r.id)) + 1 : 1,
       ...requestData,
-      status: 'New',
-      dateSubmitted: new Date().toISOString(),
     };
     requests.push(newRequest);
     saveAllContactRequests(requests);
@@ -251,6 +249,9 @@ const configureJobOpenings = () => {
     jobs.push(newJob);
     saveAllJobOpenings(jobs);
     
+    // Dispatch event
+    window.dispatchEvent(new CustomEvent('job-added', { detail: newJob }));
+    
     return newJob;
   };
   
@@ -268,6 +269,10 @@ const configureJobOpenings = () => {
     };
     
     saveAllJobOpenings(jobs);
+    
+    // Dispatch event
+    window.dispatchEvent(new CustomEvent('job-updated', { detail: jobs[index] }));
+    
     return true;
   };
   
@@ -279,6 +284,10 @@ const configureJobOpenings = () => {
     if (newJobs.length === jobs.length) return false;
     
     saveAllJobOpenings(newJobs);
+    
+    // Dispatch event
+    window.dispatchEvent(new CustomEvent('job-deleted', { detail: id }));
+    
     return true;
   };
   
@@ -296,8 +305,6 @@ const configureEventListeners = () => {
   type EventCallback = (data: any) => void;
   type RemoveListenerFn = () => void;
   
-  const listeners: Record<string, Array<(event: Event) => void>> = {};
-
   const addEventListener = (eventName: string, callback: EventCallback): RemoveListenerFn => {
     const listener = (event: Event) => {
       if ((event as CustomEvent).detail !== undefined) {
@@ -308,18 +315,9 @@ const configureEventListeners = () => {
     };
 
     window.addEventListener(eventName, listener);
-
-    // Initialize the array if it doesn't exist
-    if (!listeners[eventName]) {
-      listeners[eventName] = [];
-    }
     
-    // Store the listener for later removal
-    listeners[eventName].push(listener);
-
     return () => {
       window.removeEventListener(eventName, listener);
-      listeners[eventName] = listeners[eventName].filter(l => l !== listener);
     };
   };
 

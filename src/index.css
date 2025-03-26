@@ -1,221 +1,145 @@
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.75rem;
+  /* Resets */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
   }
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
+  html,
+  body {
+    height: 100%;
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
 
-  html {
-    @apply scroll-smooth;
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    overflow-wrap: break-word;
+  }
+
+  #root,
+  #__next {
+    isolation: auto;
+  }
+
+  /* Typography */
+  h1,
+  h2,
+  h3 {
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  h1 {
+    font-size: clamp(2.5rem, 4vw + 1rem, 4rem);
+  }
+
+  h2 {
+    font-size: clamp(2rem, 3vw + 1rem, 3rem);
+  }
+
+  h3 {
+    font-size: clamp(1.5rem, 2vw + 1rem, 2rem);
+  }
+}
+
+@layer components {
+  /* Phone input styling */
+  .PhoneInput {
+    width: 100%;
+  }
+  
+  .PhoneInput .PhoneInputInput {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .PhoneInputCountry {
+    position: relative;
+    align-self: center;
+    display: flex;
+  }
+  
+  .PhoneInputCountryIcon {
+    width: 2em;
+    height: 1.5em;
+    margin-right: 0.5em;
+  }
+
+  .PhoneInputCountrySelectArrow {
+    display: block;
+    content: '';
+    width: 0.5em;
+    height: 0.25em;
+    border-style: solid;
+    border-width: 0.25em 0.25em 0 0.25em;
+    border-color: currentColor transparent transparent transparent;
+    margin-left: 0.25em;
   }
 }
 
 @layer utilities {
-  .glass-card {
-    @apply bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl shadow-lg dark:bg-black/20 dark:border-white/10;
+  .fade-in-element {
+    animation: fadeIn 0.8s ease-in-out forwards;
   }
   
-  .text-balance {
-    text-wrap: balance;
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+  .should-animate {
+    opacity: 0;
   }
   
   .section-padding {
-    @apply py-16 px-4 md:py-24 md:px-8 lg:px-16;
+    @apply py-16 md:py-24;
   }
   
-  .hover-scale {
-    @apply transition-transform duration-300 hover:scale-105;
+  .card-hover {
+    @apply transition-shadow hover:shadow-md;
   }
   
-  .divider {
-    @apply h-px w-full bg-gradient-to-r from-transparent via-border to-transparent my-8;
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent;
   }
-}
-
-#root {
-  max-width: 100%;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0;
-  text-align: left;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: rgba(155, 155, 155, 0.5);
-  border-radius: 20px;
-  border: transparent;
-}
-
-/* Smooth scroll behavior */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Animation delay utilities */
-.delay-100 {
-  animation-delay: 100ms;
-}
-.delay-200 {
-  animation-delay: 200ms;
-}
-.delay-300 {
-  animation-delay: 300ms;
-}
-.delay-400 {
-  animation-delay: 400ms;
-}
-.delay-500 {
-  animation-delay: 500ms;
-}
-
-/* Fade in animation */
-.fade-in-element {
-  opacity: 0;
-  transform: translateY(20px);
-  animation: fadeInUp 0.6s ease forwards;
-}
-
-@keyframes fadeInUp {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Tech icons animation */
-.animate-tech-icon {
-  opacity: 1 !important;
-  transform: translateY(0) !important;
-}
-
-/* Pulse soft animation */
-@keyframes pulseSoft {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.animate-pulse-soft {
-  animation: pulseSoft 3s infinite ease-in-out;
-}
-
-/* Float animation */
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-.animate-float {
-  animation: float 6s infinite ease-in-out;
-}
-
-/* Card flip animation */
-.flip-card {
-  perspective: 1000px;
-}
-
-.flip-card-inner {
-  transition: transform 0.6s;
-  transform-style: preserve-3d;
-}
-
-.flip-card:hover .flip-card-inner {
-  transform: rotateY(180deg);
-}
-
-/* Count animation for About section */
-@keyframes countUp {
-  from {
-    content: attr(data-start);
-  }
-  to {
-    content: attr(data-end);
-  }
-}
-
-.counter::after {
-  content: attr(data-start);
-  animation: countUp 2s forwards;
-}
-
-.counter-animated::after {
-  content: attr(data-end);
-}
-
-/* Card hover effect */
-.card-hover {
-  transition: all 0.3s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }

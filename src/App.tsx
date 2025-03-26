@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { Toaster } from './components/ui/toaster';
 import { ThemeProvider } from './lib/ThemeContext';
 import { useLanguage, LanguageCode, availableLanguages } from './lib/i18n';
+import { LanguageProvider } from './lib/LanguageProvider';
 import { useEffect } from 'react';
 
 // Pages
@@ -42,11 +43,6 @@ const ScrollToTop = () => {
   }, [pathname]);
 
   return null;
-};
-
-// Create a LanguageProvider wrapper component that uses the zustand store
-const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
-  return children;
 };
 
 function App() {

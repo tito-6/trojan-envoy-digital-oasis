@@ -1,8 +1,9 @@
+
 import React, { useState } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
@@ -15,8 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/style.css';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 import { storageService } from "@/lib/storage";
 
 const contactSchema = z.object({
@@ -51,11 +52,14 @@ const Contact: React.FC = () => {
     try {
       // Save to our storage service with required fields
       storageService.addContactRequest({
+        id: 0, // Will be assigned by storage service
         name: data.name,
         email: data.email,
         phone: data.phone,
         subject: data.subject,
         message: data.message,
+        status: 'New',
+        dateSubmitted: new Date().toISOString(),
       });
       
       toast({
@@ -81,7 +85,7 @@ const Contact: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
           <div>
             <div className="inline-block px-4 py-1.5 rounded-full bg-secondary mb-4 text-sm font-medium">
-              Get In Touch
+              {t('contact.getInTouch')}
             </div>
             
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
@@ -90,31 +94,31 @@ const Contact: React.FC = () => {
             </h2>
             
             <p className="text-muted-foreground mb-8 max-w-md">
-              Have a project in mind? Let's talk about how we can help your business grow through innovative digital solutions.
+              {t('contact.description')}
             </p>
             
             <div className="space-y-8">
               <div className="contact-info-item">
-                <h3 className="text-lg font-semibold mb-2">Office Address</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('contact.officeAddress')}</h3>
                 <p className="text-muted-foreground">
-                  1234 Tech Avenue, Innovation District<br />
-                  New York, NY 10001, USA
+                  {t('contact.addressLine1')}<br />
+                  {t('contact.addressLine2')}
                 </p>
               </div>
               
               <div className="contact-info-item">
-                <h3 className="text-lg font-semibold mb-2">Contact Information</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('contact.contactInfo')}</h3>
                 <p className="text-muted-foreground">
-                  Email: contact@trojanenvoy.com<br />
-                  Phone: +1 (555) 123-4567
+                  {t('contact.emailLabel')}: contact@trojanenvoy.com<br />
+                  {t('contact.phoneLabel')}: +1 (555) 123-4567
                 </p>
               </div>
               
               <div className="contact-info-item">
-                <h3 className="text-lg font-semibold mb-2">Working Hours</h3>
+                <h3 className="text-lg font-semibold mb-2">{t('contact.workingHours')}</h3>
                 <p className="text-muted-foreground">
-                  Monday - Friday: 9:00 AM - 6:00 PM<br />
-                  Saturday & Sunday: Closed
+                  {t('contact.weekdayHours')}<br />
+                  {t('contact.weekendHours')}
                 </p>
               </div>
             </div>
@@ -130,7 +134,7 @@ const Contact: React.FC = () => {
                     <FormItem>
                       <FormLabel>{t('contact.name')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="John Doe" {...field} />
+                        <Input placeholder={t('contact.namePlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -144,7 +148,7 @@ const Contact: React.FC = () => {
                     <FormItem>
                       <FormLabel>{t('contact.email')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="john@example.com" {...field} />
+                        <Input placeholder={t('contact.emailPlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -154,19 +158,20 @@ const Contact: React.FC = () => {
                 <FormField
                   control={form.control}
                   name="phone"
-                  render={({ field: { onChange, value } }) => (
+                  render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel>{t('contact.phone')}</FormLabel>
                       <FormControl>
-                        <PhoneInput
-                          country={'us'}
-                          value={value}
-                          onChange={onChange}
-                          inputClass="w-full p-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
-                          containerClass="w-full"
-                          buttonClass="border border-input rounded-l-md"
-                          dropdownClass="bg-background text-foreground"
-                        />
+                        <div className="phone-input-container">
+                          <PhoneInput
+                            international
+                            defaultCountry="US"
+                            value={field.value}
+                            onChange={(value) => field.onChange(value || '')}
+                            inputComponent={Input}
+                            className="PhoneInput"
+                          />
+                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -180,7 +185,7 @@ const Contact: React.FC = () => {
                     <FormItem>
                       <FormLabel>{t('contact.subject')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="Project Inquiry" {...field} />
+                        <Input placeholder={t('contact.subjectPlaceholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -195,7 +200,7 @@ const Contact: React.FC = () => {
                       <FormLabel>{t('contact.message')}</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Tell us about your project..." 
+                          placeholder={t('contact.messagePlaceholder')} 
                           rows={5}
                           {...field} 
                         />
@@ -211,7 +216,7 @@ const Contact: React.FC = () => {
                   className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-70 flex items-center justify-center"
                 >
                   {isSubmitting ? (
-                    <span className="animate-pulse">Sending...</span>
+                    <span className="animate-pulse">{t('contact.sending')}</span>
                   ) : (
                     t('contact.submit')
                   )}

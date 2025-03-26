@@ -1,76 +1,88 @@
 
 import React, { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { 
-  Plus, 
-  Search, 
-  Filter,
-  ArrowUpDown,
-  Briefcase,
-  Edit,
-  Trash2,
-  CheckCircle,
-  AlertCircle,
-  Clock
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { storageService } from "@/lib/storage";
 import { JobOpening } from "@/lib/types";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle,
+  CardFooter 
+} from "@/components/ui/card";
+import { 
+  Table, 
+  TableHeader, 
+  TableRow, 
+  TableHead, 
+  TableBody, 
+  TableCell 
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger 
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
-  FormDescription,
+  FormMessage
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 
-const formSchema = z.object({
-  title: z.string().min(2, { message: "Job title must be at least 2 characters" }),
-  department: z.string().min(2, { message: "Department is required" }),
-  location: z.string().min(2, { message: "Location is required" }),
+const JobFormSchema = z.object({
+  title: z.string().min(1, { message: "Title is required" }),
+  department: z.string().min(1, { message: "Department is required" }),
+  location: z.string().min(1, { message: "Location is required" }),
   type: z.enum(["Full-time", "Part-time", "Contract", "Remote"]),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
-  responsibilities: z.string().min(10, { message: "Responsibilities must be at least 10 characters" }),
-  requirements: z.string().min(10, { message: "Requirements must be at least 10 characters" }),
-  benefits: z.string().optional(),
-  minSalary: z.string().optional(),
-  maxSalary: z.string().optional(),
-  currency: z.string().optional(),
-  applicationUrl: z.string().url({ message: "Must be a valid URL" }).optional().or(z.literal("")),
+  responsibilities: z.string().transform(val => val.split('\n').filter(Boolean)),
+  requirements: z.string().transform(val => val.split('\n').filter(Boolean)),
+  benefits: z.string().transform(val => val.split('\n').filter(Boolean)).optional(),
+  salaryMin: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+  salaryMax: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+  salaryCurrency: z.string().optional(),
+  applicationUrl: z.string().url({ message: "Must be a valid URL" }).optional().or(z.literal('')),
   published: z.boolean().default(false),
 });
 
-type FormData = z.infer<typeof formSchema>;
+type JobFormValues = z.infer<typeof JobFormSchema>;
 
 const AdminJobs: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
-  const [jobOpenings, setJobOpenings] = useState<JobOpening[]>([]);
-  const [isNewJobDialogOpen, setIsNewJobDialogOpen] = useState(false);
-  const [isEditJobDialogOpen, setIsEditJobDialogOpen] = useState(false);
+  const [jobs, setJobs] = useState<JobOpening[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [itemToEdit, setItemToEdit] = useState<JobOpening | null>(null);
-  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
-  const [sortField, setSortField] = useState<keyof JobOpening>('updatedAt');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [selectedJob, setSelectedJob] = useState<JobOpening | null>(null);
   const { toast } = useToast();
-  
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+
+  const addForm = useForm<JobFormValues>({
+    resolver: zodResolver(JobFormSchema),
     defaultValues: {
       title: "",
       department: "",
@@ -80,964 +92,584 @@ const AdminJobs: React.FC = () => {
       responsibilities: "",
       requirements: "",
       benefits: "",
-      minSalary: "",
-      maxSalary: "",
-      currency: "USD",
+      salaryMin: "",
+      salaryMax: "",
+      salaryCurrency: "USD",
       applicationUrl: "",
       published: false,
     },
   });
-  
-  const editForm = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+
+  const editForm = useForm<JobFormValues>({
+    resolver: zodResolver(JobFormSchema),
     defaultValues: {
       title: "",
       department: "",
       location: "",
-      type: "Full-time",
+      type: "Full-time", 
       description: "",
       responsibilities: "",
       requirements: "",
       benefits: "",
-      minSalary: "",
-      maxSalary: "",
-      currency: "USD",
+      salaryMin: "",
+      salaryMax: "",
+      salaryCurrency: "USD",
       applicationUrl: "",
       published: false,
     },
   });
-  
+
   useEffect(() => {
     loadJobs();
+    
+    // Set up event listeners for job changes
+    const addedListener = storageService.addEventListener('job-added', () => {
+      loadJobs();
+    });
+    
+    const updatedListener = storageService.addEventListener('job-updated', () => {
+      loadJobs();
+    });
+    
+    const deletedListener = storageService.addEventListener('job-deleted', () => {
+      loadJobs();
+    });
+    
+    return () => {
+      addedListener();
+      updatedListener();
+      deletedListener();
+    };
   }, []);
-  
+
   useEffect(() => {
-    if (itemToEdit) {
+    if (selectedJob && isEditDialogOpen) {
       editForm.reset({
-        title: itemToEdit.title,
-        department: itemToEdit.department,
-        location: itemToEdit.location,
-        type: itemToEdit.type,
-        description: itemToEdit.description,
-        responsibilities: itemToEdit.responsibilities.join('\n'),
-        requirements: itemToEdit.requirements.join('\n'),
-        benefits: itemToEdit.benefits?.join('\n') || "",
-        minSalary: itemToEdit.salary?.min?.toString() || "",
-        maxSalary: itemToEdit.salary?.max?.toString() || "",
-        currency: itemToEdit.salary?.currency || "USD",
-        applicationUrl: itemToEdit.applicationUrl || "",
-        published: itemToEdit.published,
+        title: selectedJob.title,
+        department: selectedJob.department,
+        location: selectedJob.location,
+        type: selectedJob.type,
+        description: selectedJob.description,
+        responsibilities: selectedJob.responsibilities.join('\n'),
+        requirements: selectedJob.requirements.join('\n'),
+        benefits: selectedJob.benefits?.join('\n') || '',
+        salaryMin: selectedJob.salary?.min?.toString() || '',
+        salaryMax: selectedJob.salary?.max?.toString() || '',
+        salaryCurrency: selectedJob.salary?.currency || 'USD',
+        applicationUrl: selectedJob.applicationUrl || '',
+        published: selectedJob.published,
       });
     }
-  }, [itemToEdit]);
-  
+  }, [selectedJob, isEditDialogOpen]);
+
   const loadJobs = () => {
-    const jobs = storageService.getAllJobOpenings ? storageService.getAllJobOpenings() : [];
-    setJobOpenings(jobs);
+    const jobsData = storageService.getAllJobOpenings();
+    setJobs(jobsData);
   };
-  
-  const filteredJobs = jobOpenings.filter(job => {
-    const matchesSearch = 
-      job.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      job.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = selectedType ? job.type === selectedType : true;
-    const matchesDepartment = selectedDepartment ? job.department === selectedDepartment : true;
-    
-    return matchesSearch && matchesType && matchesDepartment;
-  });
-  
-  const sortedJobs = [...filteredJobs].sort((a, b) => {
-    const aValue = a[sortField];
-    const bValue = b[sortField];
-    
-    if (typeof aValue === 'string' && typeof bValue === 'string') {
-      return sortDirection === 'asc' 
-        ? aValue.localeCompare(bValue) 
-        : bValue.localeCompare(aValue);
-    }
-    
-    const aNum = aValue || 0;
-    const bNum = bValue || 0;
-    
-    return sortDirection === 'asc' ? +aNum - +bNum : +bNum - +aNum;
-  });
-  
-  const jobTypes = ["Full-time", "Part-time", "Contract", "Remote"];
-  const departments = Array.from(new Set(jobOpenings.map(job => job.department)));
-  
-  const handleSortChange = (field: keyof JobOpening) => {
-    if (field === sortField) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('desc');
-    }
-  };
-  
-  const onSubmit = async (data: FormData) => {
+
+  const handleAddSubmit = (data: JobFormValues) => {
     try {
-      const responsibilities = data.responsibilities.split('\n').filter(item => item.trim() !== '');
-      const requirements = data.requirements.split('\n').filter(item => item.trim() !== '');
-      const benefits = data.benefits ? data.benefits.split('\n').filter(item => item.trim() !== '') : undefined;
-      
-      const salary = (data.minSalary || data.maxSalary) ? {
-        min: data.minSalary ? parseInt(data.minSalary) : undefined,
-        max: data.maxSalary ? parseInt(data.maxSalary) : undefined,
-        currency: data.currency || 'USD'
-      } : undefined;
-      
-      const newJob = storageService.addJobOpening({
+      const newJob: Omit<JobOpening, 'id' | 'createdAt' | 'updatedAt'> = {
         title: data.title,
         department: data.department,
         location: data.location,
         type: data.type,
         description: data.description,
-        responsibilities,
-        requirements,
-        benefits,
-        salary,
+        responsibilities: data.responsibilities,
+        requirements: data.requirements,
+        benefits: data.benefits,
+        salary: {
+          min: data.salaryMin,
+          max: data.salaryMax,
+          currency: data.salaryCurrency
+        },
         applicationUrl: data.applicationUrl || undefined,
         published: data.published,
+      };
+      
+      storageService.addJobOpening(newJob);
+      
+      toast({
+        title: "Job Opening Created",
+        description: "The job has been successfully added.",
       });
       
-      if (newJob) {
-        toast({
-          title: "Job opening created",
-          description: `${data.title} has been added successfully.`,
-        });
-        
-        loadJobs();
-        setIsNewJobDialogOpen(false);
-        form.reset();
-      }
+      addForm.reset();
+      setIsAddDialogOpen(false);
     } catch (error) {
       toast({
-        title: "Error creating job opening",
-        description: "Please try again.",
+        title: "Error",
+        description: "Failed to create job opening. Please try again.",
         variant: "destructive",
       });
     }
   };
-  
-  const onEdit = async (data: FormData) => {
-    if (!itemToEdit) return;
+
+  const handleEditSubmit = (data: JobFormValues) => {
+    if (!selectedJob) return;
     
     try {
-      const responsibilities = data.responsibilities.split('\n').filter(item => item.trim() !== '');
-      const requirements = data.requirements.split('\n').filter(item => item.trim() !== '');
-      const benefits = data.benefits ? data.benefits.split('\n').filter(item => item.trim() !== '') : undefined;
-      
-      const salary = (data.minSalary || data.maxSalary) ? {
-        min: data.minSalary ? parseInt(data.minSalary) : undefined,
-        max: data.maxSalary ? parseInt(data.maxSalary) : undefined,
-        currency: data.currency || 'USD'
-      } : undefined;
-      
-      const success = storageService.updateJobOpening(itemToEdit.id, {
+      const updatedJob: Partial<Omit<JobOpening, 'id' | 'createdAt' | 'updatedAt'>> = {
         title: data.title,
         department: data.department,
         location: data.location,
         type: data.type,
         description: data.description,
-        responsibilities,
-        requirements,
-        benefits,
-        salary,
+        responsibilities: data.responsibilities,
+        requirements: data.requirements,
+        benefits: data.benefits,
+        salary: {
+          min: data.salaryMin,
+          max: data.salaryMax,
+          currency: data.salaryCurrency || 'USD'
+        },
         applicationUrl: data.applicationUrl || undefined,
         published: data.published,
+      };
+      
+      storageService.updateJobOpening(selectedJob.id, updatedJob);
+      
+      toast({
+        title: "Job Opening Updated",
+        description: "The job has been successfully updated.",
       });
       
-      if (success) {
-        toast({
-          title: "Job opening updated",
-          description: `${data.title} has been updated successfully.`,
-        });
-        
-        loadJobs();
-        setIsEditJobDialogOpen(false);
-        setItemToEdit(null);
-      }
+      editForm.reset();
+      setIsEditDialogOpen(false);
     } catch (error) {
       toast({
-        title: "Error updating job opening",
-        description: "Please try again.",
+        title: "Error",
+        description: "Failed to update job opening. Please try again.",
         variant: "destructive",
       });
     }
   };
-  
-  const handleEdit = (job: JobOpening) => {
-    setItemToEdit(job);
-    setIsEditJobDialogOpen(true);
-  };
-  
-  const confirmDelete = (id: number) => {
-    setItemToDelete(id);
-    setIsDeleteDialogOpen(true);
-  };
-  
+
   const handleDelete = () => {
-    if (itemToDelete) {
-      const job = jobOpenings.find(job => job.id === itemToDelete);
-      const success = storageService.deleteJobOpening(itemToDelete);
+    if (!selectedJob) return;
+    
+    try {
+      storageService.deleteJobOpening(selectedJob.id);
       
-      if (success) {
-        toast({
-          title: "Job opening deleted",
-          description: `"${job?.title}" has been removed.`,
-        });
-        
-        loadJobs();
-      }
+      toast({
+        title: "Job Opening Deleted",
+        description: "The job has been successfully deleted.",
+      });
       
       setIsDeleteDialogOpen(false);
-      setItemToDelete(null);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete job opening. Please try again.",
+        variant: "destructive",
+      });
     }
   };
-  
-  const getStatusBadge = (published: boolean) => {
-    if (published) {
-      return (
-        <Badge variant="success" className="flex items-center gap-1">
-          <CheckCircle className="w-3.5 h-3.5" />
-          <span>Published</span>
-        </Badge>
-      );
-    }
-    
-    return (
-      <Badge variant="outline" className="flex items-center gap-1">
-        <Clock className="w-3.5 h-3.5" />
-        <span>Draft</span>
-      </Badge>
-    );
-  };
-  
-  return (
-    <AdminLayout>
-      <div className="p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <h1 className="text-2xl font-display font-bold">Job Openings</h1>
+
+  const renderJobForm = (form: any, onSubmit: any, isEdit = false) => (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="title"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Job Title</FormLabel>
+                <FormControl>
+                  <Input placeholder="Frontend Developer" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           
-          <Button onClick={() => setIsNewJobDialogOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Job
-          </Button>
+          <FormField
+            control={form.control}
+            name="department"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Department</FormLabel>
+                <FormControl>
+                  <Input placeholder="Engineering" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
         
-        <div className="bg-card border border-border rounded-lg shadow-sm">
-          <div className="p-4 border-b border-border">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-grow">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  type="text"
-                  placeholder="Search jobs..."
-                  className="w-full pl-10"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative">
-                  <select
-                    className="w-full md:w-48 px-4 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none pl-4 pr-10"
-                    value={selectedType || ""}
-                    onChange={(e) => setSelectedType(e.target.value || null)}
-                  >
-                    <option value="">All Types</option>
-                    {jobTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-                  <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
-                </div>
-                
-                <div className="relative">
-                  <select
-                    className="w-full md:w-48 px-4 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none pl-4 pr-10"
-                    value={selectedDepartment || ""}
-                    onChange={(e) => setSelectedDepartment(e.target.value || null)}
-                  >
-                    <option value="">All Departments</option>
-                    {departments.map(dept => (
-                      <option key={dept} value={dept}>{dept}</option>
-                    ))}
-                  </select>
-                  <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 pointer-events-none" />
-                </div>
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Location</FormLabel>
+                <FormControl>
+                  <Input placeholder="New York, NY" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-secondary/30">
-                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('id')}>
-                      <span>ID</span>
-                      <ArrowUpDown className="w-3 h-3" />
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('title')}>
-                      <span>TITLE</span>
-                      <ArrowUpDown className="w-3 h-3" />
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('department')}>
-                      <span>DEPARTMENT</span>
-                      <ArrowUpDown className="w-3 h-3" />
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('location')}>
-                      <span>LOCATION</span>
-                      <ArrowUpDown className="w-3 h-3" />
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('type')}>
-                      <span>TYPE</span>
-                      <ArrowUpDown className="w-3 h-3" />
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('published')}>
-                      <span>STATUS</span>
-                      <ArrowUpDown className="w-3 h-3" />
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                    <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('updatedAt')}>
-                      <span>UPDATED</span>
-                      <ArrowUpDown className="w-3 h-3" />
-                    </div>
-                  </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-muted-foreground">
-                    ACTIONS
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedJobs.length > 0 ? (
-                  sortedJobs.map((job) => (
-                    <tr key={job.id} className="border-b border-border last:border-0 hover:bg-secondary/20">
-                      <td className="py-3 px-4 text-sm">{job.id}</td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <Briefcase className="w-4 h-4 text-primary" />
-                          <span className="font-medium">{job.title}</span>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-sm">{job.department}</td>
-                      <td className="py-3 px-4 text-sm">{job.location}</td>
-                      <td className="py-3 px-4 text-sm">
-                        <Badge variant="secondary">{job.type}</Badge>
-                      </td>
-                      <td className="py-3 px-4 text-sm">
-                        {getStatusBadge(job.published)}
-                      </td>
-                      <td className="py-3 px-4 text-sm">{job.updatedAt}</td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 w-8 p-0"
-                            onClick={() => handleEdit(job)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 w-8 p-0 text-destructive"
-                            onClick={() => confirmDelete(job.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={8} className="py-8 text-center text-muted-foreground">
-                      {jobOpenings.length === 0 ? (
-                        <div className="flex flex-col items-center gap-2">
-                          <AlertCircle className="w-8 h-8 text-muted-foreground/60" />
-                          <p>No job openings found. Click "Add New Job" to create one.</p>
-                        </div>
-                      ) : (
-                        "No job openings match your search criteria"
-                      )}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          
-          <div className="p-4 border-t border-border flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              Showing {filteredJobs.length} of {jobOpenings.length} job openings
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" disabled={jobOpenings.length <= 10}>
-                Previous
-              </Button>
-              <Button variant="outline" size="sm" disabled={jobOpenings.length <= 10}>
-                Next
-              </Button>
-            </div>
-          </div>
+          <FormField
+            control={form.control}
+            name="type"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Job Type</FormLabel>
+                <Select 
+                  defaultValue={field.value} 
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select job type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Full-time">Full-time</SelectItem>
+                    <SelectItem value="Part-time">Part-time</SelectItem>
+                    <SelectItem value="Contract">Contract</SelectItem>
+                    <SelectItem value="Remote">Remote</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
+        
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Job Description</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Detailed description of the job role" 
+                  {...field} 
+                  rows={4}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="responsibilities"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Responsibilities</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="One responsibility per line" 
+                    {...field} 
+                    rows={4}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Enter each responsibility on a new line
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="requirements"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Requirements</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="One requirement per line" 
+                    {...field} 
+                    rows={4}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Enter each requirement on a new line
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <FormField
+          control={form.control}
+          name="benefits"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Benefits (Optional)</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="One benefit per line" 
+                  {...field} 
+                  rows={3}
+                />
+              </FormControl>
+              <FormDescription>
+                Enter each benefit on a new line
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="salaryMin"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Min Salary (Optional)</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="50000" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="salaryMax"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Max Salary (Optional)</FormLabel>
+                <FormControl>
+                  <Input type="number" placeholder="80000" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="salaryCurrency"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Currency</FormLabel>
+                <Select 
+                  defaultValue={field.value} 
+                  onValueChange={field.onChange}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                    <SelectItem value="GBP">GBP</SelectItem>
+                    <SelectItem value="CAD">CAD</SelectItem>
+                    <SelectItem value="AUD">AUD</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <FormField
+          control={form.control}
+          name="applicationUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Application URL (Optional)</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="https://example.com/apply" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormDescription>
+                URL where applicants can apply for this job
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="published"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <FormLabel className="text-base">Publish Job Opening</FormLabel>
+                <FormDescription>
+                  Make this job visible on the website
+                </FormDescription>
+              </div>
+              <FormControl>
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        
+        <DialogFooter>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => isEdit ? setIsEditDialogOpen(false) : setIsAddDialogOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button type="submit">
+            {isEdit ? "Update Job" : "Create Job"}
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
+  );
+
+  return (
+    <AdminLayout>
+      <div className="container mx-auto py-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Job Openings</h1>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add New Job
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add New Job Opening</DialogTitle>
+                <DialogDescription>
+                  Fill in the details below to create a new job opening.
+                </DialogDescription>
+              </DialogHeader>
+              {renderJobForm(addForm, handleAddSubmit)}
+            </DialogContent>
+          </Dialog>
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Manage Job Openings</CardTitle>
+            <CardDescription>
+              View, edit, and delete job postings on your website.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {jobs.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No job openings found. Create your first job posting.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {jobs.map((job) => (
+                      <TableRow key={job.id}>
+                        <TableCell className="font-medium">{job.title}</TableCell>
+                        <TableCell>{job.department}</TableCell>
+                        <TableCell>{job.location}</TableCell>
+                        <TableCell>{job.type}</TableCell>
+                        <TableCell>
+                          {job.published ? (
+                            <Badge variant="default" className="bg-green-500">Published</Badge>
+                          ) : (
+                            <Badge variant="outline">Draft</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedJob(job);
+                                setIsEditDialogOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive"
+                              onClick={() => {
+                                setSelectedJob(job);
+                                setIsDeleteDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        {/* Edit Job Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Job Opening</DialogTitle>
+              <DialogDescription>
+                Update the details for this job opening.
+              </DialogDescription>
+            </DialogHeader>
+            {renderJobForm(editForm, handleEditSubmit, true)}
+          </DialogContent>
+        </Dialog>
+        
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete the job opening "{selectedJob?.title}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDelete}>
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-
-      {/* New Job Dialog */}
-      <Dialog open={isNewJobDialogOpen} onOpenChange={setIsNewJobDialogOpen}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Add New Job Opening</DialogTitle>
-            <DialogDescription>
-              Create a new job opening to be displayed on your website
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Job Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Senior Software Engineer" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="department"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Department</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Engineering" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location</FormLabel>
-                      <FormControl>
-                        <Input placeholder="New York, NY" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Job Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select job type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Full-time">Full-time</SelectItem>
-                          <SelectItem value="Part-time">Part-time</SelectItem>
-                          <SelectItem value="Contract">Contract</SelectItem>
-                          <SelectItem value="Remote">Remote</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Job Description</FormLabel>
-                    <FormControl>
-                      <Textarea rows={4} placeholder="Enter a detailed job description..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="responsibilities"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Responsibilities</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          rows={5} 
-                          placeholder="Enter each responsibility on a new line..." 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>Enter each item on a new line</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="requirements"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Requirements</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          rows={5} 
-                          placeholder="Enter each requirement on a new line..." 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>Enter each item on a new line</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="benefits"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Benefits (Optional)</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        rows={4} 
-                        placeholder="Enter each benefit on a new line..." 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>Enter each item on a new line</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <FormField
-                  control={form.control}
-                  name="minSalary"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Min Salary (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="50000" type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="maxSalary"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Max Salary (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="90000" type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="currency"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Currency</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select currency" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="USD">USD ($)</SelectItem>
-                          <SelectItem value="EUR">EUR (€)</SelectItem>
-                          <SelectItem value="GBP">GBP (£)</SelectItem>
-                          <SelectItem value="JPY">JPY (¥)</SelectItem>
-                          <SelectItem value="CAD">CAD ($)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={form.control}
-                name="applicationUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Application URL (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://careers.yourcompany.com/apply" {...field} />
-                    </FormControl>
-                    <FormDescription>If left empty, applicants will be directed to the default contact form</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="published"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Publish Job</FormLabel>
-                      <FormDescription>
-                        Make this job opening visible on your website
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              
-              <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsNewJobDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">Save Job Opening</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Job Dialog */}
-      <Dialog open={isEditJobDialogOpen} onOpenChange={setIsEditJobDialogOpen}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Job Opening</DialogTitle>
-            <DialogDescription>
-              Update job opening details
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Form {...editForm}>
-            <form onSubmit={editForm.handleSubmit(onEdit)} className="space-y-6 py-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={editForm.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Job Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Senior Software Engineer" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={editForm.control}
-                  name="department"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Department</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Engineering" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={editForm.control}
-                  name="location"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Location</FormLabel>
-                      <FormControl>
-                        <Input placeholder="New York, NY" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={editForm.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Job Type</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select job type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Full-time">Full-time</SelectItem>
-                          <SelectItem value="Part-time">Part-time</SelectItem>
-                          <SelectItem value="Contract">Contract</SelectItem>
-                          <SelectItem value="Remote">Remote</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={editForm.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Job Description</FormLabel>
-                    <FormControl>
-                      <Textarea rows={4} placeholder="Enter a detailed job description..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={editForm.control}
-                  name="responsibilities"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Responsibilities</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          rows={5} 
-                          placeholder="Enter each responsibility on a new line..." 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>Enter each item on a new line</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={editForm.control}
-                  name="requirements"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Requirements</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          rows={5} 
-                          placeholder="Enter each requirement on a new line..." 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>Enter each item on a new line</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={editForm.control}
-                name="benefits"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Benefits (Optional)</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        rows={4} 
-                        placeholder="Enter each benefit on a new line..." 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormDescription>Enter each item on a new line</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <FormField
-                  control={editForm.control}
-                  name="minSalary"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Min Salary (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="50000" type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={editForm.control}
-                  name="maxSalary"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Max Salary (Optional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="90000" type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={editForm.control}
-                  name="currency"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Currency</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select currency" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="USD">USD ($)</SelectItem>
-                          <SelectItem value="EUR">EUR (€)</SelectItem>
-                          <SelectItem value="GBP">GBP (£)</SelectItem>
-                          <SelectItem value="JPY">JPY (¥)</SelectItem>
-                          <SelectItem value="CAD">CAD ($)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={editForm.control}
-                name="applicationUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Application URL (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://careers.yourcompany.com/apply" {...field} />
-                    </FormControl>
-                    <FormDescription>If left empty, applicants will be directed to the default contact form</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={editForm.control}
-                name="published"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">Publish Job</FormLabel>
-                      <FormDescription>
-                        Make this job opening visible on your website
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
-              
-              <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => {
-                    setIsEditJobDialogOpen(false);
-                    setItemToEdit(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">Update Job Opening</Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
-          </DialogHeader>
-          <p>Are you sure you want to delete this job opening? This action cannot be undone.</p>
-          <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </AdminLayout>
   );
 };

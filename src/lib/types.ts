@@ -1,5 +1,5 @@
 
-export type ContentType = 'Page' | 'Page Section' | 'Service' | 'Portfolio' | 'Blog Post';
+export type ContentType = 'Page' | 'Page Section' | 'Service' | 'Portfolio' | 'Blog Post' | 'Job Opening';
 
 export type ContentPlacement = {
   pageId?: number;
@@ -89,4 +89,34 @@ export interface JobOpening {
   published: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface JobApplication {
+  id: number;
+  jobId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  resumeUrl?: string;
+  coverLetter: string;
+  status: 'New' | 'In Review' | 'Interviewed' | 'Offered' | 'Rejected';
+  submittedAt: string;
+  updatedAt: string;
+}
+
+export interface PopupConfig {
+  id: number;
+  title: string;
+  content: string;
+  active: boolean;
+  startDate?: string;
+  endDate?: string;
+  showOnPages: string[];
+  dismissible: boolean;
+  dismissType: 'session' | 'permanent';
+  position: 'center' | 'top' | 'bottom';
+  buttonText?: string;
+  buttonUrl?: string;
+  delay: number;
 }
