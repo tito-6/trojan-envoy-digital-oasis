@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,42 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useLanguage } from "@/lib/i18n";
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+const formSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  email: z.string().email({ message: "Invalid email address" }),
+  phone: z.string().min(6, { message: "Phone number is required" }),
+  service: z.string().min(1, { message: "Please select a service" }),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 const ServicesCTA: React.FC = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      service: "",
+    },
+  });
   
   const features = [
     t('services.cta.features.title1'),
@@ -20,6 +53,30 @@ const ServicesCTA: React.FC = () => {
     t('services.cta.features.title5'),
     t('services.cta.features.title6')
   ];
+  
+  const onSubmit = async (data: FormData) => {
+    setIsSubmitting(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: "Form submitted successfully!",
+        description: "We'll get back to you as soon as possible.",
+      });
+      
+      form.reset();
+    } catch (error) {
+      toast({
+        title: "Error submitting form",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   return (
     <section className="py-16 md:py-24 bg-card">
@@ -66,69 +123,107 @@ const ServicesCTA: React.FC = () => {
               {t('services.form.title')}
             </h3>
             
-            <form className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium">
-                  {t('services.form.name')}
-                </label>
-                <Input 
-                  id="name" 
-                  placeholder={t('services.form.name.placeholder')} 
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('services.form.name')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder={t('services.form.name.placeholder')}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">
-                  {t('services.form.email')}
-                </label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder={t('services.form.email.placeholder')} 
+                
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('services.form.email')}</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder={t('services.form.email.placeholder')}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="phone" className="text-sm font-medium">
-                  Phone Number
-                </label>
-                <PhoneInput
-                  country={'us'}
-                  inputProps={{
-                    id: 'phone',
-                    name: 'phone',
-                  }}
-                  inputClass="w-full p-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
-                  containerClass="w-full"
-                  buttonClass="border border-input rounded-l-md"
-                  dropdownClass="bg-background text-foreground"
+                
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field: { onChange, value } }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <PhoneInput
+                          country={'us'}
+                          value={value}
+                          onChange={onChange}
+                          inputProps={{
+                            name: 'phone',
+                            required: true,
+                          }}
+                          inputClass="w-full p-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                          containerClass="w-full"
+                          buttonClass="border border-input rounded-l-md"
+                          dropdownClass="bg-background text-foreground"
+                          enableSearch={true}
+                          searchPlaceholder="Search countries..."
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </div>
-              
-              <div className="space-y-2">
-                <label htmlFor="service" className="text-sm font-medium">
-                  {t('services.form.service')}
-                </label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('services.form.service.placeholder')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="web">{t('services.web.title')}</SelectItem>
-                    <SelectItem value="mobile">{t('services.mobile.title')}</SelectItem>
-                    <SelectItem value="ui">{t('services.ui.title')}</SelectItem>
-                    <SelectItem value="digital">{t('services.digital.title')}</SelectItem>
-                    <SelectItem value="seo">{t('services.seo.title')}</SelectItem>
-                    <SelectItem value="ecommerce">{t('services.ecommerce.title')}</SelectItem>
-                    <SelectItem value="content">{t('services.content.title')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <Button type="submit" className="w-full mt-2 bg-primary text-primary-foreground hover:opacity-90">
-                {t('services.form.submit')}
-              </Button>
-            </form>
+                
+                <FormField
+                  control={form.control}
+                  name="service"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('services.form.service')}</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={t('services.form.service.placeholder')} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="web">{t('services.web.title')}</SelectItem>
+                          <SelectItem value="mobile">{t('services.mobile.title')}</SelectItem>
+                          <SelectItem value="ui">{t('services.ui.title')}</SelectItem>
+                          <SelectItem value="digital">{t('services.digital.title')}</SelectItem>
+                          <SelectItem value="seo">{t('services.seo.title')}</SelectItem>
+                          <SelectItem value="ecommerce">{t('services.ecommerce.title')}</SelectItem>
+                          <SelectItem value="content">{t('services.content.title')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <Button 
+                  type="submit" 
+                  className="w-full mt-2 bg-primary text-primary-foreground hover:opacity-90"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Submitting..." : t('services.form.submit')}
+                </Button>
+              </form>
+            </Form>
           </div>
         </div>
       </div>

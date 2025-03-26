@@ -1,4 +1,3 @@
-
 export type ContentType = 'Page' | 'Page Section' | 'Service' | 'Portfolio' | 'Blog Post';
 
 export type ContentPlacement = {
@@ -68,4 +67,25 @@ export interface NavigationItem {
 export interface BlogCategory {
   name: string;
   count: number;
+}
+
+export interface JobOpening {
+  id: number;
+  title: string;
+  department: string;
+  location: string;
+  type: 'Full-time' | 'Part-time' | 'Contract' | 'Remote';
+  description: string;
+  responsibilities: string[];
+  requirements: string[];
+  benefits?: string[];
+  salary?: {
+    min?: number;
+    max?: number;
+    currency?: string;
+  };
+  applicationUrl?: string;
+  published: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
