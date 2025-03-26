@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -33,7 +34,7 @@ import { availableLanguages } from "@/lib/i18n";
 
 const contentFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
-  type: z.enum(["Page", "Page Section", "Service", "Portfolio", "Blog Post"] as const),
+  type: z.enum(["Page", "Page Section", "Service", "Portfolio", "Blog Post", "Job Opening"] as const),
   subtitle: z.string().optional(),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
   seoTitle: z.string().optional(),
