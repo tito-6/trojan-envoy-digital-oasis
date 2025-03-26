@@ -1,4 +1,5 @@
-import { ContentItem, ContactRequest, NavigationItem, JobOpening } from "./types";
+
+import { ContentItem, ContactRequest, NavigationItem, JobOpening, User } from "./types";
 
 // Configure storage for content items
 const configureContentStorage = () => {
@@ -69,12 +70,84 @@ const configureContentStorage = () => {
     return content.find(c => c.id === id);
   };
 
+  // Get content items by type
+  const getContentByType = (type: string): ContentItem[] => {
+    const content = getAllContent();
+    return content.filter(c => c.type === type);
+  };
+
   return {
     getAllContent,
     addContent,
     updateContent,
     deleteContent,
     getContentById,
+    getContentByType,
+  };
+};
+
+// Configure storage for users
+const configureUserStorage = () => {
+  const storageKey = 'users';
+
+  // Get all users
+  const getAllUsers = (): User[] => {
+    const usersJson = localStorage.getItem(storageKey);
+    return usersJson ? JSON.parse(usersJson) : [];
+  };
+
+  // Save all users
+  const saveAllUsers = (users: User[]) => {
+    localStorage.setItem(storageKey, JSON.stringify(users));
+  };
+
+  // Get user by email
+  const getUserByEmail = (email: string): User | undefined => {
+    const users = getAllUsers();
+    return users.find(u => u.email === email);
+  };
+
+  // Add a new user
+  const addUser = (userData: Omit<User, 'id'>): User => {
+    const users = getAllUsers();
+    const newUser: User = {
+      id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1,
+      ...userData,
+    };
+    users.push(newUser);
+    saveAllUsers(users);
+    return newUser;
+  };
+
+  // Update user
+  const updateUser = (id: number, userData: Partial<Omit<User, 'id'>>): boolean => {
+    const users = getAllUsers();
+    const index = users.findIndex(u => u.id === id);
+    if (index === -1) return false;
+
+    users[index] = {
+      ...users[index],
+      ...userData,
+    };
+    saveAllUsers(users);
+    return true;
+  };
+
+  // Delete user
+  const deleteUser = (id: number): boolean => {
+    const users = getAllUsers();
+    const newUsers = users.filter(u => u.id !== id);
+    if (newUsers.length === users.length) return false;
+    saveAllUsers(newUsers);
+    return true;
+  };
+
+  return {
+    getAllUsers,
+    getUserByEmail,
+    addUser,
+    updateUser,
+    deleteUser,
   };
 };
 
@@ -94,10 +167,17 @@ const configureContactStorage = () => {
   };
 
   // Add a new contact request
-  const addContactRequest = (requestData: ContactRequest): void => {
+  const addContactRequest = (requestData: Omit<ContactRequest, 'id' | 'status' | 'dateSubmitted'>): ContactRequest => {
     const requests = getAllContactRequests();
-    requests.push(requestData);
+    const newRequest: ContactRequest = {
+      id: requests.length > 0 ? Math.max(...requests.map(r => r.id)) + 1 : 1,
+      ...requestData,
+      status: 'New',
+      dateSubmitted: new Date().toISOString(),
+    };
+    requests.push(newRequest);
     saveAllContactRequests(requests);
+    return newRequest;
   };
 
   return {
@@ -151,9 +231,9 @@ const configureJobOpenings = () => {
   };
   
   // Get a job opening by ID
-  const getJobOpeningById = (id: number): JobOpening | null => {
+  const getJobOpeningById = (id: number): JobOpening | undefined => {
     const jobs = getAllJobOpenings();
-    return jobs.find(job => job.id === id) || null;
+    return jobs.find(job => job.id === id) || undefined;
   };
   
   // Add a new job opening
@@ -213,11 +293,14 @@ const configureJobOpenings = () => {
 
 // Global event listeners
 const configureEventListeners = () => {
-  const listeners: { [key: string]: (callback: (data: any) => void) => () => void } = {};
+  type EventCallback = (data: any) => void;
+  type RemoveListenerFn = () => void;
+  
+  const listeners: Record<string, Array<(event: Event) => void>> = {};
 
-  const addEventListener = (eventName: string, callback: (data: any) => void) => {
+  const addEventListener = (eventName: string, callback: EventCallback): RemoveListenerFn => {
     const listener = (event: Event) => {
-      if ((event as CustomEvent).detail) {
+      if ((event as CustomEvent).detail !== undefined) {
         callback((event as CustomEvent).detail);
       } else {
         callback(null);
@@ -226,13 +309,17 @@ const configureEventListeners = () => {
 
     window.addEventListener(eventName, listener);
 
+    // Initialize the array if it doesn't exist
+    if (!listeners[eventName]) {
+      listeners[eventName] = [];
+    }
+    
     // Store the listener for later removal
-    listeners[eventName] = listeners[eventName] || [];
     listeners[eventName].push(listener);
 
     return () => {
       window.removeEventListener(eventName, listener);
-      listeners[eventName] = listeners[eventName].filter((l: any) => l !== listener);
+      listeners[eventName] = listeners[eventName].filter(l => l !== listener);
     };
   };
 
@@ -244,6 +331,7 @@ const configureEventListeners = () => {
 // Extend the storage service with all configurations
 export const storageService = {
   ...configureContentStorage(),
+  ...configureUserStorage(),
   ...configureContactStorage(),
   ...configureNavigationStorage(),
   ...configureEventListeners(),

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
@@ -50,7 +49,7 @@ const Contact: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Save to our storage service
+      // Save to our storage service with required fields
       storageService.addContactRequest({
         name: data.name,
         email: data.email,

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -55,7 +54,7 @@ const Contact: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Save to our storage service
+      // Save to our storage service with required fields
       storageService.addContactRequest({
         name: data.name,
         email: data.email,
