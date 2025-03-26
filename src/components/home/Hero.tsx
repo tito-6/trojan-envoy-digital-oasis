@@ -5,7 +5,7 @@ import { ArrowRight, Award, Check } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { 
   FaGoogle, 
-  FaFacebook, // Replace FaMeta with FaFacebook as Meta's icon
+  FaMeta, 
   FaSearchengin, 
   FaAws, 
   FaShopify, 
@@ -103,7 +103,7 @@ const Hero: React.FC = () => {
       bgColor: "bg-blue-100"
     },
     { 
-      Icon: FaFacebook, // Use FaFacebook instead of FaMeta
+      Icon: FaMeta, 
       name: "Meta", 
       color: "#1877F2",
       bgColor: "bg-blue-100"

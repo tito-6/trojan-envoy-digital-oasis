@@ -1,337 +1,365 @@
+import { ContentItem, ContactRequest, User, NavigationItem } from './types';
 
-import { ContentItem, ContactRequest, NavigationItem, JobOpening, User } from "./types";
+// Initial sample data for content - we'll keep this minimal
+const initialContent: ContentItem[] = [];
 
-// Configure storage for content items
-const configureContentStorage = () => {
-  const storageKey = 'content-items';
+// Initial navigation items
+const initialNavigation: NavigationItem[] = [
+  { id: 1, label: "Home", path: "/", order: 1 },
+  { id: 2, label: "Services", path: "/services", order: 2 },
+  { id: 3, label: "About", path: "/about", order: 3 },
+  { id: 4, label: "Portfolio", path: "/portfolio", order: 4 },
+  { id: 5, label: "Blog", path: "/blog", order: 5 },
+  { id: 6, label: "Contact", path: "/contact", order: 6 },
+];
 
-  // Get all content items
-  const getAllContent = (): ContentItem[] => {
-    const contentJson = localStorage.getItem(storageKey);
-    return contentJson ? JSON.parse(contentJson) : [];
-  };
+// Initial sample users
+const initialUsers: User[] = [
+  { id: 1, name: "Admin User", email: "admin@trojan-envoy.com", role: "Admin", lastLogin: "2023-11-15" },
+];
 
-  // Save all content items
-  const saveAllContent = (content: ContentItem[]) => {
-    localStorage.setItem(storageKey, JSON.stringify(content));
-  };
+// Initial sample contact requests - empty now
+const initialContacts: ContactRequest[] = [];
 
-  // Add a new content item
-  const addContent = (contentData: Omit<ContentItem, 'id' | 'lastUpdated'>): ContentItem => {
-    const content = getAllContent();
-    const newContent: ContentItem = {
-      id: content.length > 0 ? Math.max(...content.map(c => c.id)) + 1 : 1,
-      ...contentData,
-      lastUpdated: new Date().toISOString(),
-    };
-    content.push(newContent);
-    saveAllContent(content);
+class StorageService {
+  private contentKey = 'trojan-envoy-content';
+  private usersKey = 'trojan-envoy-users';
+  private contactsKey = 'trojan-envoy-contacts';
+  private navigationKey = 'trojan-envoy-navigation';
+  private eventListeners: Record<string, Function[]> = {};
+
+  constructor() {
+    this.initializeStorage();
+  }
+
+  private initializeStorage() {
+    if (!localStorage.getItem(this.contentKey)) {
+      localStorage.setItem(this.contentKey, JSON.stringify(initialContent));
+    }
     
-    // Dispatch event
-    window.dispatchEvent(new CustomEvent('content-added', { detail: newContent }));
+    if (!localStorage.getItem(this.usersKey)) {
+      localStorage.setItem(this.usersKey, JSON.stringify(initialUsers));
+    }
     
-    return newContent;
-  };
-
-  // Update a content item
-  const updateContent = (id: number, contentData: Partial<Omit<ContentItem, 'id' | 'lastUpdated'>>): boolean => {
-    const content = getAllContent();
-    const index = content.findIndex(c => c.id === id);
-    if (index === -1) return false;
-
-    content[index] = {
-      ...content[index],
-      ...contentData,
-      lastUpdated: new Date().toISOString(),
-    };
-    saveAllContent(content);
+    if (!localStorage.getItem(this.contactsKey)) {
+      localStorage.setItem(this.contactsKey, JSON.stringify(initialContacts));
+    }
     
-    // Dispatch event
-    window.dispatchEvent(new CustomEvent('content-updated', { detail: content[index] }));
+    if (!localStorage.getItem(this.navigationKey)) {
+      localStorage.setItem(this.navigationKey, JSON.stringify(initialNavigation));
+    }
+  }
+
+  addEventListener(event: string, callback: Function) {
+    if (!this.eventListeners[event]) {
+      this.eventListeners[event] = [];
+    }
+    this.eventListeners[event].push(callback);
+    return () => this.removeEventListener(event, callback);
+  }
+
+  removeEventListener(event: string, callback: Function) {
+    if (this.eventListeners[event]) {
+      this.eventListeners[event] = this.eventListeners[event].filter(cb => cb !== callback);
+    }
+  }
+
+  dispatchEvent(event: string, data: any) {
+    if (this.eventListeners[event]) {
+      this.eventListeners[event].forEach(callback => callback(data));
+    }
+  }
+
+  getAllContent(): ContentItem[] {
+    const content = localStorage.getItem(this.contentKey);
+    return content ? JSON.parse(content) : [];
+  }
+
+  getContentById(id: number): ContentItem | undefined {
+    return this.getAllContent().find(item => item.id === id);
+  }
+
+  getContentByType(type: string): ContentItem[] {
+    return this.getAllContent().filter(item => item.type === type);
+  }
+
+  getContentBySlug(slug: string): ContentItem | undefined {
+    return this.getAllContent().find(item => item.slug === slug);
+  }
+
+  addContent(content: Omit<ContentItem, 'id' | 'lastUpdated'>): ContentItem {
+    const allContent = this.getAllContent();
+    const newId = allContent.length > 0 ? Math.max(...allContent.map(item => item.id)) + 1 : 1;
     
-    return true;
-  };
-
-  // Delete a content item
-  const deleteContent = (id: number): boolean => {
-    const content = getAllContent();
-    const newContent = content.filter(c => c.id !== id);
-    saveAllContent(newContent);
-    
-    // Dispatch event
-    window.dispatchEvent(new CustomEvent('content-deleted', { detail: id }));
-    
-    return true;
-  };
-  
-  // Get content item by ID
-  const getContentById = (id: number): ContentItem | undefined => {
-    const content = getAllContent();
-    return content.find(c => c.id === id);
-  };
-
-  // Get content items by type
-  const getContentByType = (type: string): ContentItem[] => {
-    const content = getAllContent();
-    return content.filter(c => c.type === type);
-  };
-
-  return {
-    getAllContent,
-    addContent,
-    updateContent,
-    deleteContent,
-    getContentById,
-    getContentByType,
-  };
-};
-
-// Configure storage for users
-const configureUserStorage = () => {
-  const storageKey = 'users';
-
-  // Get all users
-  const getAllUsers = (): User[] => {
-    const usersJson = localStorage.getItem(storageKey);
-    return usersJson ? JSON.parse(usersJson) : [];
-  };
-
-  // Save all users
-  const saveAllUsers = (users: User[]) => {
-    localStorage.setItem(storageKey, JSON.stringify(users));
-  };
-
-  // Get user by email
-  const getUserByEmail = (email: string): User | undefined => {
-    const users = getAllUsers();
-    return users.find(u => u.email === email);
-  };
-
-  // Add a new user
-  const addUser = (userData: Omit<User, 'id'>): User => {
-    const users = getAllUsers();
-    const newUser: User = {
-      id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1,
-      ...userData,
-    };
-    users.push(newUser);
-    saveAllUsers(users);
-    return newUser;
-  };
-
-  // Update user
-  const updateUser = (id: number, userData: Partial<Omit<User, 'id'>>): boolean => {
-    const users = getAllUsers();
-    const index = users.findIndex(u => u.id === id);
-    if (index === -1) return false;
-
-    users[index] = {
-      ...users[index],
-      ...userData,
-    };
-    saveAllUsers(users);
-    return true;
-  };
-
-  // Delete user
-  const deleteUser = (id: number): boolean => {
-    const users = getAllUsers();
-    const newUsers = users.filter(u => u.id !== id);
-    if (newUsers.length === users.length) return false;
-    saveAllUsers(newUsers);
-    return true;
-  };
-
-  return {
-    getAllUsers,
-    getUserByEmail,
-    addUser,
-    updateUser,
-    deleteUser,
-  };
-};
-
-// Configure storage for contact requests
-const configureContactStorage = () => {
-  const storageKey = 'contact-requests';
-
-  // Get all contact requests
-  const getAllContactRequests = (): ContactRequest[] => {
-    const requestsJson = localStorage.getItem(storageKey);
-    return requestsJson ? JSON.parse(requestsJson) : [];
-  };
-
-  // Save all contact requests
-  const saveAllContactRequests = (requests: ContactRequest[]) => {
-    localStorage.setItem(storageKey, JSON.stringify(requests));
-  };
-
-  // Add a new contact request
-  const addContactRequest = (requestData: Omit<ContactRequest, 'id'>): ContactRequest => {
-    const requests = getAllContactRequests();
-    const newRequest: ContactRequest = {
-      id: requests.length > 0 ? Math.max(...requests.map(r => r.id)) + 1 : 1,
-      ...requestData,
-    };
-    requests.push(newRequest);
-    saveAllContactRequests(requests);
-    return newRequest;
-  };
-
-  return {
-    getAllContactRequests,
-    addContactRequest,
-  };
-};
-
-// Configure storage for navigation items
-const configureNavigationStorage = () => {
-  const storageKey = 'navigation-items';
-
-  // Get all navigation items
-  const getAllNavigationItems = (): NavigationItem[] => {
-    const navigationJson = localStorage.getItem(storageKey);
-    return navigationJson ? JSON.parse(navigationJson) : [];
-  };
-
-  // Save all navigation items
-  const saveAllNavigationItems = (navigation: NavigationItem[]) => {
-    localStorage.setItem(storageKey, JSON.stringify(navigation));
-  };
-
-  // Update navigation items
-  const updateNavigationItems = (newNavigation: NavigationItem[]): void => {
-    saveAllNavigationItems(newNavigation);
-    
-    // Dispatch event
-    window.dispatchEvent(new CustomEvent('navigation-updated'));
-  };
-
-  return {
-    getAllNavigationItems,
-    updateNavigationItems,
-  };
-};
-
-// Configure storage for job openings
-const configureJobOpenings = () => {
-  const storageKey = 'job-openings';
-  
-  // Get all job openings
-  const getAllJobOpenings = (): JobOpening[] => {
-    const jobsJson = localStorage.getItem(storageKey);
-    return jobsJson ? JSON.parse(jobsJson) : [];
-  };
-  
-  // Save all job openings
-  const saveAllJobOpenings = (jobs: JobOpening[]) => {
-    localStorage.setItem(storageKey, JSON.stringify(jobs));
-  };
-  
-  // Get a job opening by ID
-  const getJobOpeningById = (id: number): JobOpening | undefined => {
-    const jobs = getAllJobOpenings();
-    return jobs.find(job => job.id === id) || undefined;
-  };
-  
-  // Add a new job opening
-  const addJobOpening = (jobData: Omit<JobOpening, 'id' | 'createdAt' | 'updatedAt'>): JobOpening => {
-    const jobs = getAllJobOpenings();
-    
-    const now = new Date().toISOString();
-    const newJob: JobOpening = {
-      id: jobs.length > 0 ? Math.max(...jobs.map(job => job.id)) + 1 : 1,
-      ...jobData,
-      createdAt: now,
-      updatedAt: now,
+    const normalizedContent: ContentItem = {
+      ...content,
+      id: newId,
+      lastUpdated: new Date().toISOString().split('T')[0],
+      published: content.published ?? false,
+      seoKeywords: content.seoKeywords || [],
+      slug: content.slug 
+        ? content.slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '') 
+        : content.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
+      publishDate: content.type === 'Blog Post' ? 
+        (content.publishDate || new Date().toISOString().split('T')[0]) : 
+        content.publishDate
     };
     
-    jobs.push(newJob);
-    saveAllJobOpenings(jobs);
+    allContent.push(normalizedContent);
+    localStorage.setItem(this.contentKey, JSON.stringify(allContent));
     
-    // Dispatch event
-    window.dispatchEvent(new CustomEvent('job-added', { detail: newJob }));
+    if (content.type === 'Page' && content.showInNavigation && normalizedContent.slug) {
+      this.addNavigationItem({
+        label: content.title,
+        path: `/${normalizedContent.slug}`,
+        order: this.getAllNavigationItems().length + 1
+      });
+    }
     
-    return newJob;
-  };
-  
-  // Update a job opening
-  const updateJobOpening = (id: number, jobData: Partial<Omit<JobOpening, 'id' | 'createdAt' | 'updatedAt'>>): boolean => {
-    const jobs = getAllJobOpenings();
-    const index = jobs.findIndex(job => job.id === id);
+    this.dispatchEvent('content-added', normalizedContent);
     
-    if (index === -1) return false;
+    return normalizedContent;
+  }
+
+  updateContent(id: number, content: Partial<ContentItem>): ContentItem | null {
+    const allContent = this.getAllContent();
+    const index = allContent.findIndex(item => item.id === id);
     
-    jobs[index] = {
-      ...jobs[index],
-      ...jobData,
-      updatedAt: new Date().toISOString(),
+    if (index === -1) return null;
+    
+    const originalContent = allContent[index];
+    
+    let updatedSlug = originalContent.slug;
+    if (content.slug !== undefined) {
+      updatedSlug = content.slug
+        ? content.slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '')
+        : originalContent.slug;
+    } else if (content.title && !originalContent.slug) {
+      updatedSlug = content.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
+    }
+    
+    const updatedContent: ContentItem = {
+      ...originalContent,
+      ...content,
+      lastUpdated: new Date().toISOString().split('T')[0],
+      seoKeywords: content.seoKeywords || originalContent.seoKeywords || [],
+      slug: updatedSlug
     };
     
-    saveAllJobOpenings(jobs);
+    allContent[index] = updatedContent;
+    localStorage.setItem(this.contentKey, JSON.stringify(allContent));
     
-    // Dispatch event
-    window.dispatchEvent(new CustomEvent('job-updated', { detail: jobs[index] }));
-    
-    return true;
-  };
-  
-  // Delete a job opening
-  const deleteJobOpening = (id: number): boolean => {
-    const jobs = getAllJobOpenings();
-    const newJobs = jobs.filter(job => job.id !== id);
-    
-    if (newJobs.length === jobs.length) return false;
-    
-    saveAllJobOpenings(newJobs);
-    
-    // Dispatch event
-    window.dispatchEvent(new CustomEvent('job-deleted', { detail: id }));
-    
-    return true;
-  };
-  
-  return {
-    getAllJobOpenings,
-    getJobOpeningById,
-    addJobOpening,
-    updateJobOpening,
-    deleteJobOpening,
-  };
-};
-
-// Global event listeners
-const configureEventListeners = () => {
-  type EventCallback = (data: any) => void;
-  type RemoveListenerFn = () => void;
-  
-  const addEventListener = (eventName: string, callback: EventCallback): RemoveListenerFn => {
-    const listener = (event: Event) => {
-      if ((event as CustomEvent).detail !== undefined) {
-        callback((event as CustomEvent).detail);
-      } else {
-        callback(null);
+    if (updatedContent.type === 'Page') {
+      const navItem = this.getNavigationItemByPath(`/${originalContent.slug || ''}`);
+      
+      if (updatedContent.showInNavigation && !navItem && updatedContent.slug) {
+        this.addNavigationItem({
+          label: updatedContent.title,
+          path: `/${updatedContent.slug}`,
+          order: this.getAllNavigationItems().length + 1
+        });
+      } 
+      else if (navItem) {
+        if (!updatedContent.showInNavigation) {
+          this.deleteNavigationItem(navItem.id);
+        } else if (originalContent.title !== updatedContent.title || originalContent.slug !== updatedContent.slug) {
+          this.updateNavigationItem(navItem.id, {
+            label: updatedContent.title,
+            path: `/${updatedContent.slug}`
+          });
+        }
       }
-    };
-
-    window.addEventListener(eventName, listener);
+    }
     
-    return () => {
-      window.removeEventListener(eventName, listener);
+    this.dispatchEvent('content-updated', updatedContent);
+    
+    return updatedContent;
+  }
+
+  deleteContent(id: number): boolean {
+    const allContent = this.getAllContent();
+    const contentToDelete = allContent.find(item => item.id === id);
+    const filteredContent = allContent.filter(item => item.id !== id);
+    
+    if (filteredContent.length === allContent.length) return false;
+    
+    localStorage.setItem(this.contentKey, JSON.stringify(filteredContent));
+    
+    if (contentToDelete?.type === 'Page' && contentToDelete.showInNavigation && contentToDelete.slug) {
+      const navItem = this.getNavigationItemByPath(`/${contentToDelete.slug}`);
+      if (navItem) {
+        this.deleteNavigationItem(navItem.id);
+      }
+    }
+    
+    this.dispatchEvent('content-deleted', id);
+    
+    return true;
+  }
+
+  getAllNavigationItems(): NavigationItem[] {
+    const navItems = localStorage.getItem(this.navigationKey);
+    return navItems ? JSON.parse(navItems) : [];
+  }
+
+  getNavigationItemById(id: number): NavigationItem | undefined {
+    return this.getAllNavigationItems().find(item => item.id === id);
+  }
+
+  getNavigationItemByPath(path: string): NavigationItem | undefined {
+    return this.getAllNavigationItems().find(item => item.path === path);
+  }
+
+  addNavigationItem(item: Omit<NavigationItem, 'id'>): NavigationItem {
+    const allItems = this.getAllNavigationItems();
+    const newId = allItems.length > 0 ? Math.max(...allItems.map(i => i.id)) + 1 : 1;
+    
+    const newItem: NavigationItem = { ...item, id: newId };
+    allItems.push(newItem);
+    localStorage.setItem(this.navigationKey, JSON.stringify(allItems));
+    
+    this.dispatchEvent('navigation-updated', this.getAllNavigationItems());
+    
+    return newItem;
+  }
+
+  updateNavigationItem(id: number, item: Partial<NavigationItem>): NavigationItem | null {
+    const allItems = this.getAllNavigationItems();
+    const index = allItems.findIndex(i => i.id === id);
+    
+    if (index === -1) return null;
+    
+    const updatedItem = { ...allItems[index], ...item };
+    allItems[index] = updatedItem;
+    localStorage.setItem(this.navigationKey, JSON.stringify(allItems));
+    
+    this.dispatchEvent('navigation-updated', this.getAllNavigationItems());
+    
+    return updatedItem;
+  }
+
+  deleteNavigationItem(id: number): boolean {
+    const allItems = this.getAllNavigationItems();
+    const filteredItems = allItems.filter(item => item.id !== id);
+    
+    if (filteredItems.length === allItems.length) return false;
+    
+    localStorage.setItem(this.navigationKey, JSON.stringify(filteredItems));
+    
+    this.dispatchEvent('navigation-updated', filteredItems);
+    
+    return true;
+  }
+
+  getAllUsers(): User[] {
+    const users = localStorage.getItem(this.usersKey);
+    return users ? JSON.parse(users) : [];
+  }
+
+  getUserById(id: number): User | undefined {
+    return this.getAllUsers().find(user => user.id === id);
+  }
+
+  getUserByEmail(email: string): User | undefined {
+    return this.getAllUsers().find(user => user.email === email);
+  }
+
+  addUser(user: Omit<User, 'id'>): User {
+    const allUsers = this.getAllUsers();
+    const newId = allUsers.length > 0 ? Math.max(...allUsers.map(u => u.id)) + 1 : 1;
+    
+    const newUser = { ...user, id: newId };
+    allUsers.push(newUser);
+    localStorage.setItem(this.usersKey, JSON.stringify(allUsers));
+    
+    this.dispatchEvent('user-added', newUser);
+    
+    return newUser;
+  }
+
+  updateUser(id: number, user: Partial<User>): User | null {
+    const allUsers = this.getAllUsers();
+    const index = allUsers.findIndex(u => u.id === id);
+    
+    if (index === -1) return null;
+    
+    const updatedUser = { ...allUsers[index], ...user };
+    allUsers[index] = updatedUser;
+    localStorage.setItem(this.usersKey, JSON.stringify(allUsers));
+    
+    this.dispatchEvent('user-updated', updatedUser);
+    
+    return updatedUser;
+  }
+
+  deleteUser(id: number): boolean {
+    const allUsers = this.getAllUsers();
+    const filteredUsers = allUsers.filter(user => user.id !== id);
+    
+    if (filteredUsers.length === allUsers.length) return false;
+    
+    localStorage.setItem(this.usersKey, JSON.stringify(filteredUsers));
+    
+    this.dispatchEvent('user-deleted', id);
+    
+    return true;
+  }
+
+  getAllContactRequests(): ContactRequest[] {
+    const contacts = localStorage.getItem(this.contactsKey);
+    return contacts ? JSON.parse(contacts) : [];
+  }
+
+  getContactRequestById(id: number): ContactRequest | undefined {
+    return this.getAllContactRequests().find(contact => contact.id === id);
+  }
+
+  addContactRequest(contact: Omit<ContactRequest, 'id' | 'dateSubmitted' | 'status'>): ContactRequest {
+    const allContacts = this.getAllContactRequests();
+    const newId = allContacts.length > 0 ? Math.max(...allContacts.map(c => c.id)) + 1 : 1;
+    
+    const newContact: ContactRequest = {
+      ...contact,
+      id: newId,
+      dateSubmitted: new Date().toISOString().split('T')[0],
+      status: 'New'
     };
-  };
+    
+    allContacts.push(newContact);
+    localStorage.setItem(this.contactsKey, JSON.stringify(allContacts));
+    
+    this.dispatchEvent('contact-added', newContact);
+    
+    return newContact;
+  }
 
-  return {
-    addEventListener,
-  };
-};
+  updateContactRequest(id: number, contact: Partial<ContactRequest>): ContactRequest | null {
+    const allContacts = this.getAllContactRequests();
+    const index = allContacts.findIndex(c => c.id === id);
+    
+    if (index === -1) return null;
+    
+    const updatedContact = { ...allContacts[index], ...contact };
+    allContacts[index] = updatedContact;
+    localStorage.setItem(this.contactsKey, JSON.stringify(allContacts));
+    
+    this.dispatchEvent('contact-updated', updatedContact);
+    
+    return updatedContact;
+  }
 
-// Extend the storage service with all configurations
-export const storageService = {
-  ...configureContentStorage(),
-  ...configureUserStorage(),
-  ...configureContactStorage(),
-  ...configureNavigationStorage(),
-  ...configureEventListeners(),
-  ...configureJobOpenings(),
-};
+  deleteContactRequest(id: number): boolean {
+    const allContacts = this.getAllContactRequests();
+    const filteredContacts = allContacts.filter(contact => contact.id !== id);
+    
+    if (filteredContacts.length === allContacts.length) return false;
+    
+    localStorage.setItem(this.contactsKey, JSON.stringify(filteredContacts));
+    
+    this.dispatchEvent('contact-deleted', id);
+    
+    return true;
+  }
+}
+
+export const storageService = new StorageService();
