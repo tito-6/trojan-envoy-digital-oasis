@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/lib/i18n";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
 
 const ServicesCTA: React.FC = () => {
   const { t } = useLanguage();
@@ -83,6 +85,23 @@ const ServicesCTA: React.FC = () => {
                   id="email" 
                   type="email" 
                   placeholder={t('services.form.email.placeholder')} 
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="phone" className="text-sm font-medium">
+                  Phone Number
+                </label>
+                <PhoneInput
+                  country={'us'}
+                  inputProps={{
+                    id: 'phone',
+                    name: 'phone',
+                  }}
+                  inputClass="w-full p-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                  containerClass="w-full"
+                  buttonClass="border border-input rounded-l-md"
+                  dropdownClass="bg-background text-foreground"
                 />
               </div>
               
