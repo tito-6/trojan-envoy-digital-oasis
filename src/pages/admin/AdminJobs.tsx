@@ -177,10 +177,10 @@ const AdminJobs: React.FC = () => {
         description: data.description,
         responsibilities: data.responsibilities,
         requirements: data.requirements,
-        benefits: data.benefits,
+        benefits: data.benefits || [],
         salary: {
-          min: data.salaryMin,
-          max: data.salaryMax,
+          min: data.salaryMin ? Number(data.salaryMin) : undefined,
+          max: data.salaryMax ? Number(data.salaryMax) : undefined,
           currency: data.salaryCurrency
         },
         applicationUrl: data.applicationUrl || undefined,
@@ -217,10 +217,10 @@ const AdminJobs: React.FC = () => {
         description: data.description,
         responsibilities: data.responsibilities,
         requirements: data.requirements,
-        benefits: data.benefits,
+        benefits: data.benefits || [],
         salary: {
-          min: data.salaryMin,
-          max: data.salaryMax,
+          min: data.salaryMin ? Number(data.salaryMin) : undefined,
+          max: data.salaryMax ? Number(data.salaryMax) : undefined,
           currency: data.salaryCurrency || 'USD'
         },
         applicationUrl: data.applicationUrl || undefined,

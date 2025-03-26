@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -61,6 +62,8 @@ const Contact: React.FC = () => {
         phone: data.phone,
         subject: data.subject,
         message: data.message,
+        status: 'New',
+        dateSubmitted: new Date().toISOString(),
       });
       
       toast({

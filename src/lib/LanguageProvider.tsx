@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useLanguageStore } from './i18n';
+import { useLanguage } from './i18n';
 
 interface LanguageProviderProps {
   children: React.ReactNode;
