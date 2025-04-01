@@ -40,14 +40,20 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
     try {
       const results = searchIcons(value, 300);
       
+      // Filter by selected library if needed
+      const filteredResults = selectedLibrary !== "all" 
+        ? results.filter(icon => icon.library === selectedLibrary)
+        : results;
+      
       // Convert search results to the format expected by the component
-      const formattedResults = results.map(({ name, library }) => ({
+      const formattedResults = filteredResults.map(({ name, library }) => ({
         name,
         component: getIconComponentByName(name) || (() => null),
         library
       })).filter(icon => icon.component);
       
       setFilteredIcons(formattedResults);
+      console.log("Search results:", formattedResults.length, "icons found");
     } catch (error) {
       console.error("Error searching icons:", error);
       setFilteredIcons([]);
@@ -55,6 +61,13 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
       setIsSearching(false);
     }
   };
+  
+  // Apply library filter when it changes
+  useEffect(() => {
+    if (searchTerm) {
+      handleSearchChange(searchTerm);
+    }
+  }, [selectedLibrary]);
   
   const debouncedSearchChange = useCallback(
     (callback: Function, delay: number) => {
@@ -305,7 +318,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
           ) : filteredIcons.length > 0 ? (
             <ScrollArea className="h-[300px] border rounded-md p-4">
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4">
-                {filteredIcons.map(({ name, component: Icon }) => {
+                {filteredIcons.map(({ name, component: Icon, library }) => {
                   const isSelected = selectedIcon === name;
                   return (
                     <TooltipProvider key={name}>
@@ -332,6 +345,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>{name}</p>
+                          <p className="text-xs text-muted-foreground">{library}</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
