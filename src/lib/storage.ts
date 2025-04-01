@@ -238,6 +238,7 @@ class StorageService {
       }
     }
     
+    console.log("Dispatching content-updated event with:", updatedContent);
     this.dispatchEvent('content-updated', updatedContent);
     
     return updatedContent;

@@ -106,8 +106,6 @@ const TechnologyStack: React.FC = () => {
 
   const renderIcon = (tech: TechItem) => {
     console.log("Rendering icon for tech:", tech.name, "icon:", tech.iconName);
-    
-    // Use the Icon component to render the icon
     return <Icon name={tech.iconName} color={tech.color} size={36} />;
   };
 
