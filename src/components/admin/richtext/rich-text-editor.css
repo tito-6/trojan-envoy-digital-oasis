@@ -66,7 +66,7 @@
 /* Color picker */
 .rdw-colorpicker-modal {
   position: absolute;
-  max-height: 250px;
+  max-height: 300px;
   overflow-y: auto;
   background-color: white;
   border: 1px solid #e2e8f0;
@@ -98,7 +98,7 @@
 /* Emoji picker */
 .rdw-emoji-modal {
   position: absolute;
-  max-height: 200px;
+  max-height: 300px;
   overflow-y: auto;
   background-color: white;
   border: 1px solid #e2e8f0;
@@ -184,12 +184,14 @@
   left: 5px;
   display: flex;
   flex-direction: column;
-  width: 310px;
+  width: 350px;
   border-radius: 0.375rem;
   background-color: white;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   padding: 1rem;
   z-index: 50;
+  max-height: 500px;
+  overflow-y: auto;
 }
 
 .rdw-image-modal-header {
@@ -318,11 +320,48 @@
   background-color: #f1f5f9;
 }
 
+/* Improve text coloring within the editor */
+.rdw-colorpicker-wrapper {
+  position: relative;
+}
+
+/* Handle text colors in the editor content */
+[style*="color"] {
+  display: inline-block;
+}
+
+/* Support for inline text styles */
+.public-DraftStyleDefault-block {
+  margin: 0.5em 0;
+}
+
+.public-DraftStyleDefault-ul, 
+.public-DraftStyleDefault-ol {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+.public-DraftStyleDefault-blockquote {
+  border-left: 3px solid #e2e8f0;
+  padding-left: 1em;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Ensure modals appear above everything else */
+.rdw-link-modal,
+.rdw-image-modal {
+  z-index: 1000 !important;
+}
+
 /* Custom scrollbar for better experience */
 .dropdown-wrapper::-webkit-scrollbar,
 .emoji-wrapper::-webkit-scrollbar,
 .color-picker-wrapper::-webkit-scrollbar,
-.editor-content::-webkit-scrollbar {
+.editor-content::-webkit-scrollbar,
+.rdw-colorpicker-modal::-webkit-scrollbar,
+.rdw-emoji-modal::-webkit-scrollbar,
+.rdw-image-modal::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
@@ -330,7 +369,10 @@
 .dropdown-wrapper::-webkit-scrollbar-thumb,
 .emoji-wrapper::-webkit-scrollbar-thumb,
 .color-picker-wrapper::-webkit-scrollbar-thumb,
-.editor-content::-webkit-scrollbar-thumb {
+.editor-content::-webkit-scrollbar-thumb,
+.rdw-colorpicker-modal::-webkit-scrollbar-thumb,
+.rdw-emoji-modal::-webkit-scrollbar-thumb,
+.rdw-image-modal::-webkit-scrollbar-thumb {
   background-color: #cbd5e1;
   border-radius: 3px;
 }
@@ -338,7 +380,10 @@
 .dropdown-wrapper::-webkit-scrollbar-track,
 .emoji-wrapper::-webkit-scrollbar-track,
 .color-picker-wrapper::-webkit-scrollbar-track,
-.editor-content::-webkit-scrollbar-track {
+.editor-content::-webkit-scrollbar-track,
+.rdw-colorpicker-modal::-webkit-scrollbar-track,
+.rdw-emoji-modal::-webkit-scrollbar-track,
+.rdw-image-modal::-webkit-scrollbar-track {
   background-color: #f1f5f9;
   border-radius: 3px;
 }
@@ -347,7 +392,10 @@
 .dropdown-wrapper,
 .emoji-wrapper,
 .color-picker-wrapper,
-.editor-content {
+.editor-content,
+.rdw-colorpicker-modal,
+.rdw-emoji-modal,
+.rdw-image-modal {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 #f1f5f9;
 }

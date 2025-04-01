@@ -1,54 +1,11 @@
 
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink, FileText, Download } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import React from "react";
+import { ArrowRight, Code, Smartphone, Paintbrush, BarChart, Globe, ShoppingCart, FileText } from "lucide-react";
+import { ContentItem } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useLanguage } from "@/lib/i18n";
-import { ContentItem } from "@/lib/types";
-import { getIconComponentByName } from "@/lib/iconUtils";
-import draftToHtml from 'draftjs-to-html';
-
-// Custom hook for getting YouTube video ID
-const useYouTubeVideoId = (url: string): string | null => {
-  const [videoId, setVideoId] = useState<string | null>(null);
-  
-  React.useEffect(() => {
-    if (!url) return;
-    
-    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-    const match = url.match(youtubeRegex);
-    
-    if (match && match[1]) {
-      setVideoId(match[1]);
-    } else {
-      setVideoId(null);
-    }
-  }, [url]);
-  
-  return videoId;
-};
-
-// Custom hook for getting Vimeo video ID
-const useVimeoVideoId = (url: string): string | null => {
-  const [videoId, setVideoId] = useState<string | null>(null);
-  
-  React.useEffect(() => {
-    if (!url) return;
-    
-    const vimeoRegex = /vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/(?:[^\/]*)\/videos\/|album\/(?:\d+)\/video\/|)(\d+)(?:$|\/|\?)/;
-    const match = url.match(vimeoRegex);
-    
-    if (match && match[1]) {
-      setVideoId(match[1]);
-    } else {
-      setVideoId(null);
-    }
-  }, [url]);
-  
-  return videoId;
-};
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ServiceDetailProps {
   service: ContentItem;
@@ -56,17 +13,25 @@ interface ServiceDetailProps {
 
 const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
   const { t } = useLanguage();
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [lightboxImage, setLightboxImage] = useState("");
   
-  const IconComponent = service.iconName ? getIconComponentByName(service.iconName) : null;
+  const getIconForService = (iconName: string = 'code') => {
+    const iconMap: Record<string, React.ReactNode> = {
+      code: <Code className="w-6 h-6 text-primary" />,
+      smartphone: <Smartphone className="w-6 h-6 text-primary" />,
+      paintbrush: <Paintbrush className="w-6 h-6 text-primary" />,
+      barChart: <BarChart className="w-6 h-6 text-primary" />,
+      globe: <Globe className="w-6 h-6 text-primary" />,
+      shoppingCart: <ShoppingCart className="w-6 h-6 text-primary" />,
+      fileText: <FileText className="w-6 h-6 text-primary" />
+    };
+    
+    return iconMap[iconName] || <Code className="w-6 h-6 text-primary" />;
+  };
   
-  const renderContent = () => {
-    // If there's formatted content, render it as HTML
+  const renderFormattedContent = () => {
     if (service.formattedContent) {
       try {
-        const htmlContent = draftToHtml(service.formattedContent);
+        const htmlContent = require('draftjs-to-html')(service.formattedContent);
         return (
           <div className="prose prose-lg max-w-none">
             <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
@@ -74,304 +39,161 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
         );
       } catch (error) {
         console.error("Error rendering formatted content:", error);
+        return <p>{service.content || service.description}</p>;
       }
     }
     
-    // Fallback to regular content with formatting
-    if (service.content) {
-      const paragraphs = service.content
-        .split('\n')
-        .filter(p => p.trim().length > 0);
-      
-      return (
-        <div className="space-y-4">
-          {paragraphs.map((paragraph, index) => {
-            if (paragraph.startsWith('- ')) {
-              // It's a list item
-              return (
-                <div key={index} className="flex items-start gap-2">
-                  <div className="w-5 h-5 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center mt-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
-                  </div>
-                  <span>{paragraph.substring(2)}</span>
-                </div>
-              );
-            } else if (paragraph.startsWith('# ')) {
-              // It's a heading
-              return <h3 key={index} className="text-xl font-bold mt-6">{paragraph.substring(2)}</h3>;
-            } else {
-              // Regular paragraph
-              return <p key={index}>{paragraph}</p>;
-            }
-          })}
-        </div>
-      );
+    return <p>{service.content || service.description}</p>;
+  };
+  
+  const parseFeatures = (content?: string): string[] => {
+    if (!content) return [];
+    
+    if (content.includes('- ') || content.includes('• ')) {
+      return content
+        .split(/\n/)
+        .map(line => line.replace(/^[-•]\s*/, '').trim())
+        .filter(Boolean);
     }
     
-    // Fallback to just the description
-    return <p>{service.description}</p>;
+    return content
+      .split(/\n/)
+      .map(line => line.trim())
+      .filter(Boolean)
+      .slice(0, 5);
   };
   
-  const openLightbox = (imageUrl: string) => {
-    setLightboxImage(imageUrl);
-    setLightboxOpen(true);
-    document.body.style.overflow = 'hidden';
-  };
+  const features = service.content ? parseFeatures(service.content) : [];
   
-  const closeLightbox = () => {
-    setLightboxOpen(false);
-    document.body.style.overflow = 'auto';
-  };
-  
-  // SEO heading structure
-  const renderHeadings = () => {
-    if (!service.seoHeadingStructure) return null;
-    
-    return (
-      <div className="mb-12 space-y-8">
-        {service.seoHeadingStructure.h1 && (
-          <h1 className="text-4xl font-bold">{service.seoHeadingStructure.h1}</h1>
-        )}
-        
-        {service.seoHeadingStructure.h2 && service.seoHeadingStructure.h2.length > 0 && (
-          <div className="space-y-4">
-            {service.seoHeadingStructure.h2.map((heading, index) => (
-              <h2 key={index} className="text-2xl font-semibold">{heading}</h2>
-            ))}
-          </div>
-        )}
-        
-        {service.seoHeadingStructure.h3 && service.seoHeadingStructure.h3.length > 0 && (
-          <div className="space-y-3">
-            {service.seoHeadingStructure.h3.map((heading, index) => (
-              <h3 key={index} className="text-xl font-medium">{heading}</h3>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-  
-  const hasMedia = (service.images && service.images.length > 0) || 
-                  (service.videos && service.videos.length > 0) || 
-                  (service.documents && service.documents.length > 0);
-                  
   return (
-    <>
-      <section className="py-16 md:py-24 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col items-start max-w-4xl mx-auto">
-            <Link to="/services" className="inline-flex items-center text-sm mb-8 hover:text-primary transition-colors">
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              {t('back.to.services')}
-            </Link>
-            
-            <div className="flex items-center mb-6 gap-4">
-              {IconComponent && (
-                <div 
-                  className="w-16 h-16 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: service.bgColor || "#eff6ff", color: service.color || "#3b82f6" }}
-                >
-                  <IconComponent className="w-8 h-8" />
+    <div className="py-16 md:py-24">
+      <div className="container mx-auto px-4">
+        <header className="mb-16 text-center">
+          <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-6">
+            {service.iconName ? 
+              getIconForService(service.iconName) : 
+              <Code className="w-6 h-6 text-primary" />
+            }
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4">{service.title}</h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">{service.description}</p>
+          
+          {service.technologies && service.technologies.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-2 mt-6">
+              {service.technologies.map((tech, idx) => (
+                <Badge key={idx} variant="secondary">{tech}</Badge>
+              ))}
+            </div>
+          )}
+        </header>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-16">
+          <div className="col-span-1 lg:col-span-2">
+            <div className="space-y-8">
+              {renderFormattedContent()}
+              
+              {features.length > 0 && (
+                <div>
+                  <h3 className="text-2xl font-bold mb-6">{t('key.features')}</h3>
+                  <ul className="space-y-4">
+                    {features.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center mt-1">
+                          <div className="w-2 h-2 rounded-full bg-primary"></div>
+                        </div>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
-              <h1 className="text-3xl md:text-4xl font-bold">{service.title}</h1>
             </div>
-            
-            {service.seoKeywords && service.seoKeywords.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-6">
-                {service.seoKeywords.map((keyword, index) => (
-                  <Badge key={index} variant="secondary">{keyword}</Badge>
-                ))}
-              </div>
-            )}
-            
-            <p className="text-lg text-muted-foreground mb-8">{service.description}</p>
           </div>
-        </div>
-      </section>
-      
-      <section className="py-16">
-        <div className="container mx-auto px-4">
-          <div className={`grid ${hasMedia ? 'grid-cols-1 lg:grid-cols-3 gap-12' : ''} max-w-6xl mx-auto`}>
-            <div className={`${hasMedia ? 'lg:col-span-2' : 'max-w-4xl mx-auto w-full'} space-y-8`}>
-              {renderHeadings()}
+          
+          <div className="col-span-1">
+            <div className="bg-muted p-6 rounded-lg sticky top-24">
+              <h3 className="text-xl font-bold mb-4">{t('get.started')}</h3>
+              <p className="text-muted-foreground mb-6">{t('contact.us.services.desc')}</p>
+              <Button className="w-full">
+                {t('contact.us')}
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
               
-              <div className="prose-lg max-w-none">
-                {renderContent()}
+              <hr className="my-6" />
+              
+              <div className="space-y-4">
+                {service.images && service.images.length > 0 && (
+                  <img 
+                    src={service.images[0]} 
+                    alt={service.title} 
+                    className="w-full h-auto rounded-md"
+                  />
+                )}
               </div>
             </div>
+          </div>
+        </div>
+        
+        {(service.images && service.images.length > 1) || (service.videos && service.videos.length > 0) ? (
+          <div className="mb-16">
+            <h3 className="text-2xl font-bold mb-6">{t('portfolio.showcase')}</h3>
             
-            {hasMedia && (
-              <div className="space-y-8">
-                {service.images && service.images.length > 0 && (
-                  <Card>
-                    <CardContent className="p-6">
-                      <h3 className="text-xl font-semibold mb-4">Gallery</h3>
-                      
-                      {/* Main image */}
-                      <div className="mb-4 overflow-hidden rounded-lg cursor-pointer" onClick={() => service.images && openLightbox(service.images[activeImageIndex])}>
-                        <img 
-                          src={service.images[activeImageIndex]} 
-                          alt={service.title} 
-                          className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      
-                      {/* Thumbnails */}
-                      {service.images.length > 1 && (
-                        <div className="grid grid-cols-4 gap-2">
-                          {service.images.map((image, index) => (
-                            <div 
-                              key={index}
-                              className={`rounded-md overflow-hidden cursor-pointer ${index === activeImageIndex ? 'ring-2 ring-primary' : ''}`}
-                              onClick={() => setActiveImageIndex(index)}
-                            >
-                              <img 
-                                src={image} 
-                                alt={`${service.title} ${index + 1}`} 
-                                className="w-full h-14 object-cover"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                )}
-                
-                {service.videos && service.videos.length > 0 && (
-                  <Card>
-                    <CardContent className="p-6">
-                      <h3 className="text-xl font-semibold mb-4">Videos</h3>
-                      
-                      <div className="space-y-4">
-                        {service.videos.map((video, index) => {
-                          const youtubeId = useYouTubeVideoId(video);
-                          const vimeoId = useVimeoVideoId(video);
-                          
-                          if (youtubeId) {
-                            return (
-                              <div key={index} className="rounded-lg overflow-hidden">
-                                <iframe
-                                  width="100%"
-                                  height="200"
-                                  src={`https://www.youtube.com/embed/${youtubeId}`}
-                                  title={`YouTube video player ${index}`}
-                                  frameBorder="0"
-                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                  allowFullScreen
-                                ></iframe>
-                              </div>
-                            );
-                          } else if (vimeoId) {
-                            return (
-                              <div key={index} className="rounded-lg overflow-hidden">
-                                <iframe
-                                  width="100%"
-                                  height="200"
-                                  src={`https://player.vimeo.com/video/${vimeoId}`}
-                                  title={`Vimeo video player ${index}`}
-                                  frameBorder="0"
-                                  allow="autoplay; fullscreen; picture-in-picture"
-                                  allowFullScreen
-                                ></iframe>
-                              </div>
-                            );
-                          }
-                          
-                          return (
-                            <div key={index} className="flex items-center">
-                              <a 
-                                href={video} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 flex items-center"
-                              >
-                                <ExternalLink className="w-4 h-4 mr-2" />
-                                {`Video ${index + 1}`}
-                              </a>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                
-                {service.documents && service.documents.length > 0 && (
-                  <Card>
-                    <CardContent className="p-6">
-                      <h3 className="text-xl font-semibold mb-4">Documents</h3>
-                      
-                      <div className="space-y-3">
-                        {service.documents.map((doc, index) => {
-                          const fileName = doc.split('/').pop() || `Document ${index + 1}`;
-                          
-                          return (
-                            <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                              <div className="flex items-center">
-                                <FileText className="w-5 h-5 mr-2 text-blue-500" />
-                                <span className="text-sm font-medium">{fileName}</span>
-                              </div>
-                              <div className="flex space-x-2">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => window.open(doc, '_blank')}
-                                >
-                                  <ExternalLink className="w-4 h-4 mr-1.5" />
-                                  View
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => {
-                                    const link = document.createElement('a');
-                                    link.href = doc;
-                                    link.download = fileName;
-                                    link.click();
-                                  }}
-                                >
-                                  <Download className="w-4 h-4 mr-1.5" />
-                                  Download
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
+            <Tabs defaultValue="images" className="w-full">
+              {service.images && service.images.length > 0 && (
+                <TabsList className="mb-6">
+                  <TabsTrigger value="images">{t('images')}</TabsTrigger>
+                  {service.videos && service.videos.length > 0 && (
+                    <TabsTrigger value="videos">{t('videos')}</TabsTrigger>
+                  )}
+                </TabsList>
+              )}
+              
+              <TabsContent value="images">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {service.images && service.images.map((image, index) => (
+                    <div key={index} className="overflow-hidden rounded-lg">
+                      <img 
+                        src={image} 
+                        alt={`${service.title} - ${index + 1}`} 
+                        className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="videos">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {service.videos && service.videos.map((video, index) => (
+                    <div key={index} className="aspect-video">
+                      <iframe
+                        src={video.replace('watch?v=', 'embed/')}
+                        title={`${service.title} Video ${index + 1}`}
+                        className="w-full h-full rounded-lg"
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
+        ) : null}
+        
+        <div className="text-center">
+          <h3 className="text-2xl font-bold mb-6">{t('interested.in.service')}</h3>
+          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
+            {t('contact.for.consultation')}
+          </p>
+          <Button size="lg">
+            {t('contact.us')}
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
         </div>
-      </section>
-      
-      {/* Lightbox */}
-      {lightboxOpen && (
-        <div 
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
-          onClick={closeLightbox}
-        >
-          <div className="relative max-w-4xl max-h-[90vh] p-4">
-            <img 
-              src={lightboxImage} 
-              alt="Enlarged view" 
-              className="max-w-full max-h-[80vh] object-contain"
-            />
-            <button 
-              className="absolute top-4 right-4 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center"
-              onClick={closeLightbox}
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-    </>
+      </div>
+    </div>
   );
 };
 

@@ -108,6 +108,17 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     );
   };
 
+  // Custom image modal with improved styling
+  const customImageModal = (config: any) => {
+    return (
+      <Dialog>
+        <DialogContent className="rdw-image-modal bg-background p-4 rounded-md">
+          {config.children}
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <div className={`w-full ${className}`}>
       {label && <Label className="mb-2 block">{label}</Label>}
@@ -163,7 +174,9 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 // Neutral colors
                 '#FFFFFF', '#F3F4F6', '#9CA3AF', '#4B5563', '#1F2937', '#111827', '#000000',
                 // Additional colors
-                '#059669', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#6366F1', '#EF4444'
+                '#059669', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#6366F1', '#EF4444',
+                // Text-friendly colors
+                '#FF5722', '#2196F3', '#4CAF50', '#9C27B0', '#607D8B', '#795548', '#FF9800'
               ],
               className: 'color-picker-toolbar-item',
               popupClassName: 'color-picker-popup',
@@ -186,12 +199,16 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               className: 'image-toolbar-item',
               popupClassName: 'image-popup',
               urlEnabled: true,
-              uploadEnabled: false,
+              uploadEnabled: true,
               alignmentEnabled: true,
+              previewImage: true,
+              inputAccept: 'image/gif,image/jpeg,image/jpg,image/png,image/svg',
+              alt: { present: true, mandatory: false },
               defaultSize: {
                 height: 'auto',
                 width: 'auto',
               },
+              component: customImageModal,
             },
           }}
           toolbarCustomButtons={[]}
