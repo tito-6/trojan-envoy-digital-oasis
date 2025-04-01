@@ -1,4 +1,3 @@
-
 import React from 'react';
 import * as LucideIcons from 'lucide-react';
 import * as FaIcons from 'react-icons/fa';
@@ -35,7 +34,7 @@ const iconLibraries: Record<string, Record<string, React.ComponentType<any>>> = 
   Ti: TiIcons as Record<string, React.ComponentType<any>>,
   Cg: CgIcons as Record<string, React.ComponentType<any>>,
   Ri: RiIcons as Record<string, React.ComponentType<any>>,
-  Lu: {} as Record<string, React.ComponentType<any>> // We'll handle Lucide icons separately
+  Lu: LuIcons as Record<string, React.ComponentType<any>> // Update to use LuIcons
 };
 
 // Filter Lucide exports to only include component types
@@ -74,16 +73,14 @@ export const getIconComponentByName = (iconName: string): React.ComponentType<an
   // Handle data URLs (custom uploaded icons)
   if (iconName.startsWith('data:')) {
     // Return a function component that renders an image
-    return function CustomIcon(props: any) {
-      return (
-        <img 
-          src={iconName}
-          alt="Custom Icon"
-          className="w-full h-full object-contain"
-          style={{ width: props.size || '24px', height: props.size || '24px' }}
-          {...props}
-        />
-      );
+    return (props: any) => {
+      return React.createElement('img', {
+        src: iconName,
+        alt: "Custom Icon",
+        className: "w-full h-full object-contain",
+        style: { width: props.size || '24px', height: props.size || '24px' },
+        ...props
+      });
     };
   }
   
