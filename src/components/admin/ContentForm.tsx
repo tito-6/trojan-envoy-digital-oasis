@@ -31,7 +31,7 @@ import { ContentType, ContentItem } from "@/lib/types";
 import { storageService } from "@/lib/storage";
 import { availableLanguages } from "@/lib/i18n";
 
-// Updated schema with proper number handling
+// Updated schema to handle proper type conversions
 const contentFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
   type: z.enum(["Page", "Page Section", "Service", "Portfolio", "Blog Post", "Testimonial", "FAQ", "Team Member", "Case Study", "Job Posting"] as const),
@@ -46,9 +46,9 @@ const contentFormSchema = z.object({
   showInNavigation: z.boolean().default(false),
   language: z.string().optional(),
   placementPageId: z.string().optional()
-    .transform(val => val && val !== "none" ? parseInt(val) : undefined),
+    .transform(val => val && val !== "none" ? parseInt(val, 10) : undefined),
   placementSectionId: z.string().optional()
-    .transform(val => val && val !== "none" ? parseInt(val) : undefined),
+    .transform(val => val && val !== "none" ? parseInt(val, 10) : undefined),
   placementPosition: z.enum(["top", "middle", "bottom", "none"] as const).optional(),
   category: z.string().optional(),
   author: z.string().optional(),
@@ -57,7 +57,7 @@ const contentFormSchema = z.object({
   rating: z.string().optional()
     .transform(val => val ? Number(val) : undefined),
   answer: z.string().optional(),
-  // Make sure technologies is a string in the schema
+  // Define technologies as a string, will be transformed later
   technologies: z.string().optional(),
   duration: z.string().optional(),
   client: z.string().optional(),
@@ -66,7 +66,7 @@ const contentFormSchema = z.object({
   results: z.string().optional(),
   location: z.string().optional(),
   department: z.string().optional(),
-  // Make sure these are strings in the schema
+  // Define these as strings in the schema
   responsibilities: z.string().optional(),
   requirements: z.string().optional(),
   benefits: z.string().optional(),
