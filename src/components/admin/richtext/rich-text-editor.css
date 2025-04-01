@@ -90,7 +90,7 @@
   text-decoration: underline;
 }
 
-/* Make sure modal popups use the correct background color */
+/* Make sure modal popups use the correct background color and appear above other elements */
 .rdw-colorpicker-modal,
 .rdw-embedded-modal,
 .rdw-emoji-modal,
@@ -154,4 +154,28 @@
 
 .rich-text-editor-card .rdw-editor-toolbar > div {
   margin-bottom: 4px;
+}
+
+/* Dark mode support */
+.dark .rdw-colorpicker-modal,
+.dark .rdw-embedded-modal, 
+.dark .rdw-emoji-modal,
+.dark .rdw-image-modal,
+.dark .rdw-link-modal {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.dark .rdw-dropdown-optionwrapper {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.dark .rdw-dropdownoption-highlighted,
+.dark .rdw-dropdownoption-active {
+  background-color: #374151;
+}
+
+.dark .rich-text-editor-card .rdw-option-active {
+  background-color: #374151;
 }

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Pen, Plus, Trash2, MoveVertical, ArrowUp, ArrowDown, RotateCw } from 'lucide-react';
+import { Pen, Plus, Trash2, MoveVertical, ArrowUp, ArrowDown, RotateCw, Code, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { storageService } from '@/lib/storage';
@@ -34,6 +34,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Switch } from '@/components/ui/switch';
 
 const AdminServicesSettings: React.FC = () => {
   const [settings, setSettings] = useState<ServicesSettings>({
@@ -70,6 +71,9 @@ const AdminServicesSettings: React.FC = () => {
   const [documents, setDocuments] = useState<(File | string)[]>([]);
   const [videos, setVideos] = useState<string[]>([]);
   const [videoInput, setVideoInput] = useState('');
+  
+  const [useHtmlEditor, setUseHtmlEditor] = useState(false);
+  const [htmlContent, setHtmlContent] = useState('');
   
   const [isSyncing, setIsSyncing] = useState(false);
   
@@ -183,6 +187,14 @@ const AdminServicesSettings: React.FC = () => {
     setDocuments(service.documents || []);
     setVideos(service.videos || []);
     
+    if (service.htmlContent) {
+      setUseHtmlEditor(true);
+      setHtmlContent(service.htmlContent);
+    } else {
+      setUseHtmlEditor(false);
+      setHtmlContent('');
+    }
+    
     setServiceFormTab('general');
     setIsServiceDialogOpen(true);
   };
@@ -258,7 +270,9 @@ const AdminServicesSettings: React.FC = () => {
       order: editingService.order,
       color: editingService.color,
       bgColor: editingService.bgColor,
-      formattedDescription: editingService.formattedDescription,
+      
+      formattedDescription: useHtmlEditor ? undefined : editingService.formattedDescription,
+      htmlContent: useHtmlEditor ? htmlContent : undefined,
       
       seoTitle: seoTitle,
       seoDescription: seoDescription,
@@ -691,19 +705,59 @@ const AdminServicesSettings: React.FC = () => {
                   </div>
                 </TabsContent>
                 
-                <TabsContent value="content" className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Rich Content Editor</Label>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Use the editor below to create formatted content for your service. You can add text styling, colors, links, emojis, and more.
-                    </p>
-                    <RichTextEditor
-                      label="Service Content"
-                      value={editingService?.formattedDescription || editingService?.description || ''}
-                      onChange={handleDescriptionChange}
-                      height="300px"
-                    />
+                <TabsContent value="content" className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="html-toggle"
+                        checked={useHtmlEditor}
+                        onCheckedChange={setUseHtmlEditor}
+                      />
+                      <Label htmlFor="html-toggle" className="cursor-pointer">
+                        Use HTML Editor
+                      </Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      {useHtmlEditor ? (
+                        <Code className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <FileText className="w-4 h-4 text-muted-foreground" />
+                      )}
+                      <span className="text-sm text-muted-foreground">
+                        {useHtmlEditor ? 'HTML Editor Mode' : 'Rich Text Editor Mode'}
+                      </span>
+                    </div>
                   </div>
+                  
+                  {useHtmlEditor ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="html-content">HTML Content</Label>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Enter HTML code below. This will be displayed as plain text on the service page.
+                      </p>
+                      <Textarea
+                        id="html-content"
+                        className="font-mono h-[300px]"
+                        value={htmlContent}
+                        onChange={(e) => setHtmlContent(e.target.value)}
+                        placeholder="<p>Enter your HTML here</p>"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label>Rich Content Editor</Label>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Use the editor below to create formatted content for your service. You can add text styling, colors, links, emojis, and more.
+                      </p>
+                      <RichTextEditor
+                        label="Service Content"
+                        value={editingService?.formattedDescription || editingService?.description || ''}
+                        onChange={handleDescriptionChange}
+                        height="300px"
+                      />
+                    </div>
+                  )}
                 </TabsContent>
                 
                 <TabsContent value="seo">

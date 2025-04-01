@@ -71,6 +71,8 @@ const getFileIcon = (extension: string): React.ReactNode => {
     case 'ppt':
     case 'pptx':
       return <FileText className="w-5 h-5 text-orange-500" />;
+    case 'txt':
+      return <FileText className="w-5 h-5 text-gray-500" />;
     default:
       return <FileText className="w-5 h-5 text-gray-500" />;
   }
@@ -104,6 +106,17 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
       } catch (error) {
         console.error("Error rendering formatted content:", error);
       }
+    }
+    
+    // Check for HTML content and display as plain text
+    if (service.htmlContent) {
+      return (
+        <div className="prose prose-lg max-w-none">
+          <pre className="whitespace-pre-wrap bg-muted p-4 rounded-md overflow-x-auto text-sm">
+            {service.htmlContent}
+          </pre>
+        </div>
+      );
     }
     
     // Fallback to regular content with formatting
@@ -348,11 +361,11 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
                           
                           return (
                             <div key={index} className="p-3 bg-muted/50 rounded-md">
-                              <div className="flex items-center mb-2">
+                              <div className="flex items-center mb-3">
                                 {fileIcon}
-                                <span className="text-sm font-medium ml-2">{fileName}</span>
+                                <span className="text-sm font-medium ml-2 truncate max-w-[200px]">{fileName}</span>
                               </div>
-                              <div className="flex space-x-2">
+                              <div className="flex flex-col space-y-2">
                                 <Button 
                                   size="sm" 
                                   variant="outline"
