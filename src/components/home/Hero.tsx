@@ -55,7 +55,6 @@ import {
   SiTerraform,
   SiAmazon,
   SiGooglecloud,
-  SiMicrosoft, // Using SiMicrosoft for Azure
   SiVercel,
   SiNetlify,
   SiHeroku,
@@ -156,7 +155,7 @@ const Hero: React.FC = () => {
       SiFlutter, SiKotlin, SiSemrush, SiNextdotjs, SiExpress, SiDjango, SiSpring, 
       SiLaravel, SiRuby, SiDotnet, SiGo, SiRust, SiElixir, SiPostgresql, 
       SiMysql, SiRedis, SiElasticsearch, SiKubernetes, SiTerraform, SiAmazon, 
-      SiGooglecloud, SiMicrosoft, SiVercel, SiNetlify, SiHeroku, SiDigitalocean
+      SiGooglecloud, SiVercel, SiNetlify, SiHeroku, SiDigitalocean
     };
     
     const IconComponent = iconMap[iconName];

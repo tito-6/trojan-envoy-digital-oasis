@@ -1,6 +1,4 @@
 
-
-
 export const AVAILABLE_ICONS = [
   'FaGoogle', 'FaFacebook', 'SiSemrush', 'FaAws', 'FaShopify', 'FaWordpress', 'FaAward',
   'FaReact', 'SiTypescript', 'FaVuejs', 'FaAngular', 'SiJavascript', 'FaNode', 'FaPython',
@@ -10,7 +8,7 @@ export const AVAILABLE_ICONS = [
   'SiNextdotjs', 'SiExpress', 'SiDjango', 'SiSpring', 'SiLaravel', 'SiRuby', 
   'SiDotnet', 'SiGo', 'SiRust', 'SiElixir', 'SiPostgresql', 'SiMysql', 'SiRedis', 
   'SiElasticsearch', 'SiKubernetes', 'SiTerraform', 'SiAmazon', 'SiGooglecloud', 
-  'SiMicrosoft', 'SiVercel', 'SiNetlify', 'SiHeroku', 'SiDigitalocean'
+  'FaMicrosoft', 'SiVercel', 'SiNetlify', 'SiHeroku', 'SiDigitalocean'
 ];
 
 export const ANIMATION_OPTIONS = [
@@ -20,5 +18,3 @@ export const ANIMATION_OPTIONS = [
   { label: 'Scale', value: 'animate-scale-in' },
   { label: 'None', value: '' }
 ];
-
-
