@@ -108,7 +108,7 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
       }
     }
     
-    // Check for HTML content and display as plain text
+    // Check for HTML content and display as plain text, not rendered HTML
     if (service.htmlContent) {
       return (
         <div className="prose prose-lg max-w-none">
@@ -198,6 +198,11 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
                   (service.videos && service.videos.length > 0) || 
                   (service.documents && service.documents.length > 0);
                   
+  useEffect(() => {
+    // Scroll to top when component is mounted
+    window.scrollTo(0, 0);
+  }, []);
+  
   return (
     <>
       <section className="py-16 md:py-24 bg-muted/30">
