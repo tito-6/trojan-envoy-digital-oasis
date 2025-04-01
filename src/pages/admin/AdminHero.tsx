@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,28 +25,27 @@ const AdminHero: React.FC = () => {
     name: '',
     icon: '',
     color: '#000000',
-    bgColor: '#f0f0f0',
+    bgColor: 'bg-blue-100',
     certified: false
   });
   const [currentTechIcon, setCurrentTechIcon] = useState<Partial<TechIcon>>({
     name: '',
     icon: '',
     color: '#000000',
-    bgColor: '#f0f0f0',
+    bgColor: 'bg-blue-100',
     animate: 'animate-float'
   });
   const [previewUpdated, setPreviewUpdated] = useState(false);
 
-  // Icons available for selection
   const availableIcons = [
     'FaGoogle', 'FaFacebook', 'SiSemrush', 'FaAws', 'FaShopify', 'FaWordpress', 'FaAward',
     'FaReact', 'SiTypescript', 'FaVuejs', 'FaAngular', 'SiJavascript', 'FaNode', 'FaPython',
     'FaJava', 'FaPhp', 'SiKotlin', 'FaSwift', 'SiFlutter', 'SiFirebase', 'SiMongodb',
     'FaDatabase', 'SiGraphql', 'SiTailwindcss', 'FaDocker', 'FaAwsLogo', 'FaGithub',
-    'SiNextdotjs', 'SiExpress', 'SiDjango', 'SiSpring', 'SiLaravel', 'SiRuby', 'SiRails',
+    'SiNextdotjs', 'SiExpress', 'SiDjango', 'SiSpring', 'SiLaravel', 'SiRuby', 
     'SiDotnet', 'SiGo', 'SiRust', 'SiElixir', 'SiPostgresql', 'SiMysql', 'SiRedis', 
-    'SiElasticsearch', 'SiKubernetes', 'SiTerraform', 'SiAmazonaws', 'SiGooglecloud', 
-    'SiMicrosoftazure', 'SiVercel', 'SiNetlify', 'SiHeroku', 'SiDigitalocean'
+    'SiElasticsearch', 'SiKubernetes', 'SiTerraform', 'SiAmazon', 'SiGooglecloud', 
+    'SiAzure', 'SiVercel', 'SiNetlify', 'SiHeroku', 'SiDigitalocean'
   ];
 
   const animationOptions = [
@@ -79,13 +77,11 @@ const AdminHero: React.FC = () => {
       setPartnerLogos(hero.partnerLogos || []);
       setTechIcons(hero.techIcons || []);
     } else {
-      // Create default hero if none exists
       createDefaultHero();
     }
   };
 
   const createDefaultHero = async () => {
-    // Get the initial partner logos and tech icons from the existing Hero.tsx
     const defaultHero: Partial<ContentItem> = {
       title: "Navigating the Digital Frontier",
       subtitle: "AWARD-WINNING AGENCY",
@@ -166,8 +162,17 @@ const AdminHero: React.FC = () => {
 
     try {
       const newHero = storageService.addContent({
-        ...defaultHero,
-        description: defaultHero.description || "Hero description", // Required field
+        title: defaultHero.title || "Hero Title",
+        type: "Hero",
+        description: defaultHero.description || "Hero description",
+        published: true,
+        partnerLogos: defaultHero.partnerLogos,
+        techIcons: defaultHero.techIcons,
+        ctaLabel: defaultHero.ctaLabel,
+        ctaUrl: defaultHero.ctaUrl,
+        secondaryCtaLabel: defaultHero.secondaryCtaLabel,
+        secondaryCtaUrl: defaultHero.secondaryCtaUrl,
+        subtitle: defaultHero.subtitle
       });
       
       setHeroContent(newHero);
@@ -231,7 +236,7 @@ const AdminHero: React.FC = () => {
       name: '',
       icon: '',
       color: '#000000',
-      bgColor: '#f0f0f0',
+      bgColor: 'bg-blue-100',
       certified: false
     });
   };
@@ -258,7 +263,7 @@ const AdminHero: React.FC = () => {
       name: '',
       icon: '',
       color: '#000000',
-      bgColor: '#f0f0f0',
+      bgColor: 'bg-blue-100',
       animate: 'animate-float'
     });
   };
@@ -288,9 +293,7 @@ const AdminHero: React.FC = () => {
           title: "Success",
           description: "Hero content has been updated successfully.",
         });
-        // Trigger update in the preview
         setPreviewUpdated(!previewUpdated);
-        // Force a reload of the page to show the updated content
         storageService.dispatchEvent('content-updated', result);
       }
     } catch (error) {
@@ -699,7 +702,7 @@ const AdminHero: React.FC = () => {
                       <div className="flex flex-wrap gap-4">
                         {techIcons.map((tech, i) => (
                           <div key={i} className="text-center">
-                            <div className="w-10 h-10 rounded-full bg-secondary/30 flex items-center justify-center">
+                            <div className="w-10 h-12 rounded-full bg-secondary/30 flex items-center justify-center">
                               <div style={{ color: tech.color }}>{tech.icon}</div>
                             </div>
                             <span className="text-xs block mt-1">{tech.name}</span>

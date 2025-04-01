@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Award, Check } from "lucide-react";
@@ -41,7 +40,6 @@ import {
   SiSpring,
   SiLaravel,
   SiRuby,
-  SiRails,
   SiDotnet,
   SiGo,
   SiRust,
@@ -52,9 +50,9 @@ import {
   SiElasticsearch,
   SiKubernetes,
   SiTerraform,
-  SiAmazonaws,
+  SiAmazon,
   SiGooglecloud,
-  SiMicrosoftazure,
+  SiAzure,
   SiVercel,
   SiNetlify,
   SiHeroku,
@@ -71,7 +69,6 @@ const Hero: React.FC = () => {
   const [heroContent, setHeroContent] = useState<ContentItem | null>(null);
 
   useEffect(() => {
-    // Get hero content from CMS
     const loadHeroContent = () => {
       const heroItems = storageService.getContentByType('Hero');
       if (heroItems.length > 0) {
@@ -81,7 +78,6 @@ const Hero: React.FC = () => {
 
     loadHeroContent();
 
-    // Listen for content updates
     const unsubscribe = storageService.addEventListener('content-updated', (updatedContent: ContentItem) => {
       if (updatedContent.type === 'Hero') {
         loadHeroContent();
@@ -146,22 +142,18 @@ const Hero: React.FC = () => {
     };
   }, []);
 
-  // Function to render the correct icon based on the icon name
   const renderIcon = (iconName: string, size: number = 32, style: React.CSSProperties = {}) => {
     const iconMap: Record<string, React.ComponentType<any>> = {
-      // Partner icons
       FaGoogle, FaFacebook, FaSearchengin, FaAws, FaShopify, FaWordpress, FaAward,
       
-      // Tech stack icons
       FaReact, FaVuejs, FaAngular, FaNode, FaPython, FaJava, FaPhp, FaSwift, 
       FaDatabase, FaDocker, FaAwsLogo, FaGithub,
       
-      // Si icons
       SiTypescript, SiJavascript, SiFirebase, SiMongodb, SiGraphql, SiTailwindcss, 
       SiFlutter, SiKotlin, SiSemrush, SiNextdotjs, SiExpress, SiDjango, SiSpring, 
       SiLaravel, SiRuby, SiRails, SiDotnet, SiGo, SiRust, SiElixir, SiPostgresql, 
-      SiMysql, SiRedis, SiElasticsearch, SiKubernetes, SiTerraform, SiAmazonaws, 
-      SiGooglecloud, SiMicrosoftazure, SiVercel, SiNetlify, SiHeroku, SiDigitalocean
+      SiMysql, SiRedis, SiElasticsearch, SiKubernetes, SiTerraform, SiAmazon, 
+      SiGooglecloud, SiAzure, SiVercel, SiNetlify, SiHeroku, SiDigitalocean
     };
     
     const IconComponent = iconMap[iconName];
@@ -174,7 +166,6 @@ const Hero: React.FC = () => {
     return null;
   };
 
-  // Fallback data if CMS data is not available
   const defaultPartnerIcons: PartnerLogo[] = [
     { 
       name: "Google", 
@@ -243,7 +234,6 @@ const Hero: React.FC = () => {
     { icon: "FaGithub", name: "GitHub", color: "#181717", animate: "animate-pulse-soft" }
   ];
 
-  // Use data from CMS or fallback to defaults
   const title = heroContent?.title || "Navigating the Digital Frontier";
   const subtitle = heroContent?.subtitle || t('hero.subtitle');
   const description = heroContent?.description || t('hero.description');
@@ -259,7 +249,6 @@ const Hero: React.FC = () => {
       ref={heroRef}
       className="relative min-h-screen flex flex-col justify-start overflow-hidden pt-20"
     >
-      {/* Background Elements */}
       <div className="absolute inset-0 -z-10">
         <div 
           className="parallax-element absolute top-1/4 -left-20 w-72 h-72 rounded-full bg-primary/5 blur-3xl"
@@ -271,7 +260,6 @@ const Hero: React.FC = () => {
         ></div>
       </div>
 
-      {/* Small Grid Elements */}
       <div className="absolute inset-0 -z-10 opacity-20">
         <div className="h-full w-full bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:14px_24px]"></div>
       </div>
@@ -308,7 +296,6 @@ const Hero: React.FC = () => {
             </Link>
           </div>
           
-          {/* Trusted by section with React icons */}
           <div className="mt-16 md:mt-24">
             <p className="text-sm text-muted-foreground mb-6 animate-fade-in delay-400">
               {t('partners.title')}
@@ -341,7 +328,6 @@ const Hero: React.FC = () => {
         </div>
       </div>
 
-      {/* Technology Stack Section */}
       <div 
         ref={techSectionRef}
         className="w-full py-20 bg-gradient-to-b from-background via-background/90 to-background relative overflow-hidden"
@@ -380,7 +366,6 @@ const Hero: React.FC = () => {
           </div>
         </div>
 
-        {/* Decorative Elements */}
         <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-primary/5 blur-3xl"></div>
         <div className="absolute top-1/4 -right-10 w-40 h-40 rounded-full bg-accent/5 blur-3xl"></div>
       </div>

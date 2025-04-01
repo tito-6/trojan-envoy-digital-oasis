@@ -45,8 +45,8 @@ export const contentFormSchema = z.object({
   ctaUrl: z.string().optional(),
   secondaryCtaLabel: z.string().optional(),
   secondaryCtaUrl: z.string().optional(),
-  partnerLogos: z.string().optional(),
-  techIcons: z.string().optional(),
+  partnerLogos: z.string().optional(), // This is a JSON string that will be parsed into PartnerLogo[]
+  techIcons: z.string().optional(), // This is a JSON string that will be parsed into TechIcon[]
 });
 
 export type ContentFormValues = z.infer<typeof contentFormSchema>;
