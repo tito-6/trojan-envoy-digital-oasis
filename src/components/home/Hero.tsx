@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Award, Check } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
@@ -34,13 +34,64 @@ import {
   SiTailwindcss,
   SiFlutter,
   SiKotlin,
-  SiSemrush
+  SiSemrush,
+  SiNextdotjs,
+  SiExpress,
+  SiDjango,
+  SiSpring,
+  SiLaravel,
+  SiRuby,
+  SiRails,
+  SiDotnet,
+  SiGo,
+  SiRust,
+  SiElixir,
+  SiPostgresql,
+  SiMysql,
+  SiRedis,
+  SiElasticsearch,
+  SiKubernetes,
+  SiTerraform,
+  SiAmazonaws,
+  SiGooglecloud,
+  SiMicrosoftazure,
+  SiVercel,
+  SiNetlify,
+  SiHeroku,
+  SiDigitalocean
 } from "react-icons/si";
+
+import { ContentItem, PartnerLogo, TechIcon } from "@/lib/types";
+import { storageService } from "@/lib/storage";
 
 const Hero: React.FC = () => {
   const { t } = useLanguage();
   const heroRef = useRef<HTMLDivElement>(null);
   const techSectionRef = useRef<HTMLDivElement>(null);
+  const [heroContent, setHeroContent] = useState<ContentItem | null>(null);
+
+  useEffect(() => {
+    // Get hero content from CMS
+    const loadHeroContent = () => {
+      const heroItems = storageService.getContentByType('Hero');
+      if (heroItems.length > 0) {
+        setHeroContent(heroItems[0]);
+      }
+    };
+
+    loadHeroContent();
+
+    // Listen for content updates
+    const unsubscribe = storageService.addEventListener('content-updated', (updatedContent: ContentItem) => {
+      if (updatedContent.type === 'Hero') {
+        loadHeroContent();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -95,73 +146,113 @@ const Hero: React.FC = () => {
     };
   }, []);
 
-  const partnerIcons = [
+  // Function to render the correct icon based on the icon name
+  const renderIcon = (iconName: string, size: number = 32, style: React.CSSProperties = {}) => {
+    const iconMap: Record<string, React.ComponentType<any>> = {
+      // Partner icons
+      FaGoogle, FaFacebook, FaSearchengin, FaAws, FaShopify, FaWordpress, FaAward,
+      
+      // Tech stack icons
+      FaReact, FaVuejs, FaAngular, FaNode, FaPython, FaJava, FaPhp, FaSwift, 
+      FaDatabase, FaDocker, FaAwsLogo, FaGithub,
+      
+      // Si icons
+      SiTypescript, SiJavascript, SiFirebase, SiMongodb, SiGraphql, SiTailwindcss, 
+      SiFlutter, SiKotlin, SiSemrush, SiNextdotjs, SiExpress, SiDjango, SiSpring, 
+      SiLaravel, SiRuby, SiRails, SiDotnet, SiGo, SiRust, SiElixir, SiPostgresql, 
+      SiMysql, SiRedis, SiElasticsearch, SiKubernetes, SiTerraform, SiAmazonaws, 
+      SiGooglecloud, SiMicrosoftazure, SiVercel, SiNetlify, SiHeroku, SiDigitalocean
+    };
+    
+    const IconComponent = iconMap[iconName];
+    
+    if (IconComponent) {
+      return <IconComponent size={size} style={style} />;
+    }
+    
+    console.warn(`Icon not found: ${iconName}`);
+    return null;
+  };
+
+  // Fallback data if CMS data is not available
+  const defaultPartnerIcons: PartnerLogo[] = [
     { 
-      Icon: FaGoogle, 
       name: "Google", 
+      icon: "FaGoogle", 
       color: "#4285F4",
-      bgColor: "bg-blue-100"
+      bgColor: "bg-blue-100",
+      certified: true
     },
     { 
-      Icon: FaFacebook, 
       name: "Meta", 
+      icon: "FaFacebook", 
       color: "#1877F2",
-      bgColor: "bg-blue-100"
+      bgColor: "bg-blue-100",
+      certified: true
     },
     { 
-      Icon: SiSemrush, 
       name: "SEMrush", 
+      icon: "SiSemrush", 
       color: "#5FB246",
-      bgColor: "bg-green-100"
+      bgColor: "bg-green-100",
+      certified: true
     },
     { 
-      Icon: FaAws, 
       name: "AWS", 
+      icon: "FaAws", 
       color: "#FF9900",
-      bgColor: "bg-orange-100"
+      bgColor: "bg-orange-100",
+      certified: true
     },
     { 
-      Icon: FaShopify, 
       name: "Magento", 
+      icon: "FaShopify", 
       color: "#7AB55C",
-      bgColor: "bg-purple-100"
+      bgColor: "bg-purple-100",
+      certified: true
     },
     { 
-      Icon: FaWordpress, 
       name: "WordPress", 
+      icon: "FaWordpress", 
       color: "#21759B",
-      bgColor: "bg-blue-100"
-    },
-    { 
-      Icon: FaAward, 
-      name: t('partners.title'), 
-      color: "#FFD700",
-      bgColor: "bg-yellow-100"
+      bgColor: "bg-blue-100",
+      certified: true
     }
   ];
 
-  const techStackIcons = [
-    { Icon: FaReact, name: "React", color: "#61DAFB", animate: "animate-float" },
-    { Icon: SiTypescript, name: "TypeScript", color: "#3178C6", animate: "animate-pulse-soft" },
-    { Icon: FaVuejs, name: "Vue.js", color: "#4FC08D", animate: "animate-float" },
-    { Icon: FaAngular, name: "Angular", color: "#DD0031", animate: "animate-pulse-soft" },
-    { Icon: SiJavascript, name: "JavaScript", color: "#F7DF1E", animate: "animate-float" },
-    { Icon: FaNode, name: "Node.js", color: "#339933", animate: "animate-pulse-soft" },
-    { Icon: FaPython, name: "Python", color: "#3776AB", animate: "animate-float" },
-    { Icon: FaJava, name: "Java", color: "#007396", animate: "animate-pulse-soft" },
-    { Icon: FaPhp, name: "PHP", color: "#777BB4", animate: "animate-float" },
-    { Icon: SiKotlin, name: "Kotlin", color: "#7F52FF", animate: "animate-pulse-soft" },
-    { Icon: FaSwift, name: "Swift", color: "#FA7343", animate: "animate-float" },
-    { Icon: SiFlutter, name: "Flutter", color: "#02569B", animate: "animate-pulse-soft" },
-    { Icon: SiFirebase, name: "Firebase", color: "#FFCA28", animate: "animate-float" },
-    { Icon: SiMongodb, name: "MongoDB", color: "#47A248", animate: "animate-pulse-soft" },
-    { Icon: FaDatabase, name: "SQL", color: "#4479A1", animate: "animate-float" },
-    { Icon: SiGraphql, name: "GraphQL", color: "#E10098", animate: "animate-pulse-soft" },
-    { Icon: SiTailwindcss, name: "Tailwind", color: "#06B6D4", animate: "animate-float" },
-    { Icon: FaDocker, name: "Docker", color: "#2496ED", animate: "animate-pulse-soft" },
-    { Icon: FaAwsLogo, name: "AWS", color: "#FF9900", animate: "animate-float" },
-    { Icon: FaGithub, name: "GitHub", color: "#181717", animate: "animate-pulse-soft" }
+  const defaultTechStackIcons: TechIcon[] = [
+    { icon: "FaReact", name: "React", color: "#61DAFB", animate: "animate-float" },
+    { icon: "SiTypescript", name: "TypeScript", color: "#3178C6", animate: "animate-pulse-soft" },
+    { icon: "FaVuejs", name: "Vue.js", color: "#4FC08D", animate: "animate-float" },
+    { icon: "FaAngular", name: "Angular", color: "#DD0031", animate: "animate-pulse-soft" },
+    { icon: "SiJavascript", name: "JavaScript", color: "#F7DF1E", animate: "animate-float" },
+    { icon: "FaNode", name: "Node.js", color: "#339933", animate: "animate-pulse-soft" },
+    { icon: "FaPython", name: "Python", color: "#3776AB", animate: "animate-float" },
+    { icon: "FaJava", name: "Java", color: "#007396", animate: "animate-pulse-soft" },
+    { icon: "FaPhp", name: "PHP", color: "#777BB4", animate: "animate-float" },
+    { icon: "SiKotlin", name: "Kotlin", color: "#7F52FF", animate: "animate-pulse-soft" },
+    { icon: "FaSwift", name: "Swift", color: "#FA7343", animate: "animate-float" },
+    { icon: "SiFlutter", name: "Flutter", color: "#02569B", animate: "animate-pulse-soft" },
+    { icon: "SiFirebase", name: "Firebase", color: "#FFCA28", animate: "animate-float" },
+    { icon: "SiMongodb", name: "MongoDB", color: "#47A248", animate: "animate-pulse-soft" },
+    { icon: "FaDatabase", name: "SQL", color: "#4479A1", animate: "animate-float" },
+    { icon: "SiGraphql", name: "GraphQL", color: "#E10098", animate: "animate-pulse-soft" },
+    { icon: "SiTailwindcss", name: "Tailwind", color: "#06B6D4", animate: "animate-float" },
+    { icon: "FaDocker", name: "Docker", color: "#2496ED", animate: "animate-pulse-soft" },
+    { icon: "FaAwsLogo", name: "AWS", color: "#FF9900", animate: "animate-float" },
+    { icon: "FaGithub", name: "GitHub", color: "#181717", animate: "animate-pulse-soft" }
   ];
+
+  // Use data from CMS or fallback to defaults
+  const title = heroContent?.title || "Navigating the Digital Frontier";
+  const subtitle = heroContent?.subtitle || t('hero.subtitle');
+  const description = heroContent?.description || t('hero.description');
+  const ctaLabel = heroContent?.ctaLabel || t('hero.cta');
+  const ctaUrl = heroContent?.ctaUrl || "/contact";
+  const secondaryCtaLabel = heroContent?.secondaryCtaLabel || t('explore.services');
+  const secondaryCtaUrl = heroContent?.secondaryCtaUrl || "/services";
+  const partnerIcons = heroContent?.partnerLogos || defaultPartnerIcons;
+  const techStackIcons = heroContent?.techIcons || defaultTechStackIcons;
 
   return (
     <div 
@@ -188,32 +279,32 @@ const Hero: React.FC = () => {
       <div className="container mx-auto px-4 py-16 md:py-24">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-block px-4 py-1.5 rounded-full bg-secondary mb-6 text-sm font-medium animate-fade-in">
-            {t('hero.subtitle')}
+            {subtitle}
           </div>
           
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold leading-tight tracking-tight mb-6 animate-fade-in delay-100">
-            {t('hero.title')}
-            <span className="block text-gradient">{t('hero.subtitle')}</span>
+            {title}
+            <span className="block text-gradient">{subtitle}</span>
           </h1>
           
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto animate-fade-in delay-200">
-            {t('hero.description')}
+            {description}
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in delay-300">
             <Link
-              to="/contact"
+              to={ctaUrl}
               className="bg-primary text-primary-foreground px-8 py-3 rounded-lg font-medium hover:opacity-90 transition-opacity inline-flex items-center gap-2"
             >
-              {t('hero.cta')}
+              {ctaLabel}
               <ArrowRight className="w-4 h-4" />
             </Link>
             
             <Link
-              to="/services"
+              to={secondaryCtaUrl}
               className="bg-secondary text-secondary-foreground px-8 py-3 rounded-lg font-medium hover:bg-secondary/80 transition-colors"
             >
-              {t('explore.services')}
+              {secondaryCtaLabel}
             </Link>
           </div>
           
@@ -234,13 +325,15 @@ const Hero: React.FC = () => {
                   }}
                 >
                   <div className={`w-16 h-16 rounded-full ${item.bgColor} flex items-center justify-center mb-3 flip-card-inner`}>
-                    <item.Icon size={32} style={{ color: item.color }} />
+                    {renderIcon(item.icon, 32, { color: item.color })}
                   </div>
                   <span className="text-xs font-medium">{item.name}</span>
-                  <div className="flex items-center text-green-600 mt-1">
-                    <Award className="w-3 h-3 mr-1" />
-                    <span className="text-[10px] uppercase font-bold">{t('partners.certified')}</span>
-                  </div>
+                  {item.certified && (
+                    <div className="flex items-center text-green-600 mt-1">
+                      <Award className="w-3 h-3 mr-1" />
+                      <span className="text-[10px] uppercase font-bold">{t('partners.certified')}</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -269,7 +362,7 @@ const Hero: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 max-w-5xl mx-auto">
             {techStackIcons.map((tech, index) => (
               <div 
-                key={tech.name}
+                key={`${tech.name}-${index}`}
                 className="tech-icon flex flex-col items-center justify-center opacity-0 transform translate-y-8"
                 style={{ 
                   transitionDelay: `${index * 50}ms`,
@@ -279,7 +372,7 @@ const Hero: React.FC = () => {
                 <div 
                   className={`w-16 h-16 rounded-full bg-secondary/30 flex items-center justify-center mb-3 ${tech.animate} hover:shadow-lg transition-all duration-300`}
                 >
-                  <tech.Icon size={36} style={{ color: tech.color }} />
+                  {renderIcon(tech.icon, 36, { color: tech.color })}
                 </div>
                 <span className="text-sm font-medium">{tech.name}</span>
               </div>

@@ -4,7 +4,7 @@ import { z } from "zod";
 // Schema to handle proper type conversions
 export const contentFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
-  type: z.enum(["Page", "Page Section", "Service", "Portfolio", "Blog Post", "Testimonial", "FAQ", "Team Member", "Case Study", "Job Posting"] as const),
+  type: z.enum(["Page", "Page Section", "Service", "Portfolio", "Blog Post", "Testimonial", "FAQ", "Team Member", "Case Study", "Job Posting", "Hero", "Tech Stack"] as const),
   subtitle: z.string().optional(),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
   seoTitle: z.string().optional(),
@@ -40,6 +40,13 @@ export const contentFormSchema = z.object({
   applyUrl: z.string().optional(),
   salaryMin: z.coerce.number().optional(),
   salaryMax: z.coerce.number().optional(),
+  // Hero specific fields
+  ctaLabel: z.string().optional(),
+  ctaUrl: z.string().optional(),
+  secondaryCtaLabel: z.string().optional(),
+  secondaryCtaUrl: z.string().optional(),
+  partnerLogos: z.string().optional(),
+  techIcons: z.string().optional(),
 });
 
 export type ContentFormValues = z.infer<typeof contentFormSchema>;

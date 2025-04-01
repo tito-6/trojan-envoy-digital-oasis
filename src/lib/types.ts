@@ -1,5 +1,5 @@
 
-export type ContentType = 'Page' | 'Page Section' | 'Service' | 'Portfolio' | 'Blog Post' | 'Testimonial' | 'FAQ' | 'Team Member' | 'Case Study' | 'Job Posting';
+export type ContentType = 'Page' | 'Page Section' | 'Service' | 'Portfolio' | 'Blog Post' | 'Testimonial' | 'FAQ' | 'Team Member' | 'Case Study' | 'Job Posting' | 'Hero' | 'Tech Stack';
 
 export type ContentPlacement = {
   pageId?: number;
@@ -7,6 +7,22 @@ export type ContentPlacement = {
   position?: 'top' | 'middle' | 'bottom';
   order?: number;
 };
+
+export interface TechIcon {
+  name: string;
+  icon: string;
+  color: string;
+  bgColor?: string;
+  animate?: string;
+}
+
+export interface PartnerLogo {
+  name: string;
+  icon: string;
+  color: string;
+  bgColor: string;
+  certified?: boolean;
+}
 
 export interface ContentItem {
   id: number;
@@ -50,6 +66,13 @@ export interface ContentItem {
   applyUrl?: string;
   salaryMin?: number;
   salaryMax?: number;
+  // Hero specific fields
+  ctaLabel?: string;
+  ctaUrl?: string;
+  secondaryCtaLabel?: string;
+  secondaryCtaUrl?: string;
+  partnerLogos?: PartnerLogo[];
+  techIcons?: TechIcon[];
 }
 
 export interface User {
