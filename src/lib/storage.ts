@@ -1,39 +1,7 @@
-import { ContentItem, ContactRequest, User, NavigationItem, TechItem } from './types';
+import { ContentItem, ContactRequest, User, NavigationItem } from './types';
 
 // Initial sample data for content - we'll keep this minimal
-const initialContent: ContentItem[] = [
-  {
-    id: 1,
-    title: "Our Technology Stack",
-    type: "Technology Stack",
-    subtitle: "Comprehensive digital solutions for your business",
-    description: "We leverage cutting-edge technology to build modern, scalable solutions",
-    lastUpdated: new Date().toISOString(),
-    published: true,
-    techItems: [
-      { name: "React", iconName: "react", color: "#61DAFB", animate: "animate-float" },
-      { name: "TypeScript", iconName: "typescript", color: "#3178C6", animate: "animate-pulse-soft" },
-      { name: "Vue.js", iconName: "vue-js", color: "#4FC08D", animate: "animate-float" },
-      { name: "Angular", iconName: "angular", color: "#DD0031", animate: "animate-pulse-soft" },
-      { name: "JavaScript", iconName: "javascript", color: "#F7DF1E", animate: "animate-float" },
-      { name: "Node.js", iconName: "node-js", color: "#339933", animate: "animate-pulse-soft" },
-      { name: "Python", iconName: "python", color: "#3776AB", animate: "animate-float" },
-      { name: "Java", iconName: "java", color: "#007396", animate: "animate-pulse-soft" },
-      { name: "PHP", iconName: "php", color: "#777BB4", animate: "animate-float" },
-      { name: "Kotlin", iconName: "kotlin", color: "#7F52FF", animate: "animate-pulse-soft" },
-      { name: "Swift", iconName: "swift", color: "#FA7343", animate: "animate-float" },
-      { name: "Flutter", iconName: "flutter", color: "#02569B", animate: "animate-pulse-soft" },
-      { name: "Firebase", iconName: "firebase", color: "#FFCA28", animate: "animate-float" },
-      { name: "MongoDB", iconName: "mongodb", color: "#47A248", animate: "animate-pulse-soft" },
-      { name: "SQL", iconName: "sql", color: "#4479A1", animate: "animate-float" },
-      { name: "GraphQL", iconName: "graphql", color: "#E10098", animate: "animate-pulse-soft" },
-      { name: "Tailwind", iconName: "tailwind", color: "#06B6D4", animate: "animate-float" },
-      { name: "Docker", iconName: "docker", color: "#2496ED", animate: "animate-pulse-soft" },
-      { name: "AWS", iconName: "aws", color: "#FF9900", animate: "animate-float" },
-      { name: "GitHub", iconName: "github", color: "#181717", animate: "animate-pulse-soft" }
-    ]
-  }
-];
+const initialContent: ContentItem[] = [];
 
 // Initial navigation items
 const initialNavigation: NavigationItem[] = [
@@ -123,18 +91,6 @@ class StorageService {
     const allContent = this.getAllContent();
     const newId = allContent.length > 0 ? Math.max(...allContent.map(item => item.id)) + 1 : 1;
     
-    let techItemsArray: TechItem[] = [];
-    if (typeof content.techItems === 'string') {
-      try {
-        techItemsArray = JSON.parse(content.techItems);
-      } catch (e) {
-        console.error("Failed to parse tech items", e);
-        techItemsArray = [];
-      }
-    } else if (Array.isArray(content.techItems)) {
-      techItemsArray = content.techItems;
-    }
-    
     const normalizedContent: ContentItem = {
       ...content,
       id: newId,
@@ -150,8 +106,7 @@ class StorageService {
       responsibilities: content.responsibilities || [],
       requirements: content.requirements || [],
       benefits: content.benefits || [],
-      technologies: content.technologies || [],
-      techItems: techItemsArray
+      technologies: content.technologies || []
     };
     
     allContent.push(normalizedContent);
@@ -166,7 +121,6 @@ class StorageService {
     }
     
     this.dispatchEvent('content-added', normalizedContent);
-    this.dispatchEvent('content-updated', normalizedContent);
     
     return normalizedContent;
   }
@@ -178,18 +132,6 @@ class StorageService {
     if (index === -1) return null;
     
     const originalContent = allContent[index];
-    
-    let techItemsArray: TechItem[] | undefined = undefined;
-    if (typeof content.techItems === 'string') {
-      try {
-        techItemsArray = JSON.parse(content.techItems);
-      } catch (e) {
-        console.error("Failed to parse tech items", e);
-        techItemsArray = originalContent.techItems || [];
-      }
-    } else if (Array.isArray(content.techItems)) {
-      techItemsArray = content.techItems;
-    }
     
     let updatedSlug = originalContent.slug;
     if (content.slug !== undefined) {
@@ -209,8 +151,7 @@ class StorageService {
       responsibilities: content.responsibilities || originalContent.responsibilities || [],
       requirements: content.requirements || originalContent.requirements || [],
       benefits: content.benefits || originalContent.benefits || [],
-      technologies: content.technologies || originalContent.technologies || [],
-      techItems: techItemsArray !== undefined ? techItemsArray : originalContent.techItems
+      technologies: content.technologies || originalContent.technologies || []
     };
     
     allContent[index] = updatedContent;

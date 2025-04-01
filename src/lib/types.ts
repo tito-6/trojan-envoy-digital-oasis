@@ -1,5 +1,5 @@
 
-export type ContentType = 'Page' | 'Page Section' | 'Service' | 'Portfolio' | 'Blog Post' | 'Testimonial' | 'FAQ' | 'Team Member' | 'Case Study' | 'Job Posting' | 'Technology Stack';
+export type ContentType = 'Page' | 'Page Section' | 'Service' | 'Portfolio' | 'Blog Post' | 'Testimonial' | 'FAQ' | 'Team Member' | 'Case Study' | 'Job Posting';
 
 export type ContentPlacement = {
   pageId?: number;
@@ -50,14 +50,6 @@ export interface ContentItem {
   applyUrl?: string;
   salaryMin?: number;
   salaryMax?: number;
-  techItems?: TechItem[];
-}
-
-export interface TechItem {
-  name: string;
-  iconName: string;
-  color: string;
-  animate?: string;
 }
 
 export interface User {

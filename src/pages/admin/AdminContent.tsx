@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Plus, MoreVertical, Edit, Trash2, Eye, ArrowDown, ArrowUp, Code } from 'lucide-react';
+import { Plus, MoreVertical, Edit, Trash2, Eye, ArrowDown, ArrowUp } from 'lucide-react';
 import { 
   Select, 
   SelectContent, 
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   DropdownMenu,
@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ContentForm } from '@/components/admin/content-form';
-import { ContentItem, ContentType, TechItem } from '@/lib/types';
+import { ContentItem, ContentType } from '@/lib/types';
 import { storageService } from '@/lib/storage';
 import { useToast } from '@/hooks/use-toast';
 
@@ -34,20 +34,12 @@ const AdminContent: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [initialFormValues, setInitialFormValues] = useState<Partial<ContentItem> | undefined>(undefined);
   const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState('list');
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     const storedContent = storageService.getAllContent();
     setContentList(storedContent);
-    
-    // Subscribe to content updates
-    const unsubscribe = storageService.addEventListener('content-updated', () => {
-      setContentList(storageService.getAllContent());
-    });
-    
-    return () => unsubscribe();
   }, []);
 
   const handleContentTypeFilterChange = (value: ContentType | 'All') => {
@@ -101,8 +93,8 @@ const AdminContent: React.FC = () => {
     return filtered;
   }, [contentList, contentTypeFilter, searchTerm, sortOrder, sortBy]);
 
-  const handleCreateContent = (contentType?: ContentType) => {
-    setInitialFormValues(contentType ? { type: contentType } : undefined);
+  const handleCreateContent = () => {
+    setInitialFormValues(undefined);
     setIsEditing(false);
     setIsFormOpen(true);
   };
@@ -153,22 +145,11 @@ const AdminContent: React.FC = () => {
     setIsFormOpen(false);
   };
 
-  const countContentByType = (type: ContentType) => {
-    return contentList.filter(item => item.type === type).length;
-  };
-
-  const getTechItemsCount = (content: ContentItem) => {
-    if (content.type === 'Technology Stack' && content.techItems) {
-      return content.techItems.length;
-    }
-    return 0;
-  };
-
   return (
     <div className="container mx-auto py-10">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Content Management</h1>
-        <Button onClick={() => handleCreateContent()}>
+        <Button onClick={handleCreateContent}>
           <Plus className="h-4 w-4 mr-2" />
           Create Content
         </Button>
@@ -182,7 +163,7 @@ const AdminContent: React.FC = () => {
           onChange={handleSearchTermChange}
         />
 
-        <Select onValueChange={(value) => handleContentTypeFilterChange(value as ContentType | 'All')} defaultValue="All">
+        <Select onValueChange={handleContentTypeFilterChange} defaultValue="All">
           <SelectTrigger>
             <SelectValue placeholder="Filter by Content Type" />
           </SelectTrigger>
@@ -198,12 +179,11 @@ const AdminContent: React.FC = () => {
             <SelectItem value="Team Member">Team Member</SelectItem>
             <SelectItem value="Case Study">Case Study</SelectItem>
             <SelectItem value="Job Posting">Job Posting</SelectItem>
-            <SelectItem value="Technology Stack">Technology Stack</SelectItem>
           </SelectContent>
         </Select>
 
         <div className="flex items-center space-x-2">
-          <Select onValueChange={(value) => handleSortByChange(value as 'title' | 'type')} defaultValue="title">
+          <Select onValueChange={handleSortByChange} defaultValue="title">
             <SelectTrigger>
               <SelectValue placeholder="Sort By" />
             </SelectTrigger>
@@ -218,7 +198,7 @@ const AdminContent: React.FC = () => {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs defaultValue="list" className="w-full">
         <TabsList>
           <TabsTrigger value="list">Content List</TabsTrigger>
           <TabsTrigger value="types">Content Types</TabsTrigger>
@@ -226,26 +206,18 @@ const AdminContent: React.FC = () => {
         <TabsContent value="list" className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredContent.map(content => (
-              <Card key={content.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                <CardHeader className={content.type === "Technology Stack" ? "bg-gradient-to-r from-primary/10 to-primary/5" : ""}>
+              <Card key={content.id}>
+                <CardHeader>
                   <CardTitle>{content.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-6">
+                <CardContent>
                   <div className="flex items-center space-x-2 mb-2">
                     <Badge>{content.type}</Badge>
-                    {content.published && <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-300 border-green-200">Published</Badge>}
-                    {content.type === "Technology Stack" && (
-                      <Badge variant="outline" className="ml-auto">
-                        {getTechItemsCount(content)} technologies
-                      </Badge>
-                    )}
+                    {content.published && <Badge variant="success">Published</Badge>}
                   </div>
                   <p className="text-sm text-muted-foreground">{content.description?.substring(0, 100)}...</p>
                 </CardContent>
-                <CardFooter className="flex justify-between items-center border-t bg-muted/30 p-2">
-                  <span className="text-xs text-muted-foreground">
-                    Last updated: {new Date(content.lastUpdated).toLocaleDateString()}
-                  </span>
+                <div className="p-2 flex justify-end">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">
@@ -268,7 +240,7 @@ const AdminContent: React.FC = () => {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </CardFooter>
+                </div>
               </Card>
             ))}
             {filteredContent.length === 0 && (
@@ -280,82 +252,28 @@ const AdminContent: React.FC = () => {
         </TabsContent>
         <TabsContent value="types" className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleCreateContent("Technology Stack")}>
-              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
-                <div className="flex items-center justify-between">
-                  <CardTitle>Technology Stack</CardTitle>
-                  <Code className="h-5 w-5 text-primary" />
-                </div>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <p className="text-sm text-muted-foreground mb-4">Technology stack showcased on the homepage.</p>
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline">{countContentByType("Technology Stack")} items</Badge>
-                  <Button size="sm" variant="outline" onClick={(e) => {
-                    e.stopPropagation();
-                    handleCreateContent("Technology Stack");
-                  }}>
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add New
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleCreateContent("Page")}>
+            <Card>
               <CardHeader>
                 <CardTitle>Pages</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">Website pages like Home, About Us, etc.</p>
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline">{countContentByType("Page")} items</Badge>
-                  <Button size="sm" variant="outline" onClick={(e) => {
-                    e.stopPropagation();
-                    handleCreateContent("Page");
-                  }}>
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add New
-                  </Button>
-                </div>
+                <p className="text-sm text-muted-foreground">Website pages like Home, About Us, etc.</p>
               </CardContent>
             </Card>
-            
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleCreateContent("Blog Post")}>
+            <Card>
               <CardHeader>
                 <CardTitle>Blog Posts</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">Articles and news items.</p>
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline">{countContentByType("Blog Post")} items</Badge>
-                  <Button size="sm" variant="outline" onClick={(e) => {
-                    e.stopPropagation();
-                    handleCreateContent("Blog Post");
-                  }}>
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add New
-                  </Button>
-                </div>
+                <p className="text-sm text-muted-foreground">Articles and news items.</p>
               </CardContent>
             </Card>
-            
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => handleCreateContent("Service")}>
+            <Card>
               <CardHeader>
                 <CardTitle>Services</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">Information about services offered.</p>
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline">{countContentByType("Service")} items</Badge>
-                  <Button size="sm" variant="outline" onClick={(e) => {
-                    e.stopPropagation();
-                    handleCreateContent("Service");
-                  }}>
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add New
-                  </Button>
-                </div>
+                <p className="text-sm text-muted-foreground">Information about services offered.</p>
               </CardContent>
             </Card>
           </div>
@@ -365,9 +283,7 @@ const AdminContent: React.FC = () => {
       {isFormOpen && (
         <div className="fixed inset-0 bg-background/80 z-50 overflow-y-auto">
           <div className="container mx-auto max-w-3xl mt-10 p-8 bg-card rounded-lg shadow-xl">
-            <h2 className="text-2xl font-bold mb-6">
-              {isEditing ? 'Edit Content' : `Create ${initialFormValues?.type || 'Content'}`}
-            </h2>
+            <h2 className="text-2xl font-bold mb-6">{isEditing ? 'Edit Content' : 'Create Content'}</h2>
             <ContentForm 
               initialValues={initialFormValues}
               onSave={handleSaveContent}
