@@ -1,6 +1,23 @@
 
 import { z } from "zod";
 
+// Define schemas for PartnerLogo and TechIcon
+const partnerLogoSchema = z.object({
+  name: z.string(),
+  icon: z.string(),
+  color: z.string(),
+  bgColor: z.string(),
+  certified: z.boolean().optional()
+});
+
+const techIconSchema = z.object({
+  name: z.string(),
+  icon: z.string(),
+  color: z.string(),
+  bgColor: z.string().optional(),
+  animate: z.string().optional()
+});
+
 // Schema to handle proper type conversions
 export const contentFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
@@ -45,8 +62,32 @@ export const contentFormSchema = z.object({
   ctaUrl: z.string().optional(),
   secondaryCtaLabel: z.string().optional(),
   secondaryCtaUrl: z.string().optional(),
-  partnerLogos: z.string().optional(), // This is a JSON string that will be parsed into PartnerLogo[]
-  techIcons: z.string().optional(), // This is a JSON string that will be parsed into TechIcon[]
+  partnerLogos: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') {
+        try {
+          return JSON.parse(val);
+        } catch {
+          return [];
+        }
+      }
+      return val;
+    },
+    z.array(partnerLogoSchema).optional()
+  ),
+  techIcons: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') {
+        try {
+          return JSON.parse(val);
+        } catch {
+          return [];
+        }
+      }
+      return val;
+    },
+    z.array(techIconSchema).optional()
+  )
 });
 
 export type ContentFormValues = z.infer<typeof contentFormSchema>;

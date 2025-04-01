@@ -20,9 +20,10 @@ import {
   FaSwift,
   FaDatabase,
   FaDocker,
-  FaAws as FaAwsLogo,
   FaGithub
 } from "react-icons/fa";
+
+import { FaAws as FaAwsLogo } from "react-icons/fa";
 
 import {
   SiTypescript,
@@ -52,11 +53,11 @@ import {
   SiTerraform,
   SiAmazon,
   SiGooglecloud,
-  SiAzure,
   SiVercel,
   SiNetlify,
   SiHeroku,
-  SiDigitalocean
+  SiDigitalocean,
+  SiMicrosoft
 } from "react-icons/si";
 
 import { ContentItem, PartnerLogo, TechIcon } from "@/lib/types";
@@ -151,9 +152,9 @@ const Hero: React.FC = () => {
       
       SiTypescript, SiJavascript, SiFirebase, SiMongodb, SiGraphql, SiTailwindcss, 
       SiFlutter, SiKotlin, SiSemrush, SiNextdotjs, SiExpress, SiDjango, SiSpring, 
-      SiLaravel, SiRuby, SiRails, SiDotnet, SiGo, SiRust, SiElixir, SiPostgresql, 
+      SiLaravel, SiRuby, SiDotnet, SiGo, SiRust, SiElixir, SiPostgresql, 
       SiMysql, SiRedis, SiElasticsearch, SiKubernetes, SiTerraform, SiAmazon, 
-      SiGooglecloud, SiAzure, SiVercel, SiNetlify, SiHeroku, SiDigitalocean
+      SiGooglecloud, SiVercel, SiNetlify, SiHeroku, SiDigitalocean, SiMicrosoft
     };
     
     const IconComponent = iconMap[iconName];

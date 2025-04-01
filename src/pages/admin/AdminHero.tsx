@@ -1,17 +1,22 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Edit, Plus, Save, Trash2, Eye } from 'lucide-react';
+import { Edit, Save } from 'lucide-react';
 import { storageService } from '@/lib/storage';
 import { ContentItem, PartnerLogo, TechIcon } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ColorPicker } from '@/components/admin/ColorPicker';
+import {
+  PartnerLogoForm,
+  PartnerLogoGrid,
+  TechIconForm,
+  TechIconGrid,
+  GeneralInfoForm,
+  HeroPreview,
+  AVAILABLE_ICONS,
+  ANIMATION_OPTIONS
+} from '@/components/admin/hero';
 
 const AdminHero: React.FC = () => {
   const { toast } = useToast();
@@ -36,25 +41,6 @@ const AdminHero: React.FC = () => {
     animate: 'animate-float'
   });
   const [previewUpdated, setPreviewUpdated] = useState(false);
-
-  const availableIcons = [
-    'FaGoogle', 'FaFacebook', 'SiSemrush', 'FaAws', 'FaShopify', 'FaWordpress', 'FaAward',
-    'FaReact', 'SiTypescript', 'FaVuejs', 'FaAngular', 'SiJavascript', 'FaNode', 'FaPython',
-    'FaJava', 'FaPhp', 'SiKotlin', 'FaSwift', 'SiFlutter', 'SiFirebase', 'SiMongodb',
-    'FaDatabase', 'SiGraphql', 'SiTailwindcss', 'FaDocker', 'FaAwsLogo', 'FaGithub',
-    'SiNextdotjs', 'SiExpress', 'SiDjango', 'SiSpring', 'SiLaravel', 'SiRuby', 
-    'SiDotnet', 'SiGo', 'SiRust', 'SiElixir', 'SiPostgresql', 'SiMysql', 'SiRedis', 
-    'SiElasticsearch', 'SiKubernetes', 'SiTerraform', 'SiAmazon', 'SiGooglecloud', 
-    'SiAzure', 'SiVercel', 'SiNetlify', 'SiHeroku', 'SiDigitalocean'
-  ];
-
-  const animationOptions = [
-    { label: 'Float', value: 'animate-float' },
-    { label: 'Pulse', value: 'animate-pulse-soft' },
-    { label: 'Fade', value: 'animate-fade-in' },
-    { label: 'Scale', value: 'animate-scale-in' },
-    { label: 'None', value: '' }
-  ];
 
   useEffect(() => {
     loadHeroContent();
@@ -206,12 +192,6 @@ const AdminHero: React.FC = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSwitchChange = (checked: boolean, name: string) => {
-    if (name === 'certified') {
-      setCurrentPartnerLogo({ ...currentPartnerLogo, certified: checked });
-    }
-  };
-
   const handlePartnerLogoChange = (field: keyof PartnerLogo, value: string | boolean) => {
     setCurrentPartnerLogo({ ...currentPartnerLogo, [field]: value });
   };
@@ -221,15 +201,6 @@ const AdminHero: React.FC = () => {
   };
 
   const addPartnerLogo = () => {
-    if (!currentPartnerLogo.name || !currentPartnerLogo.icon) {
-      toast({
-        title: "Missing information",
-        description: "Please provide a name and select an icon for the partner logo.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const newPartnerLogos = [...partnerLogos, currentPartnerLogo as PartnerLogo];
     setPartnerLogos(newPartnerLogos);
     setCurrentPartnerLogo({
@@ -248,15 +219,6 @@ const AdminHero: React.FC = () => {
   };
 
   const addTechIcon = () => {
-    if (!currentTechIcon.name || !currentTechIcon.icon) {
-      toast({
-        title: "Missing information",
-        description: "Please provide a name and select an icon for the tech stack.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const newTechIcons = [...techIcons, currentTechIcon as TechIcon];
     setTechIcons(newTechIcons);
     setCurrentTechIcon({
@@ -338,88 +300,11 @@ const AdminHero: React.FC = () => {
                   <CardTitle>General Information</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="title">Title</Label>
-                        <Input
-                          id="title"
-                          name="title"
-                          value={formData.title || ''}
-                          onChange={handleInputChange}
-                          disabled={!isEditing}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="subtitle">Subtitle</Label>
-                        <Input
-                          id="subtitle"
-                          name="subtitle"
-                          value={formData.subtitle || ''}
-                          onChange={handleInputChange}
-                          disabled={!isEditing}
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        name="description"
-                        value={formData.description || ''}
-                        onChange={handleInputChange}
-                        rows={4}
-                        disabled={!isEditing}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="ctaLabel">Primary Button Text</Label>
-                        <Input
-                          id="ctaLabel"
-                          name="ctaLabel"
-                          value={formData.ctaLabel || ''}
-                          onChange={handleInputChange}
-                          disabled={!isEditing}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="ctaUrl">Primary Button URL</Label>
-                        <Input
-                          id="ctaUrl"
-                          name="ctaUrl"
-                          value={formData.ctaUrl || ''}
-                          onChange={handleInputChange}
-                          disabled={!isEditing}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="secondaryCtaLabel">Secondary Button Text</Label>
-                        <Input
-                          id="secondaryCtaLabel"
-                          name="secondaryCtaLabel"
-                          value={formData.secondaryCtaLabel || ''}
-                          onChange={handleInputChange}
-                          disabled={!isEditing}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="secondaryCtaUrl">Secondary Button URL</Label>
-                        <Input
-                          id="secondaryCtaUrl"
-                          name="secondaryCtaUrl"
-                          value={formData.secondaryCtaUrl || ''}
-                          onChange={handleInputChange}
-                          disabled={!isEditing}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <GeneralInfoForm 
+                    formData={formData} 
+                    isEditing={isEditing} 
+                    onChange={handleInputChange} 
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -431,120 +316,19 @@ const AdminHero: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   {isEditing && (
-                    <div className="bg-secondary/20 p-4 rounded-lg mb-6">
-                      <h3 className="text-lg font-medium mb-4">Add New Partner Logo</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <Label htmlFor="partnerName">Partner Name</Label>
-                          <Input
-                            id="partnerName"
-                            value={currentPartnerLogo.name}
-                            onChange={(e) => handlePartnerLogoChange('name', e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="partnerIcon">Partner Icon</Label>
-                          <Select 
-                            value={currentPartnerLogo.icon} 
-                            onValueChange={(value) => handlePartnerLogoChange('icon', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select an icon" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableIcons.map((icon) => (
-                                <SelectItem key={icon} value={icon}>
-                                  {icon}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <Label htmlFor="partnerColor">Icon Color</Label>
-                          <Input
-                            id="partnerColor"
-                            type="color"
-                            value={currentPartnerLogo.color}
-                            onChange={(e) => handlePartnerLogoChange('color', e.target.value)}
-                            className="h-10"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="partnerBgColor">Background Color</Label>
-                          <Select 
-                            value={currentPartnerLogo.bgColor} 
-                            onValueChange={(value) => handlePartnerLogoChange('bgColor', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select background color" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="bg-blue-100">Blue</SelectItem>
-                              <SelectItem value="bg-green-100">Green</SelectItem>
-                              <SelectItem value="bg-yellow-100">Yellow</SelectItem>
-                              <SelectItem value="bg-orange-100">Orange</SelectItem>
-                              <SelectItem value="bg-red-100">Red</SelectItem>
-                              <SelectItem value="bg-purple-100">Purple</SelectItem>
-                              <SelectItem value="bg-pink-100">Pink</SelectItem>
-                              <SelectItem value="bg-indigo-100">Indigo</SelectItem>
-                              <SelectItem value="bg-gray-100">Gray</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-2 mb-4">
-                        <Switch
-                          id="certified"
-                          checked={currentPartnerLogo.certified}
-                          onCheckedChange={(checked) => handleSwitchChange(checked, 'certified')}
-                        />
-                        <Label htmlFor="certified">Certified Partner</Label>
-                      </div>
-
-                      <Button onClick={addPartnerLogo}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Partner Logo
-                      </Button>
-                    </div>
+                    <PartnerLogoForm
+                      currentPartnerLogo={currentPartnerLogo}
+                      onPartnerLogoChange={handlePartnerLogoChange}
+                      onAddPartnerLogo={addPartnerLogo}
+                      availableIcons={AVAILABLE_ICONS}
+                    />
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {partnerLogos.map((logo, index) => (
-                      <Card key={index} className="overflow-hidden">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-medium">{logo.name}</h3>
-                            {isEditing && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removePartnerLogo(index)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            )}
-                          </div>
-                          <div className="flex flex-col items-center justify-center p-4">
-                            <div className={`w-12 h-12 rounded-full ${logo.bgColor} flex items-center justify-center mb-2`}>
-                              <div style={{ color: logo.color }}>
-                                {logo.icon}
-                              </div>
-                            </div>
-                            {logo.certified && (
-                              <div className="flex items-center text-green-600 mt-1">
-                                <span className="text-xs uppercase font-bold">Certified</span>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                  <PartnerLogoGrid
+                    partnerLogos={partnerLogos}
+                    isEditing={isEditing}
+                    onRemovePartnerLogo={removePartnerLogo}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -556,103 +340,20 @@ const AdminHero: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   {isEditing && (
-                    <div className="bg-secondary/20 p-4 rounded-lg mb-6">
-                      <h3 className="text-lg font-medium mb-4">Add New Tech Icon</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <Label htmlFor="techName">Technology Name</Label>
-                          <Input
-                            id="techName"
-                            value={currentTechIcon.name}
-                            onChange={(e) => handleTechIconChange('name', e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="techIcon">Icon</Label>
-                          <Select 
-                            value={currentTechIcon.icon} 
-                            onValueChange={(value) => handleTechIconChange('icon', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select an icon" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {availableIcons.map((icon) => (
-                                <SelectItem key={icon} value={icon}>
-                                  {icon}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <Label htmlFor="techColor">Icon Color</Label>
-                          <Input
-                            id="techColor"
-                            type="color"
-                            value={currentTechIcon.color}
-                            onChange={(e) => handleTechIconChange('color', e.target.value)}
-                            className="h-10"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="techAnimation">Animation</Label>
-                          <Select 
-                            value={currentTechIcon.animate} 
-                            onValueChange={(value) => handleTechIconChange('animate', value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select animation" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {animationOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <Button onClick={addTechIcon}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Tech Icon
-                      </Button>
-                    </div>
+                    <TechIconForm
+                      currentTechIcon={currentTechIcon}
+                      onTechIconChange={handleTechIconChange}
+                      onAddTechIcon={addTechIcon}
+                      availableIcons={AVAILABLE_ICONS}
+                      animationOptions={ANIMATION_OPTIONS}
+                    />
                   )}
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    {techIcons.map((tech, index) => (
-                      <Card key={index} className="overflow-hidden">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-medium">{tech.name}</h3>
-                            {isEditing && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeTechIcon(index)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            )}
-                          </div>
-                          <div className="flex flex-col items-center justify-center p-2">
-                            <div className={`w-12 h-12 rounded-full bg-secondary/30 flex items-center justify-center mb-2`}>
-                              <div style={{ color: tech.color }}>
-                                {tech.icon}
-                              </div>
-                            </div>
-                            <span className="text-xs animate">{tech.animate}</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                  <TechIconGrid
+                    techIcons={techIcons}
+                    isEditing={isEditing}
+                    onRemoveTechIcon={removeTechIcon}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -663,54 +364,11 @@ const AdminHero: React.FC = () => {
                   <CardTitle>Hero Preview</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex justify-center">
-                    <Button onClick={() => window.open('/', '_blank')}>
-                      <Eye className="h-4 w-4 mr-2" />
-                      View Live Hero
-                    </Button>
-                  </div>
-                  <div className="mt-6 p-4 border rounded-lg bg-secondary/10">
-                    <h2 className="text-2xl font-bold">{formData.title}</h2>
-                    <p className="text-sm font-medium text-secondary-foreground mt-2">{formData.subtitle}</p>
-                    <p className="mt-4 text-muted-foreground">{formData.description}</p>
-                    
-                    <div className="flex gap-4 mt-6">
-                      {formData.ctaLabel && (
-                        <Button>{formData.ctaLabel}</Button>
-                      )}
-                      {formData.secondaryCtaLabel && (
-                        <Button variant="outline">{formData.secondaryCtaLabel}</Button>
-                      )}
-                    </div>
-                    
-                    <div className="mt-8">
-                      <h3 className="text-sm font-medium mb-4">Partners ({partnerLogos.length})</h3>
-                      <div className="flex flex-wrap gap-4">
-                        {partnerLogos.map((logo, i) => (
-                          <div key={i} className="text-center">
-                            <div className={`w-10 h-10 rounded-full ${logo.bgColor} flex items-center justify-center`}>
-                              <div style={{ color: logo.color }}>{logo.icon}</div>
-                            </div>
-                            <span className="text-xs block mt-1">{logo.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="mt-8">
-                      <h3 className="text-sm font-medium mb-4">Tech Stack ({techIcons.length})</h3>
-                      <div className="flex flex-wrap gap-4">
-                        {techIcons.map((tech, i) => (
-                          <div key={i} className="text-center">
-                            <div className="w-10 h-12 rounded-full bg-secondary/30 flex items-center justify-center">
-                              <div style={{ color: tech.color }}>{tech.icon}</div>
-                            </div>
-                            <span className="text-xs block mt-1">{tech.name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                  <HeroPreview
+                    formData={formData}
+                    partnerLogos={partnerLogos}
+                    techIcons={techIcons}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
