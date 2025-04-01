@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Award, Check } from "lucide-react";
@@ -55,7 +56,7 @@ import {
   SiTerraform,
   SiAmazon,
   SiGooglecloud,
-  SiMicrosoftazure,
+  SiMicrosoft, // Changed from SiMicrosoftazure to SiMicrosoft
   SiVercel,
   SiNetlify,
   SiHeroku,
@@ -156,7 +157,7 @@ const Hero: React.FC = () => {
       SiFlutter, SiKotlin, SiSemrush, SiNextdotjs, SiExpress, SiDjango, SiSpring, 
       SiLaravel, SiRuby, SiDotnet, SiGo, SiRust, SiElixir, SiPostgresql, 
       SiMysql, SiRedis, SiElasticsearch, SiKubernetes, SiTerraform, SiAmazon, 
-      SiGooglecloud, SiMicrosoftazure, SiVercel, SiNetlify, SiHeroku, SiDigitalocean
+      SiGooglecloud, SiMicrosoft, SiVercel, SiNetlify, SiHeroku, SiDigitalocean
     };
     
     const IconComponent = iconMap[iconName];

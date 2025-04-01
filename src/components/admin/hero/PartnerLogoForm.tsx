@@ -50,6 +50,7 @@ const PartnerLogoForm: React.FC<PartnerLogoFormProps> = ({
             id="partnerName"
             value={currentPartnerLogo.name || ''}
             onChange={(e) => onPartnerLogoChange('name', e.target.value)}
+            required
           />
         </div>
         <div>
@@ -57,6 +58,7 @@ const PartnerLogoForm: React.FC<PartnerLogoFormProps> = ({
           <Select 
             value={currentPartnerLogo.icon} 
             onValueChange={(value) => onPartnerLogoChange('icon', value)}
+            required
           >
             <SelectTrigger>
               <SelectValue placeholder="Select an icon" />
@@ -81,6 +83,7 @@ const PartnerLogoForm: React.FC<PartnerLogoFormProps> = ({
             value={currentPartnerLogo.color || '#000000'}
             onChange={(e) => onPartnerLogoChange('color', e.target.value)}
             className="h-10"
+            required
           />
         </div>
         <div>
@@ -88,6 +91,7 @@ const PartnerLogoForm: React.FC<PartnerLogoFormProps> = ({
           <Select 
             value={currentPartnerLogo.bgColor} 
             onValueChange={(value) => onPartnerLogoChange('bgColor', value)}
+            required
           >
             <SelectTrigger>
               <SelectValue placeholder="Select background color" />

@@ -16,7 +16,6 @@ interface ContentFormProps {
   isEditing?: boolean;
 }
 
-// Helper type for files during form editing (before upload)
 interface FormFileData {
   images: (File | string)[];
   documents: (File | string)[];
@@ -227,6 +226,26 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     const seoKeywords = values.seoKeywords
       ? values.seoKeywords.split(',').map(k => k.trim()).filter(Boolean)
       : keywords;
+    
+    const partnerLogos = initialValues?.partnerLogos ? 
+      initialValues.partnerLogos.map(logo => ({
+        name: logo.name,
+        icon: logo.icon,
+        color: logo.color,
+        bgColor: logo.bgColor,
+        certified: logo.certified || false
+      })) : 
+      undefined;
+    
+    const techIcons = initialValues?.techIcons ? 
+      initialValues.techIcons.map(icon => ({
+        name: icon.name,
+        icon: icon.icon,
+        color: icon.color,
+        bgColor: icon.bgColor,
+        animate: icon.animate
+      })) : 
+      undefined;
       
     const formattedValues: Partial<ContentItem> = {
       ...values,
@@ -235,6 +254,8 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       images: imageUrls,
       documents: documentUrls,
       videos,
+      partnerLogos,
+      techIcons,
       technologies: parsedTechnologies,
       responsibilities: parsedResponsibilities,
       requirements: parsedRequirements,
