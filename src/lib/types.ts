@@ -87,3 +87,17 @@ export interface BlogCategory {
   name: string;
   count: number;
 }
+
+export interface HeaderSettings {
+  id: number;
+  siteTitle: string;
+  logoPath?: string;
+  contactButtonText: string;
+  contactButtonPath: string;
+  showLanguageSelector: boolean;
+  showThemeToggle: boolean;
+  enabledLanguages: string[];
+  defaultLanguage: string;
+  mobileMenuLabel: string;
+  lastUpdated: string;
+}

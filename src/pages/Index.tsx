@@ -9,6 +9,7 @@ import Footer from "@/components/common/Footer";
 import References from "@/components/home/References";
 import HomeFAQ from "@/components/home/HomeFAQ";
 import { useLanguage } from "@/lib/i18n";
+import { storageService } from "@/lib/storage";
 
 const Index: React.FC = () => {
   const { t } = useLanguage();
@@ -27,8 +28,9 @@ const Index: React.FC = () => {
     const elements = document.querySelectorAll(".should-animate");
     elements.forEach((el) => observer.observe(el));
 
-    // Set the page title based on current language
-    document.title = `${t('hero.title')} | Trojan Envoy`;
+    // Get header settings for the page title
+    const headerSettings = storageService.getHeaderSettings();
+    document.title = `${t('hero.title')} | ${headerSettings.siteTitle}`;
 
     return () => observer.disconnect();
   }, [t]);

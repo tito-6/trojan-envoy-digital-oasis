@@ -7,12 +7,13 @@ import ThemeToggle from "@/components/ui/ThemeToggle";
 import LanguageSelector from "@/components/ui/LanguageSelector";
 import { useLanguage } from "@/lib/i18n";
 import { storageService } from "@/lib/storage";
-import { NavigationItem } from "@/lib/types";
+import { NavigationItem, HeaderSettings } from "@/lib/types";
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>([]);
+  const [headerSettings, setHeaderSettings] = useState<HeaderSettings | null>(null);
   const { t } = useLanguage();
 
   useEffect(() => {
@@ -24,23 +25,34 @@ const Header: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Load navigation items from storage
+  // Load navigation items and header settings from storage
   useEffect(() => {
-    const loadNavigation = () => {
+    const loadData = () => {
+      // Load navigation
       const items = storageService.getAllNavigationItems();
-      // Sort by order
       const sortedItems = [...items].sort((a, b) => a.order - b.order);
       setNavigationItems(sortedItems);
+      
+      // Load header settings
+      const settings = storageService.getHeaderSettings();
+      setHeaderSettings(settings);
     };
     
-    loadNavigation();
+    loadData();
     
-    // Subscribe to navigation changes
-    const unsubscribe = storageService.addEventListener('navigation-updated', () => {
-      loadNavigation();
+    // Subscribe to changes
+    const unsubscribeNav = storageService.addEventListener('navigation-updated', () => {
+      loadData();
     });
     
-    return () => unsubscribe();
+    const unsubscribeHeader = storageService.addEventListener('header-settings-updated', () => {
+      loadData();
+    });
+    
+    return () => {
+      unsubscribeNav();
+      unsubscribeHeader();
+    };
   }, []);
 
   const toggleMobileMenu = () => {
@@ -57,6 +69,11 @@ const Header: React.FC = () => {
     document.body.style.overflow = "auto";
   };
 
+  // If settings aren't loaded yet, use defaults
+  if (!headerSettings) {
+    return <div className="h-20"></div>; // Placeholder height for header
+  }
+
   return (
     <header
       className={cn(
@@ -72,7 +89,15 @@ const Header: React.FC = () => {
             to="/"
             className="text-xl font-display font-bold tracking-tight"
           >
-            Trojan Envoy
+            {headerSettings.logoPath ? (
+              <img 
+                src={headerSettings.logoPath} 
+                alt={headerSettings.siteTitle} 
+                className="h-8"
+              />
+            ) : (
+              headerSettings.siteTitle
+            )}
           </Link>
 
           {/* Desktop Navigation */}
@@ -90,13 +115,13 @@ const Header: React.FC = () => {
 
           {/* Right Side Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <LanguageSelector />
-            <ThemeToggle />
+            {headerSettings.showLanguageSelector && <LanguageSelector />}
+            {headerSettings.showThemeToggle && <ThemeToggle />}
             <Link
-              to="/contact"
+              to={headerSettings.contactButtonPath}
               className="bg-primary text-primary-foreground px-5 py-2.5 rounded-lg font-medium text-sm hover:opacity-90 transition-opacity"
             >
-              {t('nav.contact')}
+              {headerSettings.contactButtonText}
             </Link>
           </div>
 
@@ -104,7 +129,7 @@ const Header: React.FC = () => {
           <button
             onClick={toggleMobileMenu}
             className="md:hidden p-2 rounded-lg hover:bg-secondary transition-colors"
-            aria-label="Toggle mobile menu"
+            aria-label={headerSettings.mobileMenuLabel}
           >
             {isMobileMenuOpen ? <X /> : <Menu />}
           </button>
@@ -130,20 +155,24 @@ const Header: React.FC = () => {
             </Link>
           ))}
           <div className="mt-6 flex flex-col gap-4">
-            <div className="flex items-center justify-between px-4">
-              <span className="text-sm font-medium">{t('nav.theme')}</span>
-              <ThemeToggle />
-            </div>
-            <div className="flex items-center justify-between px-4">
-              <span className="text-sm font-medium">{t('nav.language')}</span>
-              <LanguageSelector />
-            </div>
+            {headerSettings.showThemeToggle && (
+              <div className="flex items-center justify-between px-4">
+                <span className="text-sm font-medium">{t('nav.theme')}</span>
+                <ThemeToggle />
+              </div>
+            )}
+            {headerSettings.showLanguageSelector && (
+              <div className="flex items-center justify-between px-4">
+                <span className="text-sm font-medium">{t('nav.language')}</span>
+                <LanguageSelector />
+              </div>
+            )}
             <Link
-              to="/contact"
+              to={headerSettings.contactButtonPath}
               className="mt-4 bg-primary text-primary-foreground px-5 py-3 rounded-lg font-medium text-center hover:opacity-90 transition-opacity"
               onClick={closeMobileMenu}
             >
-              {t('nav.contact')}
+              {headerSettings.contactButtonText}
             </Link>
           </div>
         </nav>

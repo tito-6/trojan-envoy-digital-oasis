@@ -1,4 +1,4 @@
-import { ContentItem, ContactRequest, User, NavigationItem } from './types';
+import { ContentItem, ContactRequest, User, NavigationItem, HeaderSettings } from './types';
 
 // Initial sample data for content - we'll keep this minimal
 const initialContent: ContentItem[] = [];
@@ -21,11 +21,26 @@ const initialUsers: User[] = [
 // Initial sample contact requests - empty now
 const initialContacts: ContactRequest[] = [];
 
+// Initial header settings
+const initialHeaderSettings: HeaderSettings = {
+  id: 1,
+  siteTitle: "Trojan Envoy",
+  contactButtonText: "Contact Us",
+  contactButtonPath: "/contact",
+  showLanguageSelector: true,
+  showThemeToggle: true,
+  enabledLanguages: ["en", "fr", "es", "de", "tr", "ar", "zh"],
+  defaultLanguage: "en",
+  mobileMenuLabel: "Menu",
+  lastUpdated: "2023-11-15"
+};
+
 class StorageService {
   private contentKey = 'trojan-envoy-content';
   private usersKey = 'trojan-envoy-users';
   private contactsKey = 'trojan-envoy-contacts';
   private navigationKey = 'trojan-envoy-navigation';
+  private headerSettingsKey = 'trojan-envoy-header-settings';
   private eventListeners: Record<string, Function[]> = {};
 
   constructor() {
@@ -47,6 +62,10 @@ class StorageService {
     
     if (!localStorage.getItem(this.navigationKey)) {
       localStorage.setItem(this.navigationKey, JSON.stringify(initialNavigation));
+    }
+    
+    if (!localStorage.getItem(this.headerSettingsKey)) {
+      localStorage.setItem(this.headerSettingsKey, JSON.stringify(initialHeaderSettings));
     }
   }
 
@@ -259,6 +278,26 @@ class StorageService {
     return true;
   }
 
+  reorderNavigationItems(items: { id: number, order: number }[]): NavigationItem[] {
+    const allItems = this.getAllNavigationItems();
+    
+    items.forEach(item => {
+      const index = allItems.findIndex(i => i.id === item.id);
+      if (index !== -1) {
+        allItems[index].order = item.order;
+      }
+    });
+    
+    // Sort by order
+    const sortedItems = [...allItems].sort((a, b) => a.order - b.order);
+    
+    localStorage.setItem(this.navigationKey, JSON.stringify(sortedItems));
+    
+    this.dispatchEvent('navigation-updated', sortedItems);
+    
+    return sortedItems;
+  }
+
   getAllUsers(): User[] {
     const users = localStorage.getItem(this.usersKey);
     return users ? JSON.parse(users) : [];
@@ -367,6 +406,26 @@ class StorageService {
     this.dispatchEvent('contact-deleted', id);
     
     return true;
+  }
+
+  getHeaderSettings(): HeaderSettings {
+    const settings = localStorage.getItem(this.headerSettingsKey);
+    return settings ? JSON.parse(settings) : initialHeaderSettings;
+  }
+
+  updateHeaderSettings(settings: Partial<HeaderSettings>): HeaderSettings {
+    const currentSettings = this.getHeaderSettings();
+    const updatedSettings: HeaderSettings = {
+      ...currentSettings,
+      ...settings,
+      lastUpdated: new Date().toISOString().split('T')[0]
+    };
+    
+    localStorage.setItem(this.headerSettingsKey, JSON.stringify(updatedSettings));
+    
+    this.dispatchEvent('header-settings-updated', updatedSettings);
+    
+    return updatedSettings;
   }
 }
 

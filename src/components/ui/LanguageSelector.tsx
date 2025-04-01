@@ -3,10 +3,30 @@ import React, { useState, useEffect } from "react";
 import { Globe } from "lucide-react";
 import { availableLanguages, useLanguage, LanguageCode } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { storageService } from "@/lib/storage";
 
 const LanguageSelector: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { currentLanguage, setLanguage } = useLanguage();
+  const [enabledLanguages, setEnabledLanguages] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Load enabled languages from header settings
+    const headerSettings = storageService.getHeaderSettings();
+    setEnabledLanguages(headerSettings.enabledLanguages);
+    
+    // Subscribe to changes in header settings
+    const unsubscribe = storageService.addEventListener('header-settings-updated', (settings) => {
+      setEnabledLanguages(settings.enabledLanguages);
+      
+      // If current language is no longer enabled, switch to default
+      if (!settings.enabledLanguages.includes(currentLanguage)) {
+        setLanguage(settings.defaultLanguage as LanguageCode);
+      }
+    });
+    
+    return () => unsubscribe();
+  }, [currentLanguage, setLanguage]);
 
   const toggleDropdown = () => setIsOpen(!isOpen);
   const closeDropdown = () => setIsOpen(false);
@@ -30,6 +50,15 @@ const LanguageSelector: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+  
+  // Filter available languages to only show enabled ones
+  const filteredLanguages = availableLanguages.filter(lang => 
+    enabledLanguages.includes(lang.code)
+  );
+
+  if (filteredLanguages.length <= 1) {
+    return null;
+  }
 
   return (
     <div className="relative language-dropdown">
@@ -52,7 +81,7 @@ const LanguageSelector: React.FC = () => {
           />
           <div className="absolute right-0 mt-2 w-40 bg-background border border-border rounded-lg shadow-lg z-20 overflow-hidden glass-card animate-fade-in">
             <ul className="py-1">
-              {availableLanguages.map((lang) => (
+              {filteredLanguages.map((lang) => (
                 <li key={lang.code}>
                   <button
                     onClick={() => handleLanguageChange(lang.code as LanguageCode)}
