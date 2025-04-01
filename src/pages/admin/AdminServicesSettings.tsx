@@ -231,12 +231,24 @@ const AdminServicesSettings: React.FC = () => {
     let updatedServices = [...services];
     const index = updatedServices.findIndex(s => s.id === values.id);
 
+    // Ensure the service item has all required fields
+    const serviceItem: ServiceItem = {
+      id: values.id,
+      title: values.title,
+      description: values.description,
+      iconName: values.iconName,
+      link: values.link,
+      order: values.order,
+      color: values.color,
+      bgColor: values.bgColor,
+    };
+
     if (index !== -1) {
       // Update existing service
-      updatedServices[index] = values;
+      updatedServices[index] = serviceItem;
     } else {
       // Add new service
-      updatedServices.push(values);
+      updatedServices.push(serviceItem);
     }
 
     // Sort by order

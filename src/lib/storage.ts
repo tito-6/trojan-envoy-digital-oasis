@@ -1,4 +1,4 @@
-import { ContentItem, ContactRequest, User, NavigationItem, HeaderSettings, HeroSettings, PartnerLogo, TechIcon } from './types';
+import { ContentItem, ContactRequest, User, NavigationItem, HeaderSettings, HeroSettings, PartnerLogo, TechIcon, ServicesSettings, ServiceItem } from './types';
 
 // Initial sample data for content - we'll keep this minimal
 const initialContent: ContentItem[] = [];
