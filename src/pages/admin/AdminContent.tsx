@@ -16,7 +16,12 @@ import {
   GanttChart,
   Globe,
   Menu,
-  AlertCircle
+  AlertCircle,
+  UserCircle,
+  MessageSquare,
+  HelpCircle,
+  Briefcase,
+  FileCheck
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -124,7 +129,8 @@ const AdminContent: React.FC = () => {
                        (activeTab === "sections" && item.type === "Page Section") ||
                        (activeTab === "blog" && item.type === "Blog Post") ||
                        (activeTab === "services" && item.type === "Service") ||
-                       (activeTab === "portfolio" && item.type === "Portfolio");
+                       (activeTab === "portfolio" && item.type === "Portfolio") ||
+                       (activeTab === "other" && ["Testimonial", "FAQ", "Team Member", "Case Study", "Job Posting"].includes(item.type));
     
     return matchesSearch && matchesType && matchesLanguage && matchesTab;
   });
@@ -421,6 +427,7 @@ const AdminContent: React.FC = () => {
             <TabsTrigger value="blog" className="flex-1">Blog Posts</TabsTrigger>
             <TabsTrigger value="services" className="flex-1">Services</TabsTrigger>
             <TabsTrigger value="portfolio" className="flex-1">Portfolio</TabsTrigger>
+            <TabsTrigger value="other" className="flex-1">Other</TabsTrigger>
           </TabsList>
         </Tabs>
         

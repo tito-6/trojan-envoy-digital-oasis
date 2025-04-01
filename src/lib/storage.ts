@@ -102,7 +102,11 @@ class StorageService {
         : content.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
       publishDate: content.type === 'Blog Post' ? 
         (content.publishDate || new Date().toISOString().split('T')[0]) : 
-        content.publishDate
+        content.publishDate,
+      responsibilities: content.responsibilities || [],
+      requirements: content.requirements || [],
+      benefits: content.benefits || [],
+      technologies: content.technologies || []
     };
     
     allContent.push(normalizedContent);
@@ -143,7 +147,11 @@ class StorageService {
       ...content,
       lastUpdated: new Date().toISOString().split('T')[0],
       seoKeywords: content.seoKeywords || originalContent.seoKeywords || [],
-      slug: updatedSlug
+      slug: updatedSlug,
+      responsibilities: content.responsibilities || originalContent.responsibilities || [],
+      requirements: content.requirements || originalContent.requirements || [],
+      benefits: content.benefits || originalContent.benefits || [],
+      technologies: content.technologies || originalContent.technologies || []
     };
     
     allContent[index] = updatedContent;

@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { X, Upload, Plus, FileText, Youtube, Link, Calendar, GanttChart, PlusCircle } from "lucide-react";
+import { X, Upload, Plus, FileText, Youtube, Link, Calendar, GanttChart, PlusCircle, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { ContentType, ContentItem } from "@/lib/types";
@@ -33,7 +33,7 @@ import { availableLanguages } from "@/lib/i18n";
 
 const contentFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
-  type: z.enum(["Page", "Page Section", "Service", "Portfolio", "Blog Post"] as const),
+  type: z.enum(["Page", "Page Section", "Service", "Portfolio", "Blog Post", "Testimonial", "FAQ", "Team Member", "Case Study", "Job Posting"] as const),
   subtitle: z.string().optional(),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
   seoTitle: z.string().optional(),
@@ -48,6 +48,24 @@ const contentFormSchema = z.object({
   placementSectionId: z.number().optional(),
   placementPosition: z.enum(["top", "middle", "bottom"] as const).optional(),
   category: z.string().optional(),
+  role: z.string().optional(),
+  company: z.string().optional(),
+  rating: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+  answer: z.string().optional(),
+  technologies: z.string().optional().transform(val => val ? val.split(',').map(t => t.trim()) : []),
+  duration: z.string().optional(),
+  client: z.string().optional(),
+  challenge: z.string().optional(),
+  solution: z.string().optional(),
+  results: z.string().optional(),
+  location: z.string().optional(),
+  department: z.string().optional(),
+  responsibilities: z.string().optional().transform(val => val ? val.split('\n').map(t => t.trim()).filter(t => t) : []),
+  requirements: z.string().optional().transform(val => val ? val.split('\n').map(t => t.trim()).filter(t => t) : []),
+  benefits: z.string().optional().transform(val => val ? val.split('\n').map(t => t.trim()).filter(t => t) : []),
+  applyUrl: z.string().optional(),
+  salaryMin: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+  salaryMax: z.string().optional().transform(val => val ? parseInt(val) : undefined),
 });
 
 type ContentFormValues = z.infer<typeof contentFormSchema>;
@@ -64,6 +82,10 @@ interface ContentFormProps {
       sectionId?: number;
       position?: 'top' | 'middle' | 'bottom';
     };
+    technologies?: string[];
+    responsibilities?: string[];
+    requirements?: string[];
+    benefits?: string[];
   }>;
   onSave: (values: ContentFormValues & { 
     keywords: string[]; 
@@ -100,6 +122,24 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     placement?: string;
   }>({});
   const [categoryInput, setCategoryInput] = useState(initialValues?.category || "");
+  const [roleInput, setRoleInput] = useState(initialValues?.role || "");
+  const [companyInput, setCompanyInput] = useState(initialValues?.company || "");
+  const [ratingInput, setRatingInput] = useState(initialValues?.rating?.toString() || "5");
+  const [answerInput, setAnswerInput] = useState(initialValues?.answer || "");
+  const [technologiesInput, setTechnologiesInput] = useState(initialValues?.technologies?.join(', ') || "");
+  const [durationInput, setDurationInput] = useState(initialValues?.duration || "");
+  const [clientInput, setClientInput] = useState(initialValues?.client || "");
+  const [challengeInput, setChallengeInput] = useState(initialValues?.challenge || "");
+  const [solutionInput, setSolutionInput] = useState(initialValues?.solution || "");
+  const [resultsInput, setResultsInput] = useState(initialValues?.results || "");
+  const [locationInput, setLocationInput] = useState(initialValues?.location || "");
+  const [departmentInput, setDepartmentInput] = useState(initialValues?.department || "");
+  const [responsibilitiesInput, setResponsibilitiesInput] = useState(initialValues?.responsibilities?.join('\n') || "");
+  const [requirementsInput, setRequirementsInput] = useState(initialValues?.requirements?.join('\n') || "");
+  const [benefitsInput, setBenefitsInput] = useState(initialValues?.benefits?.join('\n') || "");
+  const [applyUrlInput, setApplyUrlInput] = useState(initialValues?.applyUrl || "");
+  const [salaryMinInput, setSalaryMinInput] = useState(initialValues?.salaryMin?.toString() || "");
+  const [salaryMaxInput, setSalaryMaxInput] = useState(initialValues?.salaryMax?.toString() || "");
 
   useEffect(() => {
     const allPages = storageService.getContentByType("Page");
@@ -127,6 +167,24 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       placementSectionId: initialValues?.placement?.sectionId,
       placementPosition: initialValues?.placement?.position,
       category: initialValues?.category || "",
+      role: initialValues?.role || "",
+      company: initialValues?.company || "",
+      rating: initialValues?.rating?.toString() || "5",
+      answer: initialValues?.answer || "",
+      technologies: initialValues?.technologies?.join(', ') || "",
+      duration: initialValues?.duration || "",
+      client: initialValues?.client || "",
+      challenge: initialValues?.challenge || "",
+      solution: initialValues?.solution || "",
+      results: initialValues?.results || "",
+      location: initialValues?.location || "",
+      department: initialValues?.department || "",
+      responsibilities: initialValues?.responsibilities?.join('\n') || "",
+      requirements: initialValues?.requirements?.join('\n') || "",
+      benefits: initialValues?.benefits?.join('\n') || "",
+      applyUrl: initialValues?.applyUrl || "",
+      salaryMin: initialValues?.salaryMin?.toString() || "",
+      salaryMax: initialValues?.salaryMax?.toString() || "",
     },
   });
 
@@ -215,6 +273,96 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     form.setValue("category", e.target.value);
   };
 
+  const handleRoleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRoleInput(e.target.value);
+    form.setValue("role", e.target.value);
+  };
+
+  const handleCompanyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCompanyInput(e.target.value);
+    form.setValue("company", e.target.value);
+  };
+
+  const handleRatingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setRatingInput(e.target.value);
+    form.setValue("rating", e.target.value);
+  };
+
+  const handleAnswerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAnswerInput(e.target.value);
+    form.setValue("answer", e.target.value);
+  };
+
+  const handleTechnologiesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTechnologiesInput(e.target.value);
+    form.setValue("technologies", e.target.value);
+  };
+
+  const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDurationInput(e.target.value);
+    form.setValue("duration", e.target.value);
+  };
+
+  const handleClientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setClientInput(e.target.value);
+    form.setValue("client", e.target.value);
+  };
+
+  const handleChallengeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setChallengeInput(e.target.value);
+    form.setValue("challenge", e.target.value);
+  };
+
+  const handleSolutionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSolutionInput(e.target.value);
+    form.setValue("solution", e.target.value);
+  };
+
+  const handleResultsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setResultsInput(e.target.value);
+    form.setValue("results", e.target.value);
+  };
+
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocationInput(e.target.value);
+    form.setValue("location", e.target.value);
+  };
+
+  const handleDepartmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDepartmentInput(e.target.value);
+    form.setValue("department", e.target.value);
+  };
+
+  const handleResponsibilitiesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setResponsibilitiesInput(e.target.value);
+    form.setValue("responsibilities", e.target.value);
+  };
+
+  const handleRequirementsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setRequirementsInput(e.target.value);
+    form.setValue("requirements", e.target.value);
+  };
+
+  const handleBenefitsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setBenefitsInput(e.target.value);
+    form.setValue("benefits", e.target.value);
+  };
+
+  const handleApplyUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setApplyUrlInput(e.target.value);
+    form.setValue("applyUrl", e.target.value);
+  };
+
+  const handleSalaryMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSalaryMinInput(e.target.value);
+    form.setValue("salaryMin", e.target.value);
+  };
+
+  const handleSalaryMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSalaryMaxInput(e.target.value);
+    form.setValue("salaryMax", e.target.value);
+  };
+
   const toggleAutoGenerateSlug = () => {
     setAutoGenerateSlug(!autoGenerateSlug);
     if (!autoGenerateSlug) {
@@ -285,8 +433,32 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
         position: values.placementPosition,
       },
       category: categoryInput,
+      role: roleInput,
+      company: companyInput,
+      rating: ratingInput,
+      answer: answerInput,
+      technologies: technologiesInput,
+      duration: durationInput,
+      client: clientInput,
+      challenge: challengeInput,
+      solution: solutionInput,
+      results: resultsInput,
+      location: locationInput,
+      department: departmentInput,
+      responsibilities: responsibilitiesInput,
+      requirements: requirementsInput,
+      benefits: benefitsInput,
+      applyUrl: applyUrlInput,
+      salaryMin: salaryMinInput,
+      salaryMax: salaryMaxInput,
     });
   };
+
+  const showTestimonialFields = contentType === "Testimonial";
+  const showTeamMemberFields = contentType === "Team Member";
+  const showFAQFields = contentType === "FAQ";
+  const showCaseStudyFields = contentType === "Case Study";
+  const showJobPostingFields = contentType === "Job Posting";
 
   return (
     <Form {...form}>
@@ -297,6 +469,11 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
             <TabsTrigger value="seo" className="flex-1">SEO & Metadata</TabsTrigger>
             <TabsTrigger value="media" className="flex-1">Media</TabsTrigger>
             <TabsTrigger value="placement" className="flex-1">Placement</TabsTrigger>
+            {showTestimonialFields && <TabsTrigger value="testimonial" className="flex-1">Testimonial</TabsTrigger>}
+            {showTeamMemberFields && <TabsTrigger value="team" className="flex-1">Team Member</TabsTrigger>}
+            {showFAQFields && <TabsTrigger value="faq" className="flex-1">FAQ</TabsTrigger>}
+            {showCaseStudyFields && <TabsTrigger value="case-study" className="flex-1">Case Study</TabsTrigger>}
+            {showJobPostingFields && <TabsTrigger value="job" className="flex-1">Job Details</TabsTrigger>}
           </TabsList>
           
           <TabsContent value="basic" className="space-y-6">
@@ -337,6 +514,11 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                           <SelectItem value="Service">Service</SelectItem>
                           <SelectItem value="Portfolio">Portfolio Item</SelectItem>
                           <SelectItem value="Blog Post">Blog Post</SelectItem>
+                          <SelectItem value="Testimonial">Testimonial</SelectItem>
+                          <SelectItem value="FAQ">FAQ</SelectItem>
+                          <SelectItem value="Team Member">Team Member</SelectItem>
+                          <SelectItem value="Case Study">Case Study</SelectItem>
+                          <SelectItem value="Job Posting">Job Posting</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -884,6 +1066,360 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                 )}
               />
             )}
+          </TabsContent>
+          
+          <TabsContent value="testimonial" className="space-y-6">
+            <FormField
+              control={form.control}
+              name="company"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Company Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Company/Organization name" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    The company or organization the testimonial is from
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="rating"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Rating (1-5)</FormLabel>
+                  <div className="flex items-center space-x-2">
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Select rating" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="1">1 Star</SelectItem>
+                        <SelectItem value="2">2 Stars</SelectItem>
+                        <SelectItem value="3">3 Stars</SelectItem>
+                        <SelectItem value="4">4 Stars</SelectItem>
+                        <SelectItem value="5">5 Stars</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-5 w-5 ${
+                            parseInt(field.value || "0") >= star
+                              ? "text-yellow-500 fill-yellow-500"
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <FormDescription>
+                    How many stars would this testimonial rate your services?
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TabsContent>
+          
+          <TabsContent value="team" className="space-y-6">
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role/Position</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Job title or role" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    The team member's job title or role in the organization
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TabsContent>
+          
+          <TabsContent value="faq" className="space-y-6">
+            <FormField
+              control={form.control}
+              name="answer"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Answer</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Answer to the FAQ question" 
+                      rows={5}
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    The detailed answer to this FAQ (the title is the question)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TabsContent>
+          
+          <TabsContent value="case-study" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="client"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Client</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Client name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="duration"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Duration</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., 3 months, Q1 2023" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <FormField
+              control={form.control}
+              name="technologies"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Technologies Used</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="React, Node.js, AWS, etc. (comma-separated)" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    List the key technologies used in this project
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="challenge"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Challenge</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="What was the client's challenge or problem?" 
+                      rows={3}
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="solution"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Solution</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="How did you solve the challenge?" 
+                      rows={3}
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="results"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Results</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="What results or benefits were achieved?" 
+                      rows={3}
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TabsContent>
+          
+          <TabsContent value="job" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Job location" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="department"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Department</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Department or team" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="salaryMin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Minimum Salary</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Minimum salary (numeric)" type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="salaryMax"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Maximum Salary</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Maximum salary (numeric)" type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            <FormField
+              control={form.control}
+              name="applyUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Application URL</FormLabel>
+                  <FormControl>
+                    <Input placeholder="URL to apply for this position" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Where candidates can apply for this job (external URL or email link)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="responsibilities"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Responsibilities</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="List responsibilities (one per line)" 
+                      rows={5}
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Enter each responsibility on a new line
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="requirements"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Requirements</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="List requirements (one per line)" 
+                      rows={5}
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Enter each requirement on a new line
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="benefits"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Benefits</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="List benefits (one per line)" 
+                      rows={5}
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Enter each benefit on a new line
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </TabsContent>
         </Tabs>
         

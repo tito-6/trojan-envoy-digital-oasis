@@ -1,5 +1,4 @@
-
-export type ContentType = 'Page' | 'Page Section' | 'Service' | 'Portfolio' | 'Blog Post';
+export type ContentType = 'Page' | 'Page Section' | 'Service' | 'Portfolio' | 'Blog Post' | 'Testimonial' | 'FAQ' | 'Team Member' | 'Case Study' | 'Job Posting';
 
 export type ContentPlacement = {
   pageId?: number;
@@ -32,6 +31,24 @@ export interface ContentItem {
   placement?: ContentPlacement;
   author?: string;
   category?: string;
+  role?: string;
+  company?: string;
+  rating?: number;
+  answer?: string;
+  technologies?: string[];
+  duration?: string;
+  client?: string;
+  challenge?: string;
+  solution?: string;
+  results?: string;
+  location?: string;
+  department?: string;
+  responsibilities?: string[];
+  requirements?: string[];
+  benefits?: string[];
+  applyUrl?: string;
+  salaryMin?: number;
+  salaryMax?: number;
 }
 
 export interface User {
