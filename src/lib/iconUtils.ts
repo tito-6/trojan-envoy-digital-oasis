@@ -22,21 +22,27 @@ import * as RiIcons from 'react-icons/ri';
 
 // Define a map of all imported icon libraries
 const iconLibraries: Record<string, Record<string, React.ComponentType<any>>> = {
-  Fa: FaIcons,
-  Si: SiIcons,
-  Lu: LucideIcons,
-  Md: MdIcons,
-  Bs: BsIcons,
-  Ai: AiIcons,
-  Bi: BiIcons,
-  Io: IoIcons,
-  Io5: Io5Icons,
-  Di: DiIcons,
-  Gi: GiIcons,
-  Ti: TiIcons,
-  Cg: CgIcons,
-  Ri: RiIcons
+  Fa: FaIcons as Record<string, React.ComponentType<any>>,
+  Si: SiIcons as Record<string, React.ComponentType<any>>,
+  Md: MdIcons as Record<string, React.ComponentType<any>>,
+  Bs: BsIcons as Record<string, React.ComponentType<any>>,
+  Ai: AiIcons as Record<string, React.ComponentType<any>>,
+  Bi: BiIcons as Record<string, React.ComponentType<any>>,
+  Io: IoIcons as Record<string, React.ComponentType<any>>,
+  Io5: Io5Icons as Record<string, React.ComponentType<any>>,
+  Di: DiIcons as Record<string, React.ComponentType<any>>,
+  Gi: GiIcons as Record<string, React.ComponentType<any>>,
+  Ti: TiIcons as Record<string, React.ComponentType<any>>,
+  Cg: CgIcons as Record<string, React.ComponentType<any>>,
+  Ri: RiIcons as Record<string, React.ComponentType<any>>,
+  Lu: {} as Record<string, React.ComponentType<any>> // We'll handle Lucide icons separately
 };
+
+// Filter Lucide exports to only include component types
+const lucideIconEntries = Object.entries(LucideIcons).filter(([key, value]) => {
+  return typeof value === 'function' && key !== 'createLucideIcon' && key !== 'Icon';
+});
+const lucideIcons = Object.fromEntries(lucideIconEntries) as Record<string, React.ComponentType<any>>;
 
 /**
  * Convert an SVG string to a data URL
@@ -67,32 +73,37 @@ export const getIconComponentByName = (iconName: string): React.ComponentType<an
   
   // Handle data URLs (custom uploaded icons)
   if (iconName.startsWith('data:')) {
-    return (props: any) => React.createElement('img', {
-      src: iconName,
-      alt: "Custom Icon",
-      className: "w-full h-full object-contain",
-      style: { width: props.size || '24px', height: props.size || '24px' },
-      ...props
-    });
+    // Return a function component that renders an image
+    return function CustomIcon(props: any) {
+      return (
+        <img 
+          src={iconName}
+          alt="Custom Icon"
+          className="w-full h-full object-contain"
+          style={{ width: props.size || '24px', height: props.size || '24px' }}
+          {...props}
+        />
+      );
+    };
   }
-  
-  // Extract the library prefix (first 2 characters usually) and icon name
-  const prefix = iconName.substring(0, 2);
   
   // Special case for Io5 (since it starts with "Io5" not just "Io")
   if (iconName.startsWith('Io5')) {
     return Io5Icons[iconName] || null;
   }
   
+  // Extract the library prefix (first 2 characters usually) and icon name
+  const prefix = iconName.substring(0, 2);
+  
   // Try to find the icon in the corresponding library
   const library = iconLibraries[prefix];
-  if (library) {
-    return library[iconName] || null;
+  if (library && library[iconName]) {
+    return library[iconName];
   }
   
   // If not found in our libraries, check if it's a Lucide icon
-  if (LucideIcons[iconName as keyof typeof LucideIcons]) {
-    return LucideIcons[iconName as keyof typeof LucideIcons] as React.ComponentType<any>;
+  if (lucideIcons[iconName]) {
+    return lucideIcons[iconName];
   }
   
   console.warn(`Icon not found: ${iconName}`);

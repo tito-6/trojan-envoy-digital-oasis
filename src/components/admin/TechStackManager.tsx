@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getIconComponentByName } from "@/lib/iconUtils";
 import IconSelector from "./icon-management/IconSelector";
 
 import {
@@ -97,14 +98,31 @@ const TechIconItem: React.FC<{
   onEdit: (icon: TechIcon) => void;
   onReorder: (id: number, direction: 'up' | 'down') => void;
 }> = ({ icon, onDelete, onEdit, onReorder }) => {
-  const Icon = iconMap[icon.iconName] || FaReact;
+  const renderTechIcon = () => {
+    if (icon.iconName.startsWith('data:')) {
+      return (
+        <img 
+          src={icon.iconName} 
+          alt={icon.name} 
+          style={{ width: '20px', height: '20px', color: icon.color }} 
+        />
+      );
+    }
+    
+    const IconComponent = getIconComponentByName(icon.iconName);
+    if (IconComponent) {
+      return <IconComponent size={20} style={{ color: icon.color }} />;
+    }
+    
+    return <FaReact size={20} style={{ color: icon.color }} />;
+  };
   
   return (
     <div className="flex items-center justify-between p-3 border rounded-md bg-card">
       <div className="flex items-center gap-3">
         <GripVertical className="w-5 h-5 text-muted-foreground cursor-grab" />
         <div className={`w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center ${icon.animation}`}>
-          <Icon size={20} style={{ color: icon.color }} />
+          {renderTechIcon()}
         </div>
         <div>
           <p className="font-medium">{icon.name}</p>

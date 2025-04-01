@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Award, Check } from "lucide-react";
@@ -8,6 +7,10 @@ import { HeroSettings, PartnerLogo, TechIcon } from "@/lib/types";
 import { getIconComponentByName } from "@/lib/iconUtils";
 
 const renderIcon = (iconName: string, props = {}) => {
+  if (!iconName) {
+    return <Award {...props} />;
+  }
+  
   if (iconName.startsWith('data:')) {
     return (
       <img 

@@ -71,17 +71,31 @@ const PartnerLogoItem: React.FC<{
   onEdit: (logo: PartnerLogo) => void;
   onReorder: (id: number, direction: 'up' | 'down') => void;
 }> = ({ logo, onDelete, onEdit, onReorder }) => {
-  // Use getIconComponentByName to support both icon names and data URLs
-  const Icon = logo.iconName.startsWith('data:') 
-    ? (props: any) => <img src={logo.iconName} alt={logo.name} {...props} style={{ width: props.size || '24px', height: props.size || '24px' }} />
-    : getIconComponentByName(logo.iconName) || FaAward;
+  const renderIconForLogo = () => {
+    if (logo.iconName.startsWith('data:')) {
+      return (
+        <img 
+          src={logo.iconName} 
+          alt={logo.name} 
+          style={{ width: '20px', height: '20px', color: logo.color }} 
+        />
+      );
+    }
+    
+    const IconComponent = getIconComponentByName(logo.iconName);
+    if (IconComponent) {
+      return <IconComponent size={20} style={{ color: logo.color }} />;
+    }
+    
+    return <FaAward size={20} style={{ color: logo.color }} />;
+  };
   
   return (
     <div className="flex items-center justify-between p-3 border rounded-md bg-card">
       <div className="flex items-center gap-3">
         <GripVertical className="w-5 h-5 text-muted-foreground cursor-grab" />
         <div className={`w-10 h-10 rounded-full ${logo.bgColor} flex items-center justify-center`}>
-          <Icon size={20} style={{ color: logo.color }} />
+          {renderIconForLogo()}
         </div>
         <div>
           <p className="font-medium">{logo.name}</p>
