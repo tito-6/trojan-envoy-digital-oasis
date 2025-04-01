@@ -623,9 +623,17 @@ class StorageService {
     return settings ? JSON.parse(settings) : null;
   }
 
-  setServicesSettings(settings: ServicesSettings): void {
-    localStorage.setItem('services-settings', JSON.stringify(settings));
-    this.dispatchEvent('services-settings-updated', settings);
+  updateServicesSettings(settings: ServicesSettings): ServicesSettings {
+    const updatedSettings: ServicesSettings = {
+      ...settings,
+      lastUpdated: new Date().toISOString().split('T')[0]
+    };
+    
+    localStorage.setItem('services-settings', JSON.stringify(updatedSettings));
+    
+    this.dispatchEvent('services-settings-updated', updatedSettings);
+    
+    return updatedSettings;
   }
 }
 

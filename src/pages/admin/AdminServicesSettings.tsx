@@ -35,12 +35,14 @@ import {
 
 const AdminServicesSettings: React.FC = () => {
   const [settings, setSettings] = useState<ServicesSettings>({
+    id: 1,
     title: 'Our Services',
     subtitle: 'What we do',
     description: 'We provide tailored solutions to meet your digital needs.',
-    buttonText: 'View All Services',
-    buttonUrl: '/services',
-    services: []
+    viewAllText: 'View All Services',
+    viewAllUrl: '/services',
+    services: [],
+    lastUpdated: new Date().toISOString()
   });
   
   const [services, setServices] = useState<ServiceItem[]>([]);
@@ -255,20 +257,20 @@ const AdminServicesSettings: React.FC = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="buttonText">Button Text</Label>
+                    <Label htmlFor="viewAllText">Button Text</Label>
                     <Input 
-                      id="buttonText" 
-                      value={settings.buttonText} 
-                      onChange={(e) => setSettings({...settings, buttonText: e.target.value})}
+                      id="viewAllText" 
+                      value={settings.viewAllText} 
+                      onChange={(e) => setSettings({...settings, viewAllText: e.target.value})}
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="buttonUrl">Button URL</Label>
+                    <Label htmlFor="viewAllUrl">Button URL</Label>
                     <Input 
-                      id="buttonUrl" 
-                      value={settings.buttonUrl} 
-                      onChange={(e) => setSettings({...settings, buttonUrl: e.target.value})}
+                      id="viewAllUrl" 
+                      value={settings.viewAllUrl} 
+                      onChange={(e) => setSettings({...settings, viewAllUrl: e.target.value})}
                     />
                   </div>
                 </div>
