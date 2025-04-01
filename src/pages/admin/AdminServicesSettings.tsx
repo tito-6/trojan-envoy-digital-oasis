@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -57,7 +56,6 @@ const AdminServicesSettings: React.FC = () => {
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [serviceFormTab, setServiceFormTab] = useState('general');
   
-  // SEO state
   const [seoTitle, setSeoTitle] = useState('');
   const [seoDescription, setSeoDescription] = useState('');
   const [seoKeywords, setSeoKeywords] = useState<string[]>([]);
@@ -68,13 +66,11 @@ const AdminServicesSettings: React.FC = () => {
   const [h3Headings, setH3Headings] = useState<string[]>([]);
   const [h3Input, setH3Input] = useState('');
   
-  // Media state
   const [images, setImages] = useState<(File | string)[]>([]);
   const [documents, setDocuments] = useState<(File | string)[]>([]);
   const [videos, setVideos] = useState<string[]>([]);
   const [videoInput, setVideoInput] = useState('');
   
-  // State for real-time sync status
   const [isSyncing, setIsSyncing] = useState(false);
   
   const { toast } = useToast();
@@ -82,7 +78,6 @@ const AdminServicesSettings: React.FC = () => {
   useEffect(() => {
     loadServicesSettings();
     
-    // Set up real-time sync listeners
     const unsubscribeContentUpdated = storageService.addEventListener('content-updated', handleRealTimeSync);
     const unsubscribeContentAdded = storageService.addEventListener('content-added', handleRealTimeSync);
     const unsubscribeContentDeleted = storageService.addEventListener('content-deleted', handleRealTimeSync);
@@ -149,7 +144,6 @@ const AdminServicesSettings: React.FC = () => {
       documents: []
     });
     
-    // Reset form state
     setSeoTitle('');
     setSeoDescription('');
     setSeoKeywords([]);
@@ -171,12 +165,10 @@ const AdminServicesSettings: React.FC = () => {
   const handleEditService = (service: ServiceItem) => {
     setEditingService(service);
     
-    // Set form state from service data
     setSeoTitle(service.seoTitle || '');
     setSeoDescription(service.seoDescription || '');
     setSeoKeywords(service.seoKeywords || []);
     
-    // Set heading structure
     if (service.seoHeadingStructure) {
       setH1Heading(service.seoHeadingStructure.h1 || '');
       setH2Headings(service.seoHeadingStructure.h2 || []);
@@ -187,7 +179,6 @@ const AdminServicesSettings: React.FC = () => {
       setH3Headings([]);
     }
     
-    // Set media
     setImages(service.images || []);
     setDocuments(service.documents || []);
     setVideos(service.videos || []);
@@ -239,7 +230,6 @@ const AdminServicesSettings: React.FC = () => {
     updatedServices[index] = updatedServices[newIndex];
     updatedServices[newIndex] = temp;
     
-    // Update order properties
     updatedServices.forEach((item, i) => {
       item.order = i + 1;
     });
@@ -259,7 +249,6 @@ const AdminServicesSettings: React.FC = () => {
     
     if (!editingService) return;
     
-    // Ensure the service item has all required fields
     const serviceItem: ServiceItem = {
       id: editingService.id,
       title: editingService.title,
@@ -271,7 +260,6 @@ const AdminServicesSettings: React.FC = () => {
       bgColor: editingService.bgColor,
       formattedDescription: editingService.formattedDescription,
       
-      // SEO fields
       seoTitle: seoTitle,
       seoDescription: seoDescription,
       seoKeywords: seoKeywords,
@@ -281,7 +269,6 @@ const AdminServicesSettings: React.FC = () => {
         h3: h3Headings
       },
       
-      // Media fields
       images: processFilesForStorage(images),
       documents: processFilesForStorage(documents),
       videos: videos
@@ -291,14 +278,11 @@ const AdminServicesSettings: React.FC = () => {
     const index = updatedServices.findIndex(s => s.id === serviceItem.id);
     
     if (index !== -1) {
-      // Update existing service
       updatedServices[index] = serviceItem;
     } else {
-      // Add new service
       updatedServices.push(serviceItem);
     }
     
-    // Sort by order
     updatedServices.sort((a, b) => a.order - b.order);
     
     setServices(updatedServices);
@@ -318,19 +302,15 @@ const AdminServicesSettings: React.FC = () => {
     setIsServiceDialogOpen(false);
   };
 
-  // Process files for storage
   const processFilesForStorage = (files: (File | string)[]): string[] => {
     return files.map(file => {
       if (typeof file === 'string') {
         return file;
       }
-      // In a real implementation, this would upload the file to a server
-      // For now, we'll use a simulated URL
       return `/uploads/${file.name}`;
     });
   };
 
-  // Handle image uploads
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const newImages = Array.from(e.target.files);
@@ -342,7 +322,6 @@ const AdminServicesSettings: React.FC = () => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Handle document uploads
   const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const newDocuments = Array.from(e.target.files);
@@ -354,7 +333,6 @@ const AdminServicesSettings: React.FC = () => {
     setDocuments(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Handle videos
   const handleAddVideo = () => {
     if (
       videoInput.trim() && 
@@ -376,7 +354,6 @@ const AdminServicesSettings: React.FC = () => {
     setVideos(prev => prev.filter(v => v !== video));
   };
 
-  // SEO handlers
   const handleAddKeyword = () => {
     if (keywordInput.trim() && !seoKeywords.includes(keywordInput.trim())) {
       setSeoKeywords(prev => [...prev, keywordInput.trim()]);
@@ -410,7 +387,6 @@ const AdminServicesSettings: React.FC = () => {
     setH3Headings(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Handle rich text changes
   const handleDescriptionChange = (value: any) => {
     if (editingService) {
       setEditingService({
@@ -719,7 +695,7 @@ const AdminServicesSettings: React.FC = () => {
                   <div className="space-y-2">
                     <Label>Rich Content Editor</Label>
                     <p className="text-sm text-muted-foreground mb-2">
-                      Use the editor below to create formatted content for your service. You can add text styling, colors, emojis, and more.
+                      Use the editor below to create formatted content for your service. You can add text styling, colors, links, emojis, and more.
                     </p>
                     <RichTextEditor
                       label="Service Content"

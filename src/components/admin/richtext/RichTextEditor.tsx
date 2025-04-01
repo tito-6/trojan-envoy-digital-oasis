@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EditorState, ContentState, convertToRaw, convertFromRaw } from 'draft-js';
 import { Editor } from 'react-draft-wysiwyg';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
@@ -11,6 +11,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/compon
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import './rich-text-editor.css';
+
+// Import the polyfill at the component level to ensure it's loaded
+import '@/lib/polyfills';
 
 interface RichTextEditorProps {
   label?: string;
@@ -46,6 +49,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
       return EditorState.createEmpty();
     }
   });
+
+  // Ensure we initialize polyfills for draft-js
+  useEffect(() => {
+    // This ensures any needed polyfills are active when the editor mounts
+    if (typeof window !== 'undefined') {
+      console.log('Rich text editor mounted with polyfills');
+    }
+  }, []);
 
   const handleEditorChange = (state: EditorState) => {
     setEditorState(state);
@@ -109,13 +120,14 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
           toolbarClassName="border-0 border-b !bg-muted/30 editor-toolbar sticky top-0 z-10"
           placeholder={placeholder}
           toolbar={{
-            options: ['inline', 'blockType', 'fontSize', 'fontFamily', 'list', 'textAlign', 'colorPicker', 'link', 'emoji', 'history'],
+            options: ['inline', 'blockType', 'fontSize', 'fontFamily', 'list', 'textAlign', 'colorPicker', 'link', 'emoji', 'image', 'history'],
             inline: {
-              options: ['bold', 'italic', 'underline', 'strikethrough', 'monospace'],
+              options: ['bold', 'italic', 'underline', 'strikethrough', 'monospace', 'superscript', 'subscript'],
               className: 'inline-toolbar-item',
+              inDropdown: false,
             },
             blockType: {
-              options: ['Normal', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'Blockquote'],
+              options: ['Normal', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'Blockquote', 'Code'],
               className: 'block-type-toolbar-item',
               dropdownClassName: 'block-type-dropdown',
               component: customDropdownRenderer,
@@ -127,37 +139,59 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               component: customDropdownRenderer,
             },
             fontFamily: {
-              options: ['Arial', 'Georgia', 'Impact', 'Tahoma', 'Times New Roman', 'Verdana'],
+              options: ['Arial', 'Georgia', 'Impact', 'Tahoma', 'Times New Roman', 'Verdana', 'Courier New', 'Lucida Console'],
               className: 'font-family-toolbar-item',
               dropdownClassName: 'font-family-dropdown',
               component: customDropdownRenderer,
+            },
+            list: {
+              options: ['unordered', 'ordered', 'indent', 'outdent'],
+              className: 'list-toolbar-item',
             },
             textAlign: {
               options: ['left', 'center', 'right', 'justify'],
               className: 'text-align-toolbar-item',
             },
             colorPicker: {
-              colors: ['rgb(97,189,109)', 'rgb(26,188,156)', 'rgb(84,172,210)', 'rgb(44,130,201)', 
-                      'rgb(147,101,184)', 'rgb(71,85,119)', 'rgb(204,204,204)', 'rgb(65,168,95)', 
-                      'rgb(0,168,133)', 'rgb(61,142,185)', 'rgb(41,105,176)', 'rgb(85,57,130)', 
-                      'rgb(40,50,78)', 'rgb(0,0,0)', 'rgb(247,218,100)', 'rgb(251,160,38)', 
-                      'rgb(235,107,86)', 'rgb(226,80,65)', 'rgb(163,143,132)', 'rgb(239,239,239)', 
-                      'rgb(255,255,255)', 'rgb(250,197,28)', 'rgb(243,121,52)', 'rgb(209,72,65)', 
-                      'rgb(184,49,47)', 'rgb(124,112,107)', 'rgb(209,213,216)'],
+              colors: [
+                // Brand colors
+                '#9b87f5', '#7E69AB', '#6E59A5', '#1A1F2C', '#D6BCFA',
+                // Soft colors
+                '#F2FCE2', '#FEF7CD', '#FEC6A1', '#E5DEFF', '#FFDEE2', '#FDE1D3', '#D3E4FD', '#F1F0FB',
+                // Vivid colors
+                '#8B5CF6', '#D946EF', '#F97316', '#0EA5E9', '#DC2626', '#16A34A', '#EAB308',
+                // Neutral colors
+                '#FFFFFF', '#F3F4F6', '#9CA3AF', '#4B5563', '#1F2937', '#111827', '#000000',
+                // Additional colors
+                '#059669', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#6366F1', '#EF4444'
+              ],
               className: 'color-picker-toolbar-item',
               popupClassName: 'color-picker-popup',
               component: customColorPicker,
+            },
+            link: {
+              options: ['link', 'unlink'],
+              className: 'link-toolbar-item',
+              popupClassName: 'link-popup',
+              component: customLinkModal,
+              defaultTargetOption: '_blank',
+              showOpenOptionOnHover: true,
             },
             emoji: {
               className: 'emoji-toolbar-item',
               popupClassName: 'emoji-popup',
               component: customEmojiPicker,
             },
-            link: {
-              className: 'link-toolbar-item',
-              popupClassName: 'link-popup',
-              component: customLinkModal,
-              defaultTargetOption: '_blank',
+            image: {
+              className: 'image-toolbar-item',
+              popupClassName: 'image-popup',
+              urlEnabled: true,
+              uploadEnabled: false,
+              alignmentEnabled: true,
+              defaultSize: {
+                height: 'auto',
+                width: 'auto',
+              },
             },
           }}
           toolbarCustomButtons={[]}
