@@ -1,3 +1,4 @@
+
 import React from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -8,10 +9,52 @@ import {
   TrendingUp, 
   Eye,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  MonitorSmartphone,
+  Shield,
+  Settings,
+  Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+
+interface AdminSectionCardProps {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  href: string;
+}
+
+const AdminSectionCard: React.FC<AdminSectionCardProps> = ({ 
+  title, description, icon, href 
+}) => {
+  const navigate = useNavigate();
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+            {icon}
+          </div>
+          <CardTitle>{title}</CardTitle>
+        </div>
+        <CardDescription>
+          {description}
+        </CardDescription>
+      </CardHeader>
+      <CardFooter className="pt-2">
+        <Button
+          variant="secondary"
+          onClick={() => navigate(href)}
+          className="w-full"
+        >
+          Manage {title}
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+};
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -47,6 +90,51 @@ const AdminDashboard: React.FC = () => {
     },
   ];
 
+  const adminSections = [
+    {
+      title: "Content",
+      description: "Manage pages, blog posts, and all website content",
+      icon: <FileText className="w-5 h-5" />,
+      href: "/admin/content"
+    },
+    {
+      title: "Header",
+      description: "Edit navigation, logo, and header settings",
+      icon: <MonitorSmartphone className="w-5 h-5" />,
+      href: "/admin/header"
+    },
+    {
+      title: "Hero",
+      description: "Update homepage hero section content and images",
+      icon: <Shield className="w-5 h-5" />,
+      href: "/admin/hero"
+    },
+    {
+      title: "Services",
+      description: "Edit services displayed on the homepage",
+      icon: <Palette className="w-5 h-5" />,
+      href: "/admin/services-settings"
+    },
+    {
+      title: "Contacts",
+      description: "View and manage contact form submissions",
+      icon: <MessageSquare className="w-5 h-5" />,
+      href: "/admin/contacts"
+    },
+    {
+      title: "Users",
+      description: "Manage user accounts and permissions",
+      icon: <Users className="w-5 h-5" />,
+      href: "/admin/users"
+    },
+    {
+      title: "Settings",
+      description: "Configure global website settings",
+      icon: <Settings className="w-5 h-5" />,
+      href: "/admin/settings"
+    }
+  ];
+
   return (
     <AdminLayout>
       <div className="p-6">
@@ -77,6 +165,19 @@ const AdminDashboard: React.FC = () => {
                 </p>
               </CardContent>
             </Card>
+          ))}
+        </div>
+        
+        <h2 className="text-xl font-semibold mb-4">Admin Sections</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {adminSections.map((section) => (
+            <AdminSectionCard
+              key={section.title}
+              title={section.title}
+              description={section.description}
+              icon={section.icon}
+              href={section.href}
+            />
           ))}
         </div>
         
@@ -122,29 +223,6 @@ const AdminDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle>Services Section</CardTitle>
-            <CardDescription>
-              Manage the services displayed on the homepage
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Edit the services section title, content, and individual service cards.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button
-              variant="secondary"
-              onClick={() => navigate("/admin/services-settings")}
-              className="w-full"
-            >
-              Manage Services
-            </Button>
-          </CardFooter>
-        </Card>
       </div>
     </AdminLayout>
   );

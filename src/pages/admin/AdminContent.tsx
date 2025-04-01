@@ -20,6 +20,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ContentForm } from '@/components/admin/content-form';
 import { ContentItem, ContentType } from '@/lib/types';
 import { storageService } from '@/lib/storage';
@@ -34,6 +44,9 @@ const AdminContent: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [initialFormValues, setInitialFormValues] = useState<Partial<ContentItem> | undefined>(undefined);
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [contentToDelete, setContentToDelete] = useState<ContentItem | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -109,13 +122,23 @@ const AdminContent: React.FC = () => {
     navigate(`/content/${content.id}`);
   };
 
-  const handleDeleteContent = (id: number) => {
-    storageService.deleteContent(id);
-    setContentList(prev => prev.filter(item => item.id !== id));
-    toast({
-      title: "Content deleted",
-      description: "The content has been successfully deleted.",
-    });
+  const openDeleteDialog = (content: ContentItem) => {
+    setContentToDelete(content);
+    setDeleteConfirmText('');
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteContent = () => {
+    if (contentToDelete && deleteConfirmText === 'DELETE') {
+      storageService.deleteContent(contentToDelete.id);
+      setContentList(prev => prev.filter(item => item.id !== contentToDelete.id));
+      toast({
+        title: "Content deleted",
+        description: "The content has been successfully deleted.",
+      });
+      setIsDeleteDialogOpen(false);
+      setContentToDelete(null);
+    }
   };
 
   const handleSaveContent = (values: ContentItem) => {
@@ -234,7 +257,7 @@ const AdminContent: React.FC = () => {
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDeleteContent(content.id)}>
+                      <DropdownMenuItem onClick={() => openDeleteDialog(content)}>
                         <Trash2 className="h-4 w-4 mr-2" />
                         Delete
                       </DropdownMenuItem>
@@ -293,6 +316,36 @@ const AdminContent: React.FC = () => {
           </div>
         </div>
       )}
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete this content?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete "{contentToDelete?.title}". 
+              <div className="mt-4">
+                <p className="font-semibold mb-2">Type "DELETE" to confirm:</p>
+                <Input 
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  className="mt-1"
+                  placeholder="Type DELETE here"
+                />
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteContent}
+              disabled={deleteConfirmText !== 'DELETE'}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

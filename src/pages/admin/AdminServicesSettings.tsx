@@ -1,248 +1,182 @@
 
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import AdminLayout from "@/components/admin/AdminLayout";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Pen, Plus, Trash2, MoveVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import AdminLayout from '@/components/admin/AdminLayout';
+import { storageService } from '@/lib/storage';
+import { ServiceItem, ServicesSettings } from '@/lib/types';
+import IconSelector from '@/components/admin/icon-management/IconSelector';
 import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from '@/components/ui/dialog';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { storageService } from "@/lib/storage";
-import { ServiceItem, ServicesSettings } from "@/lib/types";
-import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, Save, Trash2, MoveUp, MoveDown, X } from "lucide-react";
-import IconSelector from "@/components/admin/icon-management/IconSelector";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { getIconComponentByName } from "@/lib/iconUtils";
-
-// Define the schema for the form
-const formSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  subtitle: z.string().min(1, "Subtitle is required"),
-  description: z.string().min(1, "Description is required"),
-  viewAllText: z.string().min(1, "Button text is required"),
-  viewAllUrl: z.string().min(1, "Button URL is required"),
-});
-
-const serviceItemSchema = z.object({
-  id: z.number(),
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
-  iconName: z.string().min(1, "Icon is required"),
-  link: z.string().min(1, "Link is required"),
-  order: z.number(),
-  color: z.string().optional(),
-  bgColor: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-type ServiceItemFormValues = z.infer<typeof serviceItemSchema>;
-
-const defaultService: ServiceItem = {
-  id: 0,
-  title: "New Service",
-  description: "Service description goes here",
-  iconName: "Code",
-  link: "/services/new-service",
-  order: 0,
-  color: "text-foreground",
-  bgColor: "bg-secondary",
-};
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const AdminServicesSettings: React.FC = () => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [settings, setSettings] = useState<ServicesSettings | null>(null);
+  const [settings, setSettings] = useState<ServicesSettings>({
+    title: 'Our Services',
+    subtitle: 'What we do',
+    description: 'We provide tailored solutions to meet your digital needs.',
+    buttonText: 'View All Services',
+    buttonUrl: '/services',
+    services: []
+  });
+  
   const [services, setServices] = useState<ServiceItem[]>([]);
+  const [activeTab, setActiveTab] = useState('general');
   const [editingService, setEditingService] = useState<ServiceItem | null>(null);
-  const [activeTab, setActiveTab] = useState("general");
+  const [isServiceDialogOpen, setIsServiceDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState<ServiceItem | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  
+  const { toast } = useToast();
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      subtitle: "",
-      description: "",
-      viewAllText: "",
-      viewAllUrl: "",
-    },
-  });
-
-  const serviceForm = useForm<ServiceItemFormValues>({
-    resolver: zodResolver(serviceItemSchema),
-    defaultValues: defaultService,
-  });
-
-  // Load settings from storage
   useEffect(() => {
-    const settings = storageService.getServicesSettings();
-    if (settings) {
-      setSettings(settings);
-      setServices(settings.services);
-      form.reset({
-        title: settings.title,
-        subtitle: settings.subtitle,
-        description: settings.description,
-        viewAllText: settings.viewAllText,
-        viewAllUrl: settings.viewAllUrl,
-      });
-    } else {
-      // Create default settings if none exist
-      const defaultSettings: ServicesSettings = {
-        id: 1,
-        title: "Our Services",
-        subtitle: "What We Do",
-        description: "We provide comprehensive digital solutions to help businesses succeed in the digital age.",
-        viewAllText: "View All Services",
-        viewAllUrl: "/services",
-        services: [
-          {
-            id: 1,
-            title: "Web Development",
-            description: "Custom websites and web applications built with modern technologies to meet your business needs.",
-            iconName: "Code",
-            link: "/services/web-development",
-            order: 1,
-          },
-          {
-            id: 2,
-            title: "Mobile Development",
-            description: "Native and cross-platform mobile applications for iOS and Android devices.",
-            iconName: "Smartphone",
-            link: "/services/mobile-development",
-            order: 2,
-          },
-          {
-            id: 3,
-            title: "UI/UX Design",
-            description: "User-centered design that enhances the user experience and increases conversion rates.",
-            iconName: "Paintbrush",
-            link: "/services/ui-ux-design",
-            order: 3,
-          },
-          {
-            id: 4,
-            title: "Digital Marketing",
-            description: "Data-driven marketing strategies to increase your online presence and drive results.",
-            iconName: "BarChart",
-            link: "/services/digital-marketing",
-            order: 4,
-          },
-        ],
-        lastUpdated: new Date().toISOString(),
-      };
-      storageService.setServicesSettings(defaultSettings);
-      setSettings(defaultSettings);
-      setServices(defaultSettings.services);
-      form.reset({
-        title: defaultSettings.title,
-        subtitle: defaultSettings.subtitle,
-        description: defaultSettings.description,
-        viewAllText: defaultSettings.viewAllText,
-        viewAllUrl: defaultSettings.viewAllUrl,
-      });
+    const storedSettings = storageService.getServicesSettings();
+    if (storedSettings) {
+      setSettings(storedSettings);
+      setServices(storedSettings.services || []);
     }
-  }, [form]);
+  }, []);
 
-  // Handle form submission for general settings
-  const onSubmit = (values: FormValues) => {
-    if (!settings) return;
-
-    const updatedSettings: ServicesSettings = {
+  const handleSaveGeneralSettings = () => {
+    const updatedSettings = {
       ...settings,
-      title: values.title,
-      subtitle: values.subtitle,
-      description: values.description,
-      viewAllText: values.viewAllText,
-      viewAllUrl: values.viewAllUrl,
-      lastUpdated: new Date().toISOString(),
+      services: services
     };
-
-    storageService.setServicesSettings(updatedSettings);
-    setSettings(updatedSettings);
-
+    
+    storageService.updateServicesSettings(updatedSettings);
+    
     toast({
-      title: "Settings saved",
-      description: "The services section settings have been updated",
+      title: "Settings updated",
+      description: "General settings have been saved successfully.",
     });
   };
 
-  // Start editing a service
+  const handleCreateService = () => {
+    const newId = services.length > 0 
+      ? Math.max(...services.map(s => s.id)) + 1 
+      : 1;
+    
+    setEditingService({
+      id: newId,
+      title: '',
+      description: '',
+      iconName: 'code',
+      link: '/services/service-name',
+      order: services.length + 1,
+      color: '#3b82f6',
+      bgColor: '#eff6ff',
+    });
+    
+    setIsServiceDialogOpen(true);
+  };
+
   const handleEditService = (service: ServiceItem) => {
     setEditingService(service);
-    serviceForm.reset({
-      id: service.id,
-      title: service.title,
-      description: service.description,
-      iconName: service.iconName,
-      link: service.link,
-      order: service.order,
-      color: service.color || "text-foreground",
-      bgColor: service.bgColor || "bg-secondary",
-    });
-    setActiveTab("edit-service");
+    setIsServiceDialogOpen(true);
   };
 
-  // Add a new service
-  const handleAddService = () => {
-    const newService = {
-      ...defaultService,
-      id: Date.now(),
-      order: services.length + 1,
+  const openDeleteServiceDialog = (service: ServiceItem) => {
+    setServiceToDelete(service);
+    setDeleteConfirmText('');
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDeleteService = () => {
+    if (serviceToDelete && deleteConfirmText === 'DELETE') {
+      const updatedServices = services.filter(s => s.id !== serviceToDelete.id);
+      setServices(updatedServices);
+      
+      const updatedSettings = {
+        ...settings,
+        services: updatedServices
+      };
+      
+      storageService.updateServicesSettings(updatedSettings);
+      
+      toast({
+        title: "Service deleted",
+        description: `Service "${serviceToDelete.title}" has been deleted.`,
+      });
+      
+      setIsDeleteDialogOpen(false);
+      setServiceToDelete(null);
+    }
+  };
+
+  const handleMoveService = (id: number, direction: 'up' | 'down') => {
+    const index = services.findIndex(s => s.id === id);
+    if (
+      (direction === 'up' && index === 0) || 
+      (direction === 'down' && index === services.length - 1)
+    ) {
+      return;
+    }
+    
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    const updatedServices = [...services];
+    const temp = updatedServices[index];
+    updatedServices[index] = updatedServices[newIndex];
+    updatedServices[newIndex] = temp;
+    
+    // Update order properties
+    updatedServices.forEach((item, i) => {
+      item.order = i + 1;
+    });
+    
+    setServices(updatedServices);
+    
+    const updatedSettings = {
+      ...settings,
+      services: updatedServices
     };
-    setEditingService(newService);
-    serviceForm.reset({
-      id: newService.id,
-      title: newService.title,
-      description: newService.description,
-      iconName: newService.iconName,
-      link: newService.link,
-      order: newService.order,
-      color: newService.color,
-      bgColor: newService.bgColor,
-    });
-    setActiveTab("edit-service");
+    
+    storageService.updateServicesSettings(updatedSettings);
   };
 
-  // Save service changes
-  const handleSaveService = (values: ServiceItemFormValues) => {
-    if (!settings) return;
-
-    let updatedServices = [...services];
-    const index = updatedServices.findIndex(s => s.id === values.id);
-
+  const handleServiceFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingService) return;
+    
     // Ensure the service item has all required fields
     const serviceItem: ServiceItem = {
-      id: values.id,
-      title: values.title,
-      description: values.description,
-      iconName: values.iconName,
-      link: values.link,
-      order: values.order,
-      color: values.color,
-      bgColor: values.bgColor,
+      id: editingService.id,
+      title: editingService.title,
+      description: editingService.description,
+      iconName: editingService.iconName,
+      link: editingService.link,
+      order: editingService.order,
+      color: editingService.color,
+      bgColor: editingService.bgColor,
     };
-
+    
+    let updatedServices = [...services];
+    const index = updatedServices.findIndex(s => s.id === serviceItem.id);
+    
     if (index !== -1) {
       // Update existing service
       updatedServices[index] = serviceItem;
@@ -250,501 +184,324 @@ const AdminServicesSettings: React.FC = () => {
       // Add new service
       updatedServices.push(serviceItem);
     }
-
-    // Sort by order
-    updatedServices = updatedServices.sort((a, b) => a.order - b.order);
-
-    const updatedSettings: ServicesSettings = {
-      ...settings,
-      services: updatedServices,
-      lastUpdated: new Date().toISOString(),
-    };
-
-    storageService.setServicesSettings(updatedSettings);
-    setSettings(updatedSettings);
-    setServices(updatedServices);
-    setEditingService(null);
-    setActiveTab("services");
-
-    toast({
-      title: index !== -1 ? "Service updated" : "Service added",
-      description: `The service "${values.title}" has been ${index !== -1 ? "updated" : "added"}`,
-    });
-  };
-
-  // Delete a service
-  const handleDeleteService = (id: number) => {
-    if (!settings) return;
-
-    const updatedServices = services.filter(s => s.id !== id);
     
-    // Reorder the remaining services
-    updatedServices.forEach((service, index) => {
-      service.order = index + 1;
-    });
-
-    const updatedSettings: ServicesSettings = {
-      ...settings,
-      services: updatedServices,
-      lastUpdated: new Date().toISOString(),
-    };
-
-    storageService.setServicesSettings(updatedSettings);
-    setSettings(updatedSettings);
-    setServices(updatedServices);
-
-    toast({
-      title: "Service deleted",
-      description: "The service has been removed",
-    });
-  };
-
-  // Move a service up or down
-  const handleMoveService = (id: number, direction: 'up' | 'down') => {
-    if (!settings) return;
-
-    const serviceIndex = services.findIndex(s => s.id === id);
-    if (serviceIndex === -1) return;
-
-    // Can't move up if already at the top
-    if (direction === 'up' && serviceIndex === 0) return;
-    // Can't move down if already at the bottom
-    if (direction === 'down' && serviceIndex === services.length - 1) return;
-
-    const updatedServices = [...services];
-    const targetIndex = direction === 'up' ? serviceIndex - 1 : serviceIndex + 1;
-
-    // Swap order values
-    const tempOrder = updatedServices[serviceIndex].order;
-    updatedServices[serviceIndex].order = updatedServices[targetIndex].order;
-    updatedServices[targetIndex].order = tempOrder;
-
     // Sort by order
-    const sortedServices = updatedServices.sort((a, b) => a.order - b.order);
-
-    const updatedSettings: ServicesSettings = {
+    updatedServices.sort((a, b) => a.order - b.order);
+    
+    setServices(updatedServices);
+    
+    const updatedSettings = {
       ...settings,
-      services: sortedServices,
-      lastUpdated: new Date().toISOString(),
+      services: updatedServices
     };
-
-    storageService.setServicesSettings(updatedSettings);
-    setSettings(updatedSettings);
-    setServices(sortedServices);
-
+    
+    storageService.updateServicesSettings(updatedSettings);
+    
     toast({
-      title: "Service moved",
-      description: `The service has been moved ${direction}`,
+      title: index !== -1 ? "Service updated" : "Service created",
+      description: `Service "${serviceItem.title}" has been ${index !== -1 ? 'updated' : 'created'}.`,
     });
+    
+    setIsServiceDialogOpen(false);
   };
-
-  // Cancel service editing
-  const handleCancelEdit = () => {
-    setEditingService(null);
-    setActiveTab("services");
-  };
-
-  if (!settings) {
-    return (
-      <AdminLayout>
-        <div className="container mx-auto p-6">
-          <p>Loading settings...</p>
-        </div>
-      </AdminLayout>
-    );
-  }
 
   return (
     <AdminLayout>
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Services Section Settings</h1>
-          <Button onClick={() => navigate("/admin")}>Back to Dashboard</Button>
-        </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <div className="container mx-auto py-10">
+        <h1 className="text-3xl font-bold mb-8">Services Section Settings</h1>
+        
+        <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
             <TabsTrigger value="general">General Settings</TabsTrigger>
-            <TabsTrigger value="services">Manage Services</TabsTrigger>
-            {editingService && (
-              <TabsTrigger value="edit-service">
-                {editingService.id === 0 ? "Add Service" : `Edit ${editingService.title}`}
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="services">Services</TabsTrigger>
           </TabsList>
-
+          
           <TabsContent value="general">
             <Card>
               <CardHeader>
                 <CardTitle>General Settings</CardTitle>
-                <CardDescription>
-                  Configure the general settings for the services section
-                </CardDescription>
+                <CardDescription>Configure the general settings for the services section.</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Section Title</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Our Services" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            The main title displayed in the services section
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Section Title</Label>
+                    <Input 
+                      id="title" 
+                      value={settings.title} 
+                      onChange={(e) => setSettings({...settings, title: e.target.value})}
                     />
-
-                    <FormField
-                      control={form.control}
-                      name="subtitle"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Section Subtitle</FormLabel>
-                          <FormControl>
-                            <Input placeholder="What We Do" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            The subtitle displayed above the main title
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="subtitle">Section Subtitle</Label>
+                    <Input 
+                      id="subtitle" 
+                      value={settings.subtitle} 
+                      onChange={(e) => setSettings({...settings, subtitle: e.target.value})}
                     />
-
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Section Description</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="We provide comprehensive digital solutions..."
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            A brief description of your services
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="description">Section Description</Label>
+                  <Textarea 
+                    id="description" 
+                    value={settings.description} 
+                    onChange={(e) => setSettings({...settings, description: e.target.value})}
+                    rows={3}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="buttonText">Button Text</Label>
+                    <Input 
+                      id="buttonText" 
+                      value={settings.buttonText} 
+                      onChange={(e) => setSettings({...settings, buttonText: e.target.value})}
                     />
-
-                    <Separator />
-
-                    <FormField
-                      control={form.control}
-                      name="viewAllText"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>View All Button Text</FormLabel>
-                          <FormControl>
-                            <Input placeholder="View All Services" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            The text for the button at the bottom of the section
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="buttonUrl">Button URL</Label>
+                    <Input 
+                      id="buttonUrl" 
+                      value={settings.buttonUrl} 
+                      onChange={(e) => setSettings({...settings, buttonUrl: e.target.value})}
                     />
-
-                    <FormField
-                      control={form.control}
-                      name="viewAllUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>View All Button URL</FormLabel>
-                          <FormControl>
-                            <Input placeholder="/services" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            The URL that the button links to
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Button type="submit" className="w-full">
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Settings
-                    </Button>
-                  </form>
-                </Form>
+                  </div>
+                </div>
               </CardContent>
+              <CardFooter>
+                <Button onClick={handleSaveGeneralSettings}>Save Changes</Button>
+              </CardFooter>
             </Card>
           </TabsContent>
-
+          
           <TabsContent value="services">
             <div className="mb-4 flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Manage Services</h2>
-              <Button onClick={handleAddService}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add New Service
+              <h2 className="text-xl font-semibold">Service Cards</h2>
+              <Button onClick={handleCreateService}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Service
               </Button>
             </div>
-
-            {services.length === 0 ? (
-              <Card>
-                <CardContent className="pt-6">
-                  <p className="text-center py-8 text-muted-foreground">
-                    No services found. Click "Add New Service" to create one.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 gap-4">
-                {services.map(service => {
-                  const IconComponent = getIconComponentByName(service.iconName);
-                  return (
-                    <Card key={service.id}>
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-center gap-3">
-                            <div className={`rounded-lg w-10 h-10 flex items-center justify-center ${service.bgColor || "bg-secondary"}`}>
-                              {IconComponent && (
-                                <div className={service.color || "text-foreground"}>
-                                  <IconComponent size={20} />
-                                </div>
-                              )}
-                            </div>
-                            <div>
-                              <CardTitle className="text-lg">{service.title}</CardTitle>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Order: {service.order} • Link: {service.link}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleMoveService(service.id, 'up')}
-                              disabled={service.order === 1}
-                            >
-                              <MoveUp className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => handleMoveService(service.id, 'down')}
-                              disabled={service.order === services.length}
-                            >
-                              <MoveDown className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-muted-foreground">
-                          {service.description.length > 100
-                            ? `${service.description.substring(0, 100)}...`
-                            : service.description}
-                        </p>
-                      </CardContent>
-                      <CardFooter className="flex justify-end gap-2 pt-0">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditService(service)}
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {services.map(service => (
+                <Card key={service.id}>
+                  <CardHeader 
+                    className="pb-2"
+                    style={{ backgroundColor: service.bgColor, color: service.color }}
+                  >
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-lg">{service.title}</CardTitle>
+                      <div className="flex space-x-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleMoveService(service.id, 'up')}
+                          className="h-7 w-7"
                         >
-                          Edit
+                          <ArrowUp className="h-4 w-4" />
                         </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDeleteService(service.id)}
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleMoveService(service.id, 'down')}
+                          className="h-7 w-7"
                         >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
+                          <ArrowDown className="h-4 w-4" />
                         </Button>
-                      </CardFooter>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="edit-service">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle>
-                    {editingService && editingService.id !== 0
-                      ? `Edit Service: ${editingService.title}`
-                      : "Add New Service"}
-                  </CardTitle>
-                  <Button variant="ghost" size="icon" onClick={handleCancelEdit}>
-                    <X className="h-5 w-5" />
-                  </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <p className="text-sm text-muted-foreground mb-4">{service.description}</p>
+                    
+                    <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                      <span>Icon: {service.iconName}</span>
+                      <span>•</span>
+                      <span>Order: {service.order}</span>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-between">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleEditService(service)}
+                    >
+                      <Pen className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                      onClick={() => openDeleteServiceDialog(service)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+              
+              {services.length === 0 && (
+                <div className="col-span-full text-center py-10 bg-muted rounded-lg">
+                  <p className="text-muted-foreground">No services added yet. Click "Add Service" to create one.</p>
                 </div>
-                <CardDescription>
-                  {editingService && editingService.id !== 0
-                    ? "Modify the service details"
-                    : "Configure a new service to add to the homepage"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Form {...serviceForm}>
-                  <form onSubmit={serviceForm.handleSubmit(handleSaveService)} className="space-y-6">
-                    <input
-                      type="hidden"
-                      {...serviceForm.register("id")}
-                    />
-                    <input
-                      type="hidden"
-                      {...serviceForm.register("order")}
-                    />
-
-                    <FormField
-                      control={serviceForm.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Service Title</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Web Development" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={serviceForm.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Service Description</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Describe this service..."
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={serviceForm.control}
-                      name="link"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Service Link</FormLabel>
-                          <FormControl>
-                            <Input placeholder="/services/web-development" {...field} />
-                          </FormControl>
-                          <FormDescription>
-                            The URL that this service links to when "Learn More" is clicked
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={serviceForm.control}
-                      name="iconName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Service Icon</FormLabel>
-                          <FormControl>
-                            <div className="border rounded-md p-4">
-                              <IconSelector
-                                selectedIcon={field.value}
-                                onSelectIcon={(icon) => field.onChange(icon)}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormDescription>
-                            Select an icon for this service
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={serviceForm.control}
-                        name="bgColor"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Icon Background Color</FormLabel>
-                            <FormControl>
-                              <div className="flex gap-2">
-                                <Input {...field} />
-                                <div 
-                                  className={`w-10 h-10 rounded border ${field.value || "bg-secondary"}`}
-                                />
-                              </div>
-                            </FormControl>
-                            <FormDescription>
-                              Tailwind class (e.g., bg-primary/10)
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={serviceForm.control}
-                        name="color"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Icon Color</FormLabel>
-                            <FormControl>
-                              <div className="flex gap-2">
-                                <Input {...field} />
-                                <div 
-                                  className={`w-10 h-10 rounded border flex items-center justify-center ${field.value || "text-foreground"}`}
-                                >
-                                  <div className="w-6 h-6 bg-current" />
-                                </div>
-                              </div>
-                            </FormControl>
-                            <FormDescription>
-                              Tailwind class (e.g., text-primary)
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <div className="pt-4 flex justify-end gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleCancelEdit}
-                      >
-                        Cancel
-                      </Button>
-                      <Button type="submit">
-                        <Save className="mr-2 h-4 w-4" />
-                        {editingService && editingService.id !== 0
-                          ? "Update Service"
-                          : "Add Service"}
-                      </Button>
-                    </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
+        
+        <Dialog open={isServiceDialogOpen} onOpenChange={setIsServiceDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>
+                {editingService && services.some(s => s.id === editingService.id) 
+                  ? 'Edit Service' 
+                  : 'Add New Service'
+                }
+              </DialogTitle>
+              <DialogDescription>
+                Configure the service details that will be displayed on the homepage.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <form onSubmit={handleServiceFormSubmit}>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="service-title">Title</Label>
+                    <Input 
+                      id="service-title" 
+                      value={editingService?.title || ''} 
+                      onChange={(e) => setEditingService(prev => prev ? {...prev, title: e.target.value} : null)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="service-link">Link</Label>
+                    <Input 
+                      id="service-link" 
+                      value={editingService?.link || ''} 
+                      onChange={(e) => setEditingService(prev => prev ? {...prev, link: e.target.value} : null)}
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="service-description">Description</Label>
+                  <Textarea 
+                    id="service-description" 
+                    value={editingService?.description || ''} 
+                    onChange={(e) => setEditingService(prev => prev ? {...prev, description: e.target.value} : null)}
+                    rows={3}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Icon</Label>
+                  <IconSelector 
+                    selectedIcon={editingService?.iconName || 'code'} 
+                    onSelectIcon={(iconName) => setEditingService(prev => prev ? {...prev, iconName} : null)}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="service-color">Text Color</Label>
+                    <div className="flex space-x-2">
+                      <Input 
+                        id="service-color" 
+                        type="color" 
+                        value={editingService?.color || '#3b82f6'} 
+                        onChange={(e) => setEditingService(prev => prev ? {...prev, color: e.target.value} : null)}
+                        className="w-12 h-10 p-1"
+                      />
+                      <Input 
+                        type="text" 
+                        value={editingService?.color || '#3b82f6'} 
+                        onChange={(e) => setEditingService(prev => prev ? {...prev, color: e.target.value} : null)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="service-bg-color">Background Color</Label>
+                    <div className="flex space-x-2">
+                      <Input 
+                        id="service-bg-color" 
+                        type="color" 
+                        value={editingService?.bgColor || '#eff6ff'} 
+                        onChange={(e) => setEditingService(prev => prev ? {...prev, bgColor: e.target.value} : null)}
+                        className="w-12 h-10 p-1"
+                      />
+                      <Input 
+                        type="text" 
+                        value={editingService?.bgColor || '#eff6ff'} 
+                        onChange={(e) => setEditingService(prev => prev ? {...prev, bgColor: e.target.value} : null)}
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="service-order">Order</Label>
+                  <Input 
+                    id="service-order" 
+                    type="number" 
+                    min="1"
+                    value={editingService?.order || services.length + 1} 
+                    onChange={(e) => setEditingService(prev => prev ? {...prev, order: parseInt(e.target.value)} : null)}
+                  />
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button type="submit">Save Service</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+        
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure you want to delete this service?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete "{serviceToDelete?.title}" from your services list.
+                <div className="mt-4">
+                  <p className="font-semibold mb-2">Type "DELETE" to confirm:</p>
+                  <Input 
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    className="mt-1"
+                    placeholder="Type DELETE here"
+                  />
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDeleteService}
+                disabled={deleteConfirmText !== 'DELETE'}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );

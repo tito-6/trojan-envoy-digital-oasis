@@ -13,7 +13,8 @@ import {
   Users,
   Shield,
   MonitorSmartphone,
-  LucideIcon
+  LucideIcon,
+  Palette
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -91,6 +92,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       title: "Hero Management", 
       icon: <Shield className="w-4 h-4" />, 
       href: "/admin/hero" 
+    },
+    { 
+      title: "Services Management", 
+      icon: <Palette className="w-4 h-4" />, 
+      href: "/admin/services-settings" 
     },
     { 
       title: "Contact Requests", 
