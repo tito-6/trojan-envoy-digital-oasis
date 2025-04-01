@@ -136,7 +136,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
   const [authorInput, setAuthorInput] = useState(initialValues?.author || "");
   const [roleInput, setRoleInput] = useState(initialValues?.role || "");
   const [companyInput, setCompanyInput] = useState(initialValues?.company || "");
-  const [ratingInput, setRatingInput] = useState(initialValues?.rating !== undefined ? initialValues.rating.toString() : "5");
+  const [ratingInput, setRatingInput] = useState(initialValues?.rating !== undefined ? String(initialValues.rating) : "5");
   const [answerInput, setAnswerInput] = useState(initialValues?.answer || "");
   const [technologiesInput, setTechnologiesInput] = useState(initialValues?.technologies ? initialValues.technologies.join(', ') : "");
   const [durationInput, setDurationInput] = useState(initialValues?.duration || "");
@@ -150,8 +150,8 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
   const [requirementsInput, setRequirementsInput] = useState(initialValues?.requirements ? initialValues.requirements.join('\n') : "");
   const [benefitsInput, setBenefitsInput] = useState(initialValues?.benefits ? initialValues.benefits.join('\n') : "");
   const [applyUrlInput, setApplyUrlInput] = useState(initialValues?.applyUrl || "");
-  const [salaryMinInput, setSalaryMinInput] = useState(initialValues?.salaryMin !== undefined ? initialValues.salaryMin.toString() : "");
-  const [salaryMaxInput, setSalaryMaxInput] = useState(initialValues?.salaryMax !== undefined ? initialValues.salaryMax.toString() : "");
+  const [salaryMinInput, setSalaryMinInput] = useState(initialValues?.salaryMin !== undefined ? String(initialValues.salaryMin) : "");
+  const [salaryMaxInput, setSalaryMaxInput] = useState(initialValues?.salaryMax !== undefined ? String(initialValues.salaryMax) : "");
 
   useEffect(() => {
     const allPages = storageService.getContentByType("Page");
@@ -175,14 +175,14 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       slug: initialValues?.slug || "",
       showInNavigation: initialValues?.showInNavigation || false,
       language: initialValues?.language || "en",
-      placementPageId: initialValues?.placement?.pageId !== undefined ? initialValues.placement.pageId.toString() : undefined,
-      placementSectionId: initialValues?.placement?.sectionId !== undefined ? initialValues.placement.sectionId.toString() : undefined,
+      placementPageId: initialValues?.placement?.pageId !== undefined ? String(initialValues.placement.pageId) : undefined,
+      placementSectionId: initialValues?.placement?.sectionId !== undefined ? String(initialValues.placement.sectionId) : undefined,
       placementPosition: initialValues?.placement?.position || undefined,
       category: initialValues?.category || "",
       author: initialValues?.author || "",
       role: initialValues?.role || "",
       company: initialValues?.company || "",
-      rating: initialValues?.rating !== undefined ? initialValues.rating.toString() : "5",
+      rating: initialValues?.rating !== undefined ? String(initialValues.rating) : "5",
       answer: initialValues?.answer || "",
       technologies: technologiesInput,
       duration: initialValues?.duration || "",
@@ -196,8 +196,8 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       requirements: requirementsInput,
       benefits: benefitsInput,
       applyUrl: initialValues?.applyUrl || "",
-      salaryMin: initialValues?.salaryMin !== undefined ? initialValues.salaryMin.toString() : "",
-      salaryMax: initialValues?.salaryMax !== undefined ? initialValues.salaryMax.toString() : "",
+      salaryMin: initialValues?.salaryMin !== undefined ? String(initialValues.salaryMin) : "",
+      salaryMax: initialValues?.salaryMax !== undefined ? String(initialValues.salaryMax) : "",
     },
   });
 
@@ -1124,7 +1124,8 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                         <Textarea 
                           placeholder="Enter responsibilities" 
                           rows={3}
-                          {...field} 
+                          value={responsibilitiesInput}
+                          onChange={handleResponsibilitiesChange}
                         />
                       </FormControl>
                       <FormMessage />
@@ -1208,7 +1209,8 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                         <Textarea 
                           placeholder="Enter challenge" 
                           rows={3}
-                          {...field} 
+                          value={challengeInput}
+                          onChange={handleChallengeChange}
                         />
                       </FormControl>
                       <FormMessage />
@@ -1226,7 +1228,8 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                         <Textarea 
                           placeholder="Enter solution" 
                           rows={3}
-                          {...field} 
+                          value={solutionInput}
+                          onChange={handleSolutionChange}
                         />
                       </FormControl>
                       <FormMessage />
@@ -1244,7 +1247,8 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                         <Textarea 
                           placeholder="Enter results" 
                           rows={3}
-                          {...field} 
+                          value={resultsInput}
+                          onChange={handleResultsChange}
                         />
                       </FormControl>
                       <FormMessage />
