@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,7 +36,6 @@ const AdminHero: React.FC = () => {
     name: '',
     icon: '',
     color: '#000000',
-    bgColor: 'bg-blue-100',
     animate: 'animate-float'
   });
   const [previewUpdated, setPreviewUpdated] = useState(false);
@@ -201,8 +199,24 @@ const AdminHero: React.FC = () => {
   };
 
   const addPartnerLogo = () => {
-    const newPartnerLogos = [...partnerLogos, currentPartnerLogo as PartnerLogo];
-    setPartnerLogos(newPartnerLogos);
+    if (!currentPartnerLogo.name || !currentPartnerLogo.icon || !currentPartnerLogo.color || !currentPartnerLogo.bgColor) {
+      toast({
+        title: "Missing information",
+        description: "Please provide all required fields for the partner logo.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const newPartnerLogo: PartnerLogo = {
+      name: currentPartnerLogo.name,
+      icon: currentPartnerLogo.icon,
+      color: currentPartnerLogo.color,
+      bgColor: currentPartnerLogo.bgColor,
+      certified: currentPartnerLogo.certified || false
+    };
+    
+    setPartnerLogos([...partnerLogos, newPartnerLogo]);
     setCurrentPartnerLogo({
       name: '',
       icon: '',
@@ -219,13 +233,27 @@ const AdminHero: React.FC = () => {
   };
 
   const addTechIcon = () => {
-    const newTechIcons = [...techIcons, currentTechIcon as TechIcon];
-    setTechIcons(newTechIcons);
+    if (!currentTechIcon.name || !currentTechIcon.icon || !currentTechIcon.color) {
+      toast({
+        title: "Missing information",
+        description: "Please provide all required fields for the tech icon.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const newTechIcon: TechIcon = {
+      name: currentTechIcon.name,
+      icon: currentTechIcon.icon,
+      color: currentTechIcon.color,
+      animate: currentTechIcon.animate || ''
+    };
+    
+    setTechIcons([...techIcons, newTechIcon]);
     setCurrentTechIcon({
       name: '',
       icon: '',
       color: '#000000',
-      bgColor: 'bg-blue-100',
       animate: 'animate-float'
     });
   };

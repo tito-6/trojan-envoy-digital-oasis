@@ -29,7 +29,7 @@ const TechIconForm: React.FC<TechIconFormProps> = ({
     if (!currentTechIcon.name || !currentTechIcon.icon) {
       toast({
         title: "Missing information",
-        description: "Please provide a name and select an icon for the tech stack.",
+        description: "Please provide a name and select an icon for the tech stack icon.",
         variant: "destructive",
       });
       return;
@@ -42,7 +42,7 @@ const TechIconForm: React.FC<TechIconFormProps> = ({
       <h3 className="text-lg font-medium mb-4">Add New Tech Icon</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
-          <Label htmlFor="techName">Technology Name</Label>
+          <Label htmlFor="techName">Tech Name</Label>
           <Input
             id="techName"
             value={currentTechIcon.name || ''}
@@ -50,9 +50,9 @@ const TechIconForm: React.FC<TechIconFormProps> = ({
           />
         </div>
         <div>
-          <Label htmlFor="techIcon">Icon</Label>
+          <Label htmlFor="techIcon">Tech Icon</Label>
           <Select 
-            value={currentTechIcon.icon} 
+            value={currentTechIcon.icon || ''} 
             onValueChange={(value) => onTechIconChange('icon', value)}
           >
             <SelectTrigger>
@@ -83,7 +83,7 @@ const TechIconForm: React.FC<TechIconFormProps> = ({
         <div>
           <Label htmlFor="techAnimation">Animation</Label>
           <Select 
-            value={currentTechIcon.animate} 
+            value={currentTechIcon.animate || ''} 
             onValueChange={(value) => onTechIconChange('animate', value)}
           >
             <SelectTrigger>

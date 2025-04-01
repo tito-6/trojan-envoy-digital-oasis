@@ -62,32 +62,8 @@ export const contentFormSchema = z.object({
   ctaUrl: z.string().optional(),
   secondaryCtaLabel: z.string().optional(),
   secondaryCtaUrl: z.string().optional(),
-  partnerLogos: z.preprocess(
-    (val) => {
-      if (typeof val === 'string') {
-        try {
-          return JSON.parse(val);
-        } catch {
-          return [];
-        }
-      }
-      return val;
-    },
-    z.array(partnerLogoSchema).optional()
-  ),
-  techIcons: z.preprocess(
-    (val) => {
-      if (typeof val === 'string') {
-        try {
-          return JSON.parse(val);
-        } catch {
-          return [];
-        }
-      }
-      return val;
-    },
-    z.array(techIconSchema).optional()
-  )
+  partnerLogos: z.array(partnerLogoSchema).optional(),
+  techIcons: z.array(techIconSchema).optional()
 });
 
 export type ContentFormValues = z.infer<typeof contentFormSchema>;
