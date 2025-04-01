@@ -1,15 +1,9 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { EditorState, ContentState, convertToRaw, convertFromRaw } from 'draft-js';
 import { Editor } from 'react-draft-wysiwyg';
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-
-// Polyfill for global object needed by draft-js
-if (typeof window !== 'undefined' && typeof window.global === 'undefined') {
-  window.global = window;
-}
 
 interface RichTextEditorProps {
   label?: string;
