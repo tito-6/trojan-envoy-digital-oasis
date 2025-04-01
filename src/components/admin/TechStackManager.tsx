@@ -197,9 +197,12 @@ const TechStackManager: React.FC = () => {
         });
       }
     } else {
-      // Add new icon
+      // Add new icon - ensure all required properties are provided
       const newIcon = storageService.addTechIcon({
-        ...values,
+        name: values.name,
+        iconName: values.iconName,
+        color: values.color,
+        animation: values.animation,
         order: icons.length + 1
       });
       

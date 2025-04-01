@@ -179,9 +179,12 @@ const PartnerLogosManager: React.FC = () => {
         });
       }
     } else {
-      // Add new logo
+      // Add new logo - ensure all required properties are provided
       const newLogo = storageService.addPartnerLogo({
-        ...values,
+        name: values.name,
+        iconName: values.iconName,
+        color: values.color,
+        bgColor: values.bgColor,
         order: logos.length + 1
       });
       
