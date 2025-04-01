@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -117,20 +118,21 @@ const AdminContent: React.FC = () => {
     });
   };
 
-  const handleSaveContent = (values: any) => {
+  const handleSaveContent = (values: ContentItem) => {
     if (isEditing && initialFormValues) {
-      storageService.updateContent({ ...initialFormValues, ...values, id: initialFormValues.id });
-      setContentList(prev =>
-        prev.map(item => (item.id === initialFormValues.id ? { ...item, ...values } : item))
-      );
-      toast({
-        title: "Content updated",
-        description: "The content has been successfully updated.",
-      });
+      const updatedContent = storageService.updateContent(initialFormValues.id, values);
+      if (updatedContent) {
+        setContentList(prev =>
+          prev.map(item => (item.id === initialFormValues.id ? updatedContent : item))
+        );
+        toast({
+          title: "Content updated",
+          description: "The content has been successfully updated.",
+        });
+      }
     } else {
-      const newId = Date.now();
-      storageService.saveContent({ ...values, id: newId });
-      setContentList(prev => [...prev, { ...values, id: newId }]);
+      const newContent = storageService.addContent(values);
+      setContentList(prev => [...prev, newContent]);
       toast({
         title: "Content created",
         description: "The content has been successfully created.",

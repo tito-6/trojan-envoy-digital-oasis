@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from "react";
-import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
@@ -9,50 +8,18 @@ import { useToast } from "@/hooks/use-toast";
 import { ContentType, ContentItem } from "@/lib/types";
 import { storageService } from "@/lib/storage";
 import { FormTabs } from "./FormTabs";
-import { contentFormSchema } from "./schema";
-
-type ContentFormValues = z.infer<typeof contentFormSchema>;
+import { contentFormSchema, ContentFormValues } from "./schema";
 
 interface ContentFormProps {
-  initialValues?: Partial<ContentFormValues & { 
-    keywords: string[]; 
-    images: (File | string)[];
-    videos: string[];
-    documents: (File | string)[];
-    publishDate?: Date | string;
-    placement?: {
-      pageId?: number;
-      sectionId?: number;
-      position?: 'top' | 'middle' | 'bottom';
-    };
-    technologies?: string[];
-    responsibilities?: string[];
-    requirements?: string[];
-    benefits?: string[];
-  }>;
-  onSave: (values: ContentFormValues & { 
-    keywords: string[]; 
-    images: (File | string)[];
-    videos: string[];
-    documents: (File | string)[];
-    publishDate?: Date | string;
-    placement?: {
-      pageId?: number;
-      sectionId?: number;
-      position?: 'top' | 'middle' | 'bottom';
-    };
-    technologies?: string[];
-    responsibilities?: string[];
-    requirements?: string[];
-    benefits?: string[];
-  }) => void;
+  initialValues?: Partial<ContentItem>;
+  onSave: (values: ContentItem) => void;
   onCancel: () => void;
   isEditing?: boolean;
 }
 
 const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCancel, isEditing = false }) => {
   const { toast } = useToast();
-  const [keywords, setKeywords] = useState<string[]>(initialValues?.keywords || []);
+  const [keywords, setKeywords] = useState<string[]>(initialValues?.seoKeywords || []);
   const [keywordInput, setKeywordInput] = useState("");
   const [images, setImages] = useState<(File | string)[]>(initialValues?.images || []);
   const [documents, setDocuments] = useState<(File | string)[]>(initialValues?.documents || []);
@@ -72,9 +39,13 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
   const [authorInput, setAuthorInput] = useState(initialValues?.author || "");
   const [roleInput, setRoleInput] = useState(initialValues?.role || "");
   const [companyInput, setCompanyInput] = useState(initialValues?.company || "");
-  const [ratingInput, setRatingInput] = useState(initialValues?.rating !== undefined ? String(initialValues.rating) : "5");
+  const [ratingInput, setRatingInput] = useState(
+    initialValues?.rating !== undefined ? String(initialValues.rating) : "5"
+  );
   const [answerInput, setAnswerInput] = useState(initialValues?.answer || "");
-  const [technologiesInput, setTechnologiesInput] = useState(initialValues?.technologies ? initialValues.technologies.join(', ') : "");
+  const [technologiesInput, setTechnologiesInput] = useState(
+    initialValues?.technologies ? initialValues.technologies.join(', ') : ""
+  );
   const [durationInput, setDurationInput] = useState(initialValues?.duration || "");
   const [clientInput, setClientInput] = useState(initialValues?.client || "");
   const [challengeInput, setChallengeInput] = useState(initialValues?.challenge || "");
@@ -82,12 +53,22 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
   const [resultsInput, setResultsInput] = useState(initialValues?.results || "");
   const [locationInput, setLocationInput] = useState(initialValues?.location || "");
   const [departmentInput, setDepartmentInput] = useState(initialValues?.department || "");
-  const [responsibilitiesInput, setResponsibilitiesInput] = useState(initialValues?.responsibilities ? initialValues.responsibilities.join('\n') : "");
-  const [requirementsInput, setRequirementsInput] = useState(initialValues?.requirements ? initialValues.requirements.join('\n') : "");
-  const [benefitsInput, setBenefitsInput] = useState(initialValues?.benefits ? initialValues.benefits.join('\n') : "");
+  const [responsibilitiesInput, setResponsibilitiesInput] = useState(
+    initialValues?.responsibilities ? initialValues.responsibilities.join('\n') : ""
+  );
+  const [requirementsInput, setRequirementsInput] = useState(
+    initialValues?.requirements ? initialValues.requirements.join('\n') : ""
+  );
+  const [benefitsInput, setBenefitsInput] = useState(
+    initialValues?.benefits ? initialValues.benefits.join('\n') : ""
+  );
   const [applyUrlInput, setApplyUrlInput] = useState(initialValues?.applyUrl || "");
-  const [salaryMinInput, setSalaryMinInput] = useState(initialValues?.salaryMin !== undefined ? String(initialValues.salaryMin) : "");
-  const [salaryMaxInput, setSalaryMaxInput] = useState(initialValues?.salaryMax !== undefined ? String(initialValues.salaryMax) : "");
+  const [salaryMinInput, setSalaryMinInput] = useState(
+    initialValues?.salaryMin !== undefined ? String(initialValues.salaryMin) : ""
+  );
+  const [salaryMaxInput, setSalaryMaxInput] = useState(
+    initialValues?.salaryMax !== undefined ? String(initialValues.salaryMax) : ""
+  );
 
   useEffect(() => {
     const allPages = storageService.getContentByType("Page");
@@ -105,7 +86,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       description: initialValues?.description || "",
       seoTitle: initialValues?.seoTitle || "",
       seoDescription: initialValues?.seoDescription || "",
-      seoKeywords: initialValues?.seoKeywords || "",
+      seoKeywords: initialValues?.seoKeywords ? initialValues.seoKeywords.join(', ') : "",
       content: initialValues?.content || "",
       published: initialValues?.published !== undefined ? initialValues.published : true,
       slug: initialValues?.slug || "",
@@ -132,8 +113,8 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       requirements: requirementsInput,
       benefits: benefitsInput,
       applyUrl: initialValues?.applyUrl || "",
-      salaryMin: initialValues?.salaryMin !== undefined ? String(initialValues.salaryMin) : "",
-      salaryMax: initialValues?.salaryMax !== undefined ? String(initialValues.salaryMax) : "",
+      salaryMin: salaryMinInput,
+      salaryMax: salaryMaxInput,
     },
   });
 
@@ -219,36 +200,39 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       ? benefitsInput.split('\n').map(b => b.trim()).filter(Boolean) 
       : [];
     
-    onSave({
+    const seoKeywords = values.seoKeywords
+      ? values.seoKeywords.split(',').map(k => k.trim()).filter(Boolean)
+      : keywords;
+      
+    // Convert string values to numbers where needed
+    const rating = values.rating ? Number(values.rating) : undefined;
+    const salaryMin = values.salaryMin ? Number(values.salaryMin) : undefined;
+    const salaryMax = values.salaryMax ? Number(values.salaryMax) : undefined;
+    
+    const formattedValues: Partial<ContentItem> = {
       ...values,
-      keywords,
+      slug: slugInput,
+      seoKeywords,
       images,
       documents,
       videos,
-      slug: slugInput,
-      publishDate: new Date(),
+      rating,
+      technologies: parsedTechnologies,
+      responsibilities: parsedResponsibilities,
+      requirements: parsedRequirements,
+      benefits: parsedBenefits,
+      salaryMin,
+      salaryMax,
       placement: {
         pageId: values.placementPageId ? Number(values.placementPageId) : undefined,
         sectionId: values.placementSectionId ? Number(values.placementSectionId) : undefined,
         position: values.placementPosition === "none" ? undefined : values.placementPosition,
       },
-      category: categoryInput,
-      author: authorInput,
-      role: roleInput,
-      company: companyInput,
-      technologies: parsedTechnologies, 
-      duration: durationInput,
-      client: clientInput,
-      challenge: challengeInput,
-      solution: solutionInput,
-      results: resultsInput,
-      location: locationInput,
-      department: departmentInput,
-      responsibilities: parsedResponsibilities,
-      requirements: parsedRequirements,
-      benefits: parsedBenefits,
-      applyUrl: applyUrlInput
-    });
+      lastUpdated: new Date().toISOString(),
+      id: initialValues?.id,
+    };
+    
+    onSave(formattedValues as ContentItem);
   };
 
   // Helper methods for the form fields

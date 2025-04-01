@@ -16,18 +16,16 @@ export const contentFormSchema = z.object({
   showInNavigation: z.boolean().default(false),
   language: z.string().optional(),
   placementPageId: z.string().optional()
-    .transform(val => val && val !== "none" ? parseInt(val, 10) : undefined),
+    .transform(val => val && val !== "none" ? val : undefined),
   placementSectionId: z.string().optional()
-    .transform(val => val && val !== "none" ? parseInt(val, 10) : undefined),
+    .transform(val => val && val !== "none" ? val : undefined),
   placementPosition: z.enum(["top", "middle", "bottom", "none"] as const).optional(),
   category: z.string().optional(),
   author: z.string().optional(),
   role: z.string().optional(),
   company: z.string().optional(),
-  rating: z.string().optional()
-    .transform(val => val ? Number(val) : undefined),
+  rating: z.string().optional(),
   answer: z.string().optional(),
-  // Define technologies as a string, will be transformed later
   technologies: z.string().optional(),
   duration: z.string().optional(),
   client: z.string().optional(),
@@ -36,15 +34,12 @@ export const contentFormSchema = z.object({
   results: z.string().optional(),
   location: z.string().optional(),
   department: z.string().optional(),
-  // Define these as strings in the schema
   responsibilities: z.string().optional(),
   requirements: z.string().optional(),
   benefits: z.string().optional(),
   applyUrl: z.string().optional(),
-  salaryMin: z.string().optional()
-    .transform(val => val ? Number(val) : undefined),
-  salaryMax: z.string().optional()
-    .transform(val => val ? Number(val) : undefined),
+  salaryMin: z.string().optional(),
+  salaryMax: z.string().optional(),
 });
 
 export type ContentFormValues = z.infer<typeof contentFormSchema>;
