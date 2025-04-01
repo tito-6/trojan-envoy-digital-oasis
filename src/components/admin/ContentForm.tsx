@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -951,4 +952,690 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
             {showTestimonialFields && <TabsTrigger value="testimonial" className="flex-1">Testimonial</TabsTrigger>}
             {showTeamMemberFields && <TabsTrigger value="team" className="flex-1">Team Member</TabsTrigger>}
             {showFAQFields && <TabsTrigger value="faq" className="flex-1">FAQ</TabsTrigger>}
-            {showCaseStudyFields && <TabsTrigger value="case-study" className="flex-1">Case Study
+            {showCaseStudyFields && <TabsTrigger value="case-study" className="flex-1">Case Study</TabsTrigger>}
+            {showJobPostingFields && <TabsTrigger value="job" className="flex-1">Job Posting</TabsTrigger>}
+          </TabsList>
+          
+          <TabsContent value="basic" className="space-y-6">
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Content Type</FormLabel>
+                  <FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={(value: ContentType) => {
+                        field.onChange(value);
+                        // Reset active tab when changing content type
+                        setActiveTab("basic");
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a content type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="Page">Page</SelectItem>
+                          <SelectItem value="Page Section">Page Section</SelectItem>
+                          <SelectItem value="Blog Post">Blog Post</SelectItem>
+                          <SelectItem value="Service">Service</SelectItem>
+                          <SelectItem value="Portfolio">Portfolio</SelectItem>
+                          <SelectItem value="Testimonial">Testimonial</SelectItem>
+                          <SelectItem value="FAQ">FAQ</SelectItem>
+                          <SelectItem value="Team Member">Team Member</SelectItem>
+                          <SelectItem value="Case Study">Case Study</SelectItem>
+                          <SelectItem value="Job Posting">Job Posting</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormDescription>
+                    The type of content determines where and how it will be displayed on your website
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Enter title" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    The title will be displayed as the main heading
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="subtitle"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Subtitle (Optional)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Enter subtitle" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    A subtitle provides additional context to the title
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {(contentType === "Page" || contentType === "Blog Post" || 
+              contentType === "Service" || contentType === "Portfolio") && (
+              <FormField
+                control={form.control}
+                name="slug"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex justify-between items-center">
+                      <FormLabel>URL Slug</FormLabel>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={autoGenerateSlug}
+                          onCheckedChange={toggleAutoGenerateSlug}
+                          id="auto-slug"
+                        />
+                        <label
+                          htmlFor="auto-slug"
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          Auto-generate
+                        </label>
+                      </div>
+                    </div>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter URL slug" 
+                        value={slugInput}
+                        onChange={handleSlugChange}
+                        disabled={autoGenerateSlug}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      This will be used in the URL: {contentType === "Blog Post" ? "/blog/" : 
+                                                    contentType === "Page" ? "/" :
+                                                    `/${contentType.toLowerCase()}/`}{slugInput || "your-slug"}
+                    </FormDescription>
+                    {formErrors.slug && (
+                      <p className="text-sm font-medium text-destructive mt-1">
+                        {formErrors.slug}
+                      </p>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Enter description" 
+                      {...field} 
+                      rows={3}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    A brief description of this content
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Content</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Enter content" 
+                      {...field} 
+                      rows={6}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    The main content. You can use basic markdown for formatting.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {contentType === "Blog Post" && (
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter category" 
+                        value={categoryInput}
+                        onChange={handleCategoryChange}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      The main category for this blog post
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            
+            {contentType === "Blog Post" && (
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <FormLabel>Keywords/Tags</FormLabel>
+                  {formErrors.keywords && (
+                    <p className="text-sm font-medium text-amber-500">
+                      {formErrors.keywords}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-2 mb-2">
+                  <Input
+                    placeholder="Add a keyword"
+                    value={keywordInput}
+                    onChange={(e) => setKeywordInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addKeyword();
+                      }
+                    }}
+                    className="flex-grow"
+                  />
+                  <Button 
+                    type="button" 
+                    onClick={addKeyword}
+                    variant="secondary"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add
+                  </Button>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {keywords.map(keyword => (
+                    <Badge key={keyword} variant="secondary" className="flex items-center gap-1">
+                      {keyword}
+                      <button
+                        type="button"
+                        onClick={() => removeKeyword(keyword)}
+                        className="rounded-full h-4 w-4 inline-flex items-center justify-center text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                  {keywords.length === 0 && (
+                    <p className="text-sm text-muted-foreground">No keywords added yet</p>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {contentType === "Blog Post" && (
+              <FormField
+                control={form.control}
+                name="language"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Language</FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a language" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            {availableLanguages.map(lang => (
+                              <SelectItem key={lang.code} value={lang.code}>
+                                {lang.name}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormDescription>
+                      The language this content is written in
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            
+            <div className="flex items-center space-x-2">
+              <FormField
+                control={form.control}
+                name="published"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Published</FormLabel>
+                      <FormDescription>
+                        This content will be visible on your website
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+            
+            {contentType === "Page" && (
+              <div className="flex items-center space-x-2">
+                <FormField
+                  control={form.control}
+                  name="showInNavigation"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Show in Navigation</FormLabel>
+                        <FormDescription>
+                          Add this page to your main navigation menu
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+          </TabsContent>
+          
+          <TabsContent value="seo" className="space-y-6">
+            <FormField
+              control={form.control}
+              name="seoTitle"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SEO Title</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Enter SEO title" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    The title that will appear in search engine results (defaults to regular title if left empty)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="seoDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SEO Description</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Enter SEO description" 
+                      {...field} 
+                      rows={3}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    A description that will appear in search engine results (defaults to regular description if left empty)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TabsContent>
+          
+          <TabsContent value="media" className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium mb-2">Images</h3>
+              <div className="border border-dashed border-border rounded-lg p-6 text-center mb-4">
+                <div className="flex flex-col items-center">
+                  <Upload className="h-8 w-8 text-muted-foreground mb-2" />
+                  <h4 className="text-sm font-medium mb-1">Drag images here or click to upload</h4>
+                  <p className="text-xs text-muted-foreground mb-4">Upload images to include in your content</p>
+                  <label className="cursor-pointer">
+                    <Button variant="outline" type="button" className="relative">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Images
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        onChange={handleImageChange}
+                      />
+                    </Button>
+                  </label>
+                </div>
+              </div>
+              
+              {images.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  {images.map((image, index) => (
+                    <div 
+                      key={index} 
+                      className="relative group border rounded-md overflow-hidden aspect-square bg-muted"
+                    >
+                      <img 
+                        src={typeof image === 'string' ? image : URL.createObjectURL(image)}
+                        alt={`Uploaded ${index}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="w-8 h-8 p-0 rounded-full"
+                          onClick={() => removeImage(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-medium mb-2">Documents</h3>
+              <div className="border border-dashed border-border rounded-lg p-6 text-center mb-4">
+                <div className="flex flex-col items-center">
+                  <FileText className="h-8 w-8 text-muted-foreground mb-2" />
+                  <h4 className="text-sm font-medium mb-1">Drag documents here or click to upload</h4>
+                  <p className="text-xs text-muted-foreground mb-4">Upload PDFs, Word documents, or other files</p>
+                  <label className="cursor-pointer">
+                    <Button variant="outline" type="button" className="relative">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Documents
+                      <input
+                        type="file"
+                        multiple
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar"
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        onChange={handleDocumentChange}
+                      />
+                    </Button>
+                  </label>
+                </div>
+              </div>
+              
+              {documents.length > 0 && (
+                <div className="space-y-2 mb-6">
+                  {documents.map((doc, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center justify-between border rounded-md p-3"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-5 w-5 text-blue-500" />
+                        <span className="text-sm truncate max-w-[300px]">
+                          {typeof doc === 'string' ? doc.split('/').pop() : doc.name}
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-8 h-8 p-0 rounded-full"
+                        onClick={() => removeDocument(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-medium mb-2">Videos</h3>
+              <div className="space-y-4 mb-4">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Paste YouTube URL"
+                    value={videoInput}
+                    onChange={(e) => setVideoInput(e.target.value)}
+                    className="flex-grow"
+                  />
+                  <Button 
+                    type="button" 
+                    onClick={addVideo}
+                    variant="secondary"
+                  >
+                    <Youtube className="h-4 w-4 mr-1" />
+                    Add
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Only YouTube videos are supported. Paste the full video URL.
+                </p>
+              </div>
+              
+              {videos.length > 0 && (
+                <div className="space-y-2 mb-6">
+                  {videos.map((video, index) => (
+                    <div 
+                      key={index} 
+                      className="flex items-center justify-between border rounded-md p-3"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <Youtube className="h-5 w-5 text-red-500" />
+                        <span className="text-sm truncate max-w-[300px]">{video}</span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-8 h-8 p-0 rounded-full"
+                        onClick={() => removeVideo(video)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="placement" className="space-y-6">
+            <div className="bg-muted/30 p-4 rounded-md mb-6">
+              <div className="flex items-start gap-2">
+                <Calendar className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <h3 className="text-sm font-medium">Publish Date</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Content will be published immediately if set to "Published". Changes can be made later.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {contentType === "Page Section" && (
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-medium">Section Placement</h3>
+                  {formErrors.placement && (
+                    <p className="text-sm font-medium text-amber-500">
+                      {formErrors.placement}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="placementPageId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Place on Page</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value || "none"}
+                            onValueChange={(value) => field.onChange(value === "none" ? undefined : value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a page" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              {pages.map(page => (
+                                <SelectItem key={page.id} value={String(page.id)}>
+                                  {page.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormDescription>
+                          Select the page where this section should appear
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="placementSectionId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Place Inside Section</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value || "none"}
+                            onValueChange={(value) => field.onChange(value === "none" ? undefined : value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a section" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">None</SelectItem>
+                              {pageSections.map(section => (
+                                <SelectItem key={section.id} value={String(section.id)}>
+                                  {section.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormDescription>
+                          Select a parent section (optional)
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="placementPosition"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Position</FormLabel>
+                        <FormControl>
+                          <Select
+                            value={field.value || "none"}
+                            onValueChange={(value) => field.onChange(value === "none" ? undefined : value as "top" | "middle" | "bottom")}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select position" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">Default</SelectItem>
+                              <SelectItem value="top">Top</SelectItem>
+                              <SelectItem value="middle">Middle</SelectItem>
+                              <SelectItem value="bottom">Bottom</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormDescription>
+                          Position within the page or parent section
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="p-4 border border-border rounded-md">
+                    <div className="flex items-start gap-2">
+                      <GanttChart className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-sm font-medium mb-1">Layout Structure Tips</h4>
+                        <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                          <li>Sections can be placed on a page or inside another section</li>
+                          <li>Placing sections within other sections creates a nested layout</li>
+                          <li>Use the position setting to control the order of sections</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+          
+          {showTestimonialFields && renderTestimonialFields()}
+          {showFAQFields && renderFAQFields()}
+          {showTeamMemberFields && renderTeamMemberFields()}
+          {showCaseStudyFields && renderCaseStudyFields()}
+          {showJobPostingFields && renderJobPostingFields()}
+        </Tabs>
+        
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit">
+            {isEditing ? "Update" : "Save"} {contentType}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+};
+
+export default ContentForm;
