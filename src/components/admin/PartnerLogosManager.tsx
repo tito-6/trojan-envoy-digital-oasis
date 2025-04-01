@@ -27,10 +27,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getIconComponentByName } from "@/lib/iconUtils";
 import IconSelector from "./icon-management/IconSelector";
 
 import {
@@ -50,22 +47,9 @@ const logoFormSchema = z.object({
   iconName: z.string().min(1, "Icon is required"),
   color: z.string().min(1, "Color is required").regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, "Must be a valid hex color"),
   bgColor: z.string().min(1, "Background color is required"),
-  iconUrl: z.string().optional(),
-  iconSvg: z.string().optional(),
 });
 
 type LogoFormValues = z.infer<typeof logoFormSchema>;
-
-// Icon map to render the actual icons
-const iconMap: Record<string, React.ComponentType<any>> = {
-  FaGoogle,
-  FaFacebook,
-  FaAws,
-  FaShopify,
-  FaWordpress,
-  FaAward,
-  SiSemrush
-};
 
 // Background color options
 const bgColorOptions = [
@@ -87,7 +71,10 @@ const PartnerLogoItem: React.FC<{
   onEdit: (logo: PartnerLogo) => void;
   onReorder: (id: number, direction: 'up' | 'down') => void;
 }> = ({ logo, onDelete, onEdit, onReorder }) => {
-  const Icon = iconMap[logo.iconName] || FaAward;
+  // Use getIconComponentByName to support both icon names and data URLs
+  const Icon = logo.iconName.startsWith('data:') 
+    ? (props: any) => <img src={logo.iconName} alt={logo.name} {...props} style={{ width: props.size || '24px', height: props.size || '24px' }} />
+    : getIconComponentByName(logo.iconName) || FaAward;
   
   return (
     <div className="flex items-center justify-between p-3 border rounded-md bg-card">
@@ -141,10 +128,6 @@ const PartnerLogosManager: React.FC = () => {
   const [logos, setLogos] = useState<PartnerLogo[]>(storageService.getHeroSettings().partnerLogos);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingLogo, setEditingLogo] = useState<PartnerLogo | null>(null);
-  const [iconSource, setIconSource] = useState<'library' | 'upload' | 'url'>('library');
-  const [uploadedIconData, setUploadedIconData] = useState<string | null>(null);
-  const [selectedLibraryIcon, setSelectedLibraryIcon] = useState<string>("");
-  const [importUrl, setImportUrl] = useState<string>("");
   
   const form = useForm<LogoFormValues>({
     resolver: zodResolver(logoFormSchema),
@@ -153,8 +136,6 @@ const PartnerLogosManager: React.FC = () => {
       iconName: "FaAward",
       color: "#000000",
       bgColor: "bg-blue-100",
-      iconUrl: "",
-      iconSvg: "",
     }
   });
   
@@ -191,54 +172,9 @@ const PartnerLogosManager: React.FC = () => {
     setLogos(storageService.getHeroSettings().partnerLogos);
   };
   
+  // This function handles the selection of icons from IconSelector
   const handleIconSelect = (iconName: string) => {
-    setSelectedLibraryIcon(iconName);
     form.setValue("iconName", iconName);
-  };
-  
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Check if file is an image or SVG
-    if (!file.type.startsWith('image/') && file.type !== 'image/svg+xml') {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload an image or SVG file.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setUploadedIconData(result);
-      form.setValue("iconSvg", result);
-      form.setValue("iconName", "custom");
-    };
-    reader.readAsDataURL(file);
-  };
-  
-  const handleImportFromUrl = () => {
-    if (!importUrl) {
-      toast({
-        title: "URL required",
-        description: "Please enter a valid URL to import an icon.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // For a real implementation, you would fetch the SVG or image
-    // and convert it to a data URL. This is a simplified version.
-    form.setValue("iconUrl", importUrl);
-    form.setValue("iconName", "custom");
-    
-    toast({
-      title: "Icon imported",
-      description: "The icon has been imported from the URL.",
-    });
   };
   
   const onSubmit = (values: LogoFormValues) => {
@@ -278,9 +214,6 @@ const PartnerLogosManager: React.FC = () => {
     setIsAddOpen(false);
     setEditingLogo(null);
     form.reset();
-    setIconSource('library');
-    setUploadedIconData(null);
-    setImportUrl("");
   };
   
   const handleEdit = (logo: PartnerLogo) => {
@@ -298,9 +231,6 @@ const PartnerLogosManager: React.FC = () => {
     setIsAddOpen(false);
     setEditingLogo(null);
     form.reset();
-    setIconSource('library');
-    setUploadedIconData(null);
-    setImportUrl("");
   };
   
   return (
@@ -343,92 +273,20 @@ const PartnerLogosManager: React.FC = () => {
                   )}
                 />
                 
-                <Tabs defaultValue="library" onValueChange={(value) => setIconSource(value as 'library' | 'upload' | 'url')}>
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="library">Icon Library</TabsTrigger>
-                    <TabsTrigger value="upload">Upload Icon</TabsTrigger>
-                    <TabsTrigger value="url">Import from URL</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="library" className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="iconName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Icon</FormLabel>
-                          <IconSelector 
-                            selectedIcon={field.value} 
-                            onSelectIcon={(iconName) => {
-                              field.onChange(iconName);
-                              setSelectedLibraryIcon(iconName);
-                            }} 
-                          />
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="upload" className="space-y-4">
-                    <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                      <Upload className="mx-auto h-10 w-10 text-muted-foreground mb-4" />
-                      <p className="mb-2 text-sm text-muted-foreground">
-                        Drag and drop your icon, or click to browse
-                      </p>
-                      <Input
-                        type="file"
-                        accept="image/*,.svg"
-                        onChange={handleFileUpload}
-                        className="hidden"
-                        id="icon-upload"
+                <FormField
+                  control={form.control}
+                  name="iconName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Icon</FormLabel>
+                      <IconSelector 
+                        selectedIcon={field.value} 
+                        onSelectIcon={handleIconSelect} 
                       />
-                      <Button
-                        variant="outline"
-                        onClick={() => document.getElementById("icon-upload")?.click()}
-                        type="button"
-                      >
-                        Browse Files
-                      </Button>
-                      
-                      {uploadedIconData && (
-                        <div className="mt-4">
-                          <p className="text-sm font-medium mb-2">Uploaded Icon:</p>
-                          <div className="w-16 h-16 mx-auto rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                            <img 
-                              src={uploadedIconData} 
-                              alt="Uploaded icon" 
-                              className="w-8 h-8 object-contain"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="url" className="space-y-4">
-                    <div className="space-y-4">
-                      <div className="flex gap-2">
-                        <Input
-                          value={importUrl}
-                          onChange={(e) => setImportUrl(e.target.value)}
-                          placeholder="https://example.com/icon.svg"
-                        />
-                        <Button 
-                          type="button" 
-                          variant="outline" 
-                          onClick={handleImportFromUrl}
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Import
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Enter the URL of an SVG or image file to import as an icon
-                      </p>
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 
                 <div className="grid grid-cols-2 gap-4">
                   <FormField

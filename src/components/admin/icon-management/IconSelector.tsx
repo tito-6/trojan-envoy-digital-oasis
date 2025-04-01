@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Upload, Link as LinkIcon, Code } from "lucide-react";
@@ -30,6 +30,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [isJsonValid, setIsJsonValid] = useState(true);
   const [jsonErrorMessage, setJsonErrorMessage] = useState("");
+  const [uploadedIcon, setUploadedIcon] = useState<string | null>(null);
 
   // Function to handle the search input changes with real-time results
   const handleSearchChange = (value: string) => {
@@ -38,7 +39,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
     if (!value.trim()) {
       // If search is cleared, show some default icons
       if (activeTab === "library") {
-        performSearch("a"); // Show some default icons
+        performSearch("icon");
       }
       return;
     }
@@ -88,14 +89,14 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
     if (searchTerm) {
       performSearch(searchTerm);
     } else if (activeTab === "library") {
-      performSearch("a"); // Show some default icons
+      performSearch("icon"); // Show some default icons
     }
   }, [selectedLibrary]);
   
   // Display initial icons when the component mounts
   useEffect(() => {
     if (activeTab === "library") {
-      performSearch("a"); // Show some default icons on mount
+      performSearch("icon"); // Show some default icons on mount
     }
   }, []);
   
@@ -106,7 +107,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
       
       // Show some default icons when the tab is opened
       if (!searchTerm) {
-        performSearch("a");
+        performSearch("icon");
       } else {
         performSearch(searchTerm);
       }
@@ -134,21 +135,18 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
       reader.onload = (e) => {
         const result = e.target?.result as string;
         if (result) {
-          // Pass the data URL to the parent component
+          setUploadedIcon(result);
+          // We're directly setting the result as the icon - this is a data URL
           onSelectIcon(result);
           
           toast({
             title: "Icon uploaded successfully",
-            description: `${file.name} has been added to your selection`,
+            description: `${file.name} has been selected`,
           });
         }
       };
       
-      if (file.type.includes('svg')) {
-        reader.readAsText(file); // Read SVG as text
-      } else {
-        reader.readAsDataURL(file); // Read other image types as data URL
-      }
+      reader.readAsDataURL(file);
     } catch (error) {
       console.error("Error uploading file:", error);
       toast({
@@ -158,7 +156,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
       });
     }
     
-    // Reset the file input
+    // Reset the file input but not the uploaded icon
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -174,16 +172,18 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
       if (svgContent) {
         if (svgContent.startsWith('data:')) {
           // Already a data URL
+          setUploadedIcon(svgContent);
           onSelectIcon(svgContent);
         } else {
           // Convert SVG content to data URL
           const dataUrl = svgToDataUrl(svgContent);
+          setUploadedIcon(dataUrl);
           onSelectIcon(dataUrl);
         }
         
         toast({
           title: "Icon imported successfully",
-          description: "The icon has been added to your selection",
+          description: "The icon has been selected",
         });
         
         // Clear the URL input
@@ -221,7 +221,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
             
             toast({
               title: "Icon imported successfully",
-              description: `${jsonData.iconName} has been added to your selection`,
+              description: `${jsonData.iconName} has been selected`,
             });
             
             // Clear the JSON input
@@ -235,11 +235,12 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
         // If it's a valid SVG string
         if (typeof jsonData.svg === 'string' && jsonData.svg) {
           const dataUrl = svgToDataUrl(jsonData.svg);
+          setUploadedIcon(dataUrl);
           onSelectIcon(dataUrl);
           
           toast({
             title: "Icon imported successfully",
-            description: "The custom SVG icon has been added to your selection",
+            description: "The custom SVG icon has been selected",
           });
           
           // Clear the JSON input
@@ -251,11 +252,12 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
         
         // If it's a valid data URL
         if (typeof jsonData.dataUrl === 'string' && jsonData.dataUrl.startsWith('data:')) {
+          setUploadedIcon(jsonData.dataUrl);
           onSelectIcon(jsonData.dataUrl);
           
           toast({
             title: "Icon imported successfully",
-            description: "The icon has been added to your selection",
+            description: "The icon has been selected",
           });
           
           // Clear the JSON input
@@ -286,9 +288,55 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
       }
     }
   };
+  
+  // Function to check if an icon is the selected one - handles both named icons and data URLs
+  const isIconSelected = (iconValue: string) => {
+    if (selectedIcon.startsWith('data:') && iconValue.startsWith('data:')) {
+      // Both are data URLs - this is a simplified check
+      return true;
+    }
+    
+    return selectedIcon === iconValue;
+  };
+  
+  // Function to render a preview of the currently selected icon
+  const renderSelectedIconPreview = () => {
+    if (!selectedIcon) return null;
+    
+    if (selectedIcon.startsWith('data:')) {
+      return (
+        <div className="flex items-center justify-center mb-4 p-2 border rounded-md bg-muted">
+          <div className="text-center">
+            <div className="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+              <img src={selectedIcon} alt="Selected Icon" className="max-w-full max-h-full" />
+            </div>
+            <p className="text-xs text-muted-foreground">Custom Icon Selected</p>
+          </div>
+        </div>
+      );
+    }
+    
+    const IconComponent = getIconComponentByName(selectedIcon);
+    if (IconComponent) {
+      return (
+        <div className="flex items-center justify-center mb-4 p-2 border rounded-md bg-muted">
+          <div className="text-center">
+            <div className="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+              <IconComponent size={32} />
+            </div>
+            <p className="text-xs font-medium">{selectedIcon}</p>
+          </div>
+        </div>
+      );
+    }
+    
+    return null;
+  };
 
   return (
     <div className="space-y-4">
+      {renderSelectedIconPreview()}
+      
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid grid-cols-4 w-full">
           <TabsTrigger value="library">Icon Library</TabsTrigger>
@@ -338,39 +386,36 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
           ) : filteredIcons.length > 0 ? (
             <ScrollArea className="h-[300px] border rounded-md p-4">
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4">
-                {filteredIcons.map(({ name, component: Icon, library }) => {
-                  const isSelected = selectedIcon === name;
-                  return (
-                    <TooltipProvider key={name}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            tabIndex={0}
-                            className={`icon-item flex flex-col items-center justify-center p-2 rounded-md cursor-pointer hover:bg-primary/10 text-center focus:outline-none focus:ring-2 focus:ring-primary/50 ${
-                              isSelected ? "bg-primary/20 ring-2 ring-primary" : ""
-                            }`}
-                            onClick={() => onSelectIcon(name)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                onSelectIcon(name);
-                              }
-                            }}
-                          >
-                            <div className="w-8 h-8 flex items-center justify-center mb-1">
-                              <Icon size={20} />
-                            </div>
-                            <span className="text-xs truncate w-full">{name}</span>
+                {filteredIcons.map(({ name, component: Icon, library }) => (
+                  <TooltipProvider key={name}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          tabIndex={0}
+                          className={`icon-item flex flex-col items-center justify-center p-2 rounded-md cursor-pointer hover:bg-primary/10 text-center focus:outline-none focus:ring-2 focus:ring-primary/50 ${
+                            isIconSelected(name) ? "bg-primary/20 ring-2 ring-primary" : ""
+                          }`}
+                          onClick={() => onSelectIcon(name)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              onSelectIcon(name);
+                            }
+                          }}
+                        >
+                          <div className="w-8 h-8 flex items-center justify-center mb-1">
+                            <Icon size={20} />
                           </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{name}</p>
-                          <p className="text-xs text-muted-foreground">{library}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  );
-                })}
+                          <span className="text-xs truncate w-full">{name}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{name}</p>
+                        <p className="text-xs text-muted-foreground">{library}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ))}
               </div>
             </ScrollArea>
           ) : (
@@ -414,6 +459,23 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
               </Button>
             </div>
           </div>
+          
+          {uploadedIcon && (
+            <div className="mt-4 p-4 border rounded-md bg-muted/30">
+              <div className="text-center">
+                <h4 className="text-sm font-medium mb-2">Uploaded Icon Preview</h4>
+                <div className="w-16 h-16 mx-auto rounded-md bg-white flex items-center justify-center">
+                  <img src={uploadedIcon} alt="Uploaded icon" className="max-w-full max-h-full" />
+                </div>
+                <Button 
+                  className="mt-4 bg-primary text-primary-foreground" 
+                  onClick={() => onSelectIcon(uploadedIcon)}
+                >
+                  Use This Icon
+                </Button>
+              </div>
+            </div>
+          )}
         </TabsContent>
         
         <TabsContent value="url" className="space-y-4">
