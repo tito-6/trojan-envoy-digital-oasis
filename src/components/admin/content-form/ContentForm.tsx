@@ -119,8 +119,8 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       requirements: requirementsInput,
       benefits: benefitsInput,
       applyUrl: initialValues?.applyUrl || "",
-      salaryMin: salaryMinInput,
-      salaryMax: salaryMaxInput,
+      salaryMin: initialValues?.salaryMin !== undefined ? String(initialValues.salaryMin) : "",
+      salaryMax: initialValues?.salaryMax !== undefined ? String(initialValues.salaryMax) : "",
     },
   });
 
@@ -237,7 +237,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       ? values.seoKeywords.split(',').map(k => k.trim()).filter(Boolean)
       : keywords;
       
-    // Convert string values to numbers where needed
+    // Extract and convert numeric values - using the schema transformations
     const rating = values.rating ? Number(values.rating) : undefined;
     const salaryMin = values.salaryMin ? Number(values.salaryMin) : undefined;
     const salaryMax = values.salaryMax ? Number(values.salaryMax) : undefined;
