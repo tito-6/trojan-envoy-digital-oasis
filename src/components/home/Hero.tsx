@@ -38,35 +38,63 @@ import {
   SiSemrush
 } from "react-icons/si";
 
-// Icon mapping for partner logos and tech stack
-const iconMap: Record<string, React.ComponentType<any>> = {
-  FaGoogle,
-  FaFacebook,
-  FaSearchengin,
-  FaAws,
-  FaShopify,
-  FaWordpress,
-  FaAward,
-  FaReact,
-  SiTypescript,
-  FaVuejs,
-  FaAngular,
-  SiJavascript,
-  FaNode,
-  FaPython,
-  FaJava,
-  FaPhp,
-  SiKotlin,
-  FaSwift,
-  SiFlutter,
-  SiFirebase,
-  SiMongodb,
-  FaDatabase,
-  SiGraphql,
-  SiTailwindcss,
-  FaDocker,
-  FaGithub,
-  SiSemrush
+// Import all icon libraries
+import * as Fa from "react-icons/fa";
+import * as Si from "react-icons/si";
+import * as Ai from "react-icons/ai";
+import * as Bs from "react-icons/bs";
+import * as Fi from "react-icons/fi";
+import * as Gr from "react-icons/gr";
+import * as Hi from "react-icons/hi";
+import * as Im from "react-icons/im";
+import * as Md from "react-icons/md";
+import * as Ti from "react-icons/ti";
+import * as Vsc from "react-icons/vsc";
+import * as Di from "react-icons/di";
+import * as Bi from "react-icons/bi";
+import * as Fc from "react-icons/fc";
+import * as Io from "react-icons/io";
+import * as Io5 from "react-icons/io5";
+import * as Ri from "react-icons/ri";
+import * as Wi from "react-icons/wi";
+import * as Ci from "react-icons/ci";
+import * as Gi from "react-icons/gi";
+import * as Cg from "react-icons/cg";
+import * as Lu from "react-icons/lu";
+import * as Pi from "react-icons/pi";
+import * as Tb from "react-icons/tb";
+import * as Sl from "react-icons/sl";
+import * as Rx from "react-icons/rx";
+import * as Go from "react-icons/go";
+
+// Comprehensive icon map
+const iconLibraries = {
+  Fa, Si, Ai, Bs, Fi, Gr, Hi, Im, Md, Ti, 
+  Vsc, Di, Bi, Fc, Io, Io5, Ri, Wi, Ci, Gi, 
+  Cg, Lu, Pi, Tb, Sl, Rx, Go
+};
+
+// Dynamic icon map for rendering
+const getIconComponent = (iconName: string): React.ComponentType<any> => {
+  // For custom icons (URL or uploaded)
+  if (iconName === 'custom') {
+    // Placeholder for custom icons
+    return FaAward;
+  }
+  
+  // Extract prefix (first 2 characters for standard libraries)
+  const prefix = iconName.substring(0, 2);
+  
+  // Try to find the component in the libraries
+  for (const [libPrefix, library] of Object.entries(iconLibraries)) {
+    if (iconName.startsWith(libPrefix)) {
+      const component = (library as any)[iconName];
+      if (component) return component;
+    }
+  }
+  
+  // Fallback to a default icon if not found
+  return FaAward;
 };
 
 const Hero: React.FC = () => {
@@ -142,7 +170,7 @@ const Hero: React.FC = () => {
   const [forceUpdate, setForceUpdate] = React.useState(0);
   
   const renderPartnerLogo = (logo: PartnerLogo) => {
-    const Icon = iconMap[logo.iconName] || FaAward;
+    const Icon = getIconComponent(logo.iconName);
     
     return (
       <div 
@@ -167,7 +195,7 @@ const Hero: React.FC = () => {
   };
   
   const renderTechIcon = (icon: TechIcon) => {
-    const Icon = iconMap[icon.iconName] || FaReact;
+    const Icon = getIconComponent(icon.iconName);
     
     return (
       <div 
