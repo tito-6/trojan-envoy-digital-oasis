@@ -7,11 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { ContentFormValues } from "../schema";
-import { X, Plus, Info, ArrowUp, ArrowDown, EyeIcon, Paintbrush } from "lucide-react";
+import { X, Plus, Info, ArrowUp, ArrowDown, EyeIcon, Paintbrush, Upload, Search } from "lucide-react";
 import { TechItem } from "@/lib/types";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import * as FaIcons from "react-icons/fa";
+import * as SiIcons from "react-icons/si";
 
 interface TechStackTabProps {
   form: UseFormReturn<ContentFormValues>;
@@ -42,13 +46,29 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
 }) => {
   const [previewMode, setPreviewMode] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [iconSearchTerm, setIconSearchTerm] = useState("");
+  const [iconLibraryOpen, setIconLibraryOpen] = useState(false);
+  const [currentIconType, setCurrentIconType] = useState<"preset" | "custom">("preset");
+  const [customIconUrl, setCustomIconUrl] = useState("");
   
+  // Predefined icon names (keys for the iconMap in TechnologyStack.tsx)
   const availableIcons = [
     "react", "typescript", "vue-js", "angular", "javascript", 
     "node-js", "python", "java", "php", "kotlin", "swift", 
     "flutter", "firebase", "mongodb", "sql", "graphql", 
     "tailwind", "docker", "aws", "github"
   ];
+  
+  // React Icons libraries
+  const faIcons = Object.keys(FaIcons)
+    .filter(key => key.startsWith("Fa") && typeof FaIcons[key as keyof typeof FaIcons] === "function")
+    .filter(key => iconSearchTerm ? key.toLowerCase().includes(iconSearchTerm.toLowerCase()) : true)
+    .slice(0, 50); // Limit to 50 icons for performance
+
+  const siIcons = Object.keys(SiIcons)
+    .filter(key => key.startsWith("Si") && typeof SiIcons[key as keyof typeof SiIcons] === "function")
+    .filter(key => iconSearchTerm ? key.toLowerCase().includes(iconSearchTerm.toLowerCase()) : true)
+    .slice(0, 50); // Limit to 50 icons for performance
   
   const animationOptions = [
     { value: "animate-float", label: "Float" },
@@ -80,12 +100,24 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
       setNewTechName("");
       setNewTechIcon("");
       setNewTechColor("");
+      setCustomIconUrl("");
+      setCurrentIconType("preset");
     }
     // If we're entering edit mode for an existing item, load its values
     else if (index !== null && techItems[index]) {
       setNewTechName(techItems[index].name);
       setNewTechIcon(techItems[index].iconName);
       setNewTechColor(techItems[index].color || "#000000");
+      
+      // Determine if it's a preset or custom icon
+      if (availableIcons.includes(techItems[index].iconName) || 
+          techItems[index].iconName.startsWith("Fa") || 
+          techItems[index].iconName.startsWith("Si")) {
+        setCurrentIconType("preset");
+      } else {
+        setCurrentIconType("custom");
+        setCustomIconUrl(techItems[index].iconName);
+      }
     }
   };
   
@@ -94,7 +126,7 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
     
     const updatedItem = {
       name: newTechName,
-      iconName: newTechIcon,
+      iconName: currentIconType === "custom" && customIconUrl ? customIconUrl : newTechIcon,
       color: newTechColor,
       animate: techItems[editingIndex]?.animate || "animate-float"
     };
@@ -127,6 +159,66 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
     if (animate === "animate-float") return "Float";
     if (animate === "animate-pulse-soft") return "Pulse";
     return animate;
+  };
+
+  const handleSelectIcon = (iconName: string) => {
+    setNewTechIcon(iconName);
+    setIconLibraryOpen(false);
+  };
+
+  const handleAddWithCustomIcon = () => {
+    if (newTechName && customIconUrl) {
+      const newItem: TechItem = {
+        name: newTechName,
+        iconName: customIconUrl,
+        color: newTechColor || "#4285F4",
+        animate: Math.random() > 0.5 ? "animate-float" : "animate-pulse-soft"
+      };
+      
+      setTechItems(prev => [...prev, newItem]);
+      setNewTechName("");
+      setNewTechIcon("");
+      setNewTechColor("#4285F4");
+      setCustomIconUrl("");
+      setCurrentIconType("preset");
+    }
+  };
+
+  const renderIconPreview = (iconName: string) => {
+    // For preset icons in our TechnologyStack.tsx iconMap
+    if (availableIcons.includes(iconName)) {
+      return (
+        <div className="w-10 h-10 rounded-full bg-secondary/30 flex items-center justify-center">
+          <div className="text-xl font-bold" style={{ color: newTechColor || "#4285F4" }}>
+            {iconName.charAt(0).toUpperCase()}
+          </div>
+        </div>
+      );
+    }
+    
+    // For FA icons
+    if (iconName.startsWith("Fa") && FaIcons[iconName as keyof typeof FaIcons]) {
+      const Icon = FaIcons[iconName as keyof typeof FaIcons];
+      return <Icon size={24} color={newTechColor || "#4285F4"} />;
+    }
+    
+    // For SI icons
+    if (iconName.startsWith("Si") && SiIcons[iconName as keyof typeof SiIcons]) {
+      const Icon = SiIcons[iconName as keyof typeof SiIcons];
+      return <Icon size={24} color={newTechColor || "#4285F4"} />;
+    }
+    
+    // For custom URL
+    if (iconName.startsWith('http') || iconName.startsWith('/')) {
+      return <img src={iconName} alt="icon" className="w-8 h-8" />;
+    }
+    
+    // Fallback
+    return (
+      <div className="w-8 h-8 rounded-full bg-secondary/30 flex items-center justify-center">
+        <span className="text-sm font-bold">?</span>
+      </div>
+    );
   };
 
   return (
@@ -163,8 +255,8 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
       {!previewMode && (
         <div className="bg-muted/30 p-4 rounded-md mb-6 border">
           <h4 className="font-medium mb-4">{editingIndex !== null ? "Edit Technology" : "Add New Technology"}</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4">
+            <div className="md:col-span-4">
               <FormLabel>Technology Name</FormLabel>
               <Input
                 value={newTechName}
@@ -173,23 +265,134 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
               />
             </div>
             
-            <div>
-              <FormLabel>Icon Name</FormLabel>
-              <select
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
-                value={newTechIcon}
-                onChange={(e) => setNewTechIcon(e.target.value)}
-              >
-                <option value="">Select an icon</option>
-                {availableIcons.map((icon) => (
-                  <option key={icon} value={icon}>
-                    {icon.charAt(0).toUpperCase() + icon.slice(1).replace(/-/g, ' ')}
-                  </option>
-                ))}
-              </select>
+            <div className="md:col-span-4">
+              <FormLabel>Icon Selection</FormLabel>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <select
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2"
+                    value={currentIconType}
+                    onChange={(e) => setCurrentIconType(e.target.value as "preset" | "custom")}
+                  >
+                    <option value="preset">Use Preset Icon</option>
+                    <option value="custom">Use Custom URL</option>
+                  </select>
+                </div>
+                
+                <Dialog open={iconLibraryOpen} onOpenChange={setIconLibraryOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className={currentIconType === "custom" ? "opacity-50" : ""} disabled={currentIconType === "custom"}>
+                      Browse Icons
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-3xl">
+                    <DialogHeader>
+                      <DialogTitle>Select an Icon</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <div className="mb-4">
+                        <Input
+                          placeholder="Search icons..."
+                          value={iconSearchTerm}
+                          onChange={(e) => setIconSearchTerm(e.target.value)}
+                          className="mb-2"
+                          icon={<Search className="h-4 w-4" />}
+                        />
+                      </div>
+                      <div className="mb-4">
+                        <h5 className="text-sm font-medium mb-2">Preset Technology Icons</h5>
+                        <div className="grid grid-cols-5 gap-2">
+                          {availableIcons.map((icon) => (
+                            <Button
+                              key={icon}
+                              variant="outline"
+                              className="h-16 flex flex-col items-center justify-center gap-1 hover:bg-secondary/20"
+                              onClick={() => handleSelectIcon(icon)}
+                            >
+                              <div className="text-xl">{renderIconPreview(icon)}</div>
+                              <span className="text-xs truncate w-full text-center">{icon}</span>
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <ScrollArea className="h-60 rounded-md border p-4">
+                        <div className="mb-4">
+                          <h5 className="text-sm font-medium mb-2">Font Awesome Icons</h5>
+                          <div className="grid grid-cols-5 gap-2">
+                            {faIcons.map((icon) => (
+                              <Button
+                                key={icon}
+                                variant="outline"
+                                className="h-16 flex flex-col items-center justify-center gap-1 hover:bg-secondary/20"
+                                onClick={() => handleSelectIcon(icon)}
+                              >
+                                <div className="text-xl">
+                                  {(() => {
+                                    const Icon = FaIcons[icon as keyof typeof FaIcons];
+                                    return <Icon size={24} />;
+                                  })()}
+                                </div>
+                                <span className="text-xs truncate w-full text-center">{icon.replace("Fa", "")}</span>
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <h5 className="text-sm font-medium mb-2 mt-4">Simple Icons</h5>
+                          <div className="grid grid-cols-5 gap-2">
+                            {siIcons.map((icon) => (
+                              <Button
+                                key={icon}
+                                variant="outline"
+                                className="h-16 flex flex-col items-center justify-center gap-1 hover:bg-secondary/20"
+                                onClick={() => handleSelectIcon(icon)}
+                              >
+                                <div className="text-xl">
+                                  {(() => {
+                                    const Icon = SiIcons[icon as keyof typeof SiIcons];
+                                    return <Icon size={24} />;
+                                  })()}
+                                </div>
+                                <span className="text-xs truncate w-full text-center">{icon.replace("Si", "")}</span>
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      </ScrollArea>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIconLibraryOpen(false)}>
+                        Cancel
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              
+              {currentIconType === "custom" && (
+                <div className="mt-2">
+                  <Input
+                    value={customIconUrl}
+                    onChange={(e) => setCustomIconUrl(e.target.value)}
+                    placeholder="https://example.com/icon.svg or /images/icon.png"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Enter a URL to an image (SVG, PNG, etc.)
+                  </p>
+                </div>
+              )}
+              
+              {(newTechIcon || customIconUrl) && (
+                <div className="mt-2 flex items-center">
+                  <span className="text-sm mr-2">Preview:</span>
+                  {renderIconPreview(currentIconType === "custom" ? customIconUrl : newTechIcon)}
+                </div>
+              )}
             </div>
             
-            <div>
+            <div className="md:col-span-4">
               <FormLabel>Color</FormLabel>
               <div className="flex gap-2">
                 <Input
@@ -224,20 +427,33 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
                 <Button 
                   type="button" 
                   onClick={handleUpdateTechItem}
-                  disabled={!newTechName || !newTechIcon}
+                  disabled={!newTechName || !(newTechIcon || (currentIconType === "custom" && customIconUrl))}
                 >
                   Update Technology
                 </Button>
               </>
             ) : (
-              <Button 
-                type="button" 
-                onClick={addTechItem}
-                disabled={!newTechName || !newTechIcon}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Technology
-              </Button>
+              <>
+                {currentIconType === "preset" ? (
+                  <Button 
+                    type="button" 
+                    onClick={addTechItem}
+                    disabled={!newTechName || !newTechIcon}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Technology
+                  </Button>
+                ) : (
+                  <Button 
+                    type="button" 
+                    onClick={handleAddWithCustomIcon}
+                    disabled={!newTechName || !customIconUrl}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add With Custom Icon
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -264,9 +480,7 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
                     className={`w-16 h-16 rounded-full flex items-center justify-center mb-2 ${tech.animate || ""}`}
                     style={{ backgroundColor: tech.color ? `${tech.color}20` : '#eee' }}
                   >
-                    <div className="text-2xl font-bold" style={{ color: tech.color }}>
-                      {tech.iconName.charAt(0).toUpperCase()}
-                    </div>
+                    {renderIconPreview(tech.iconName)}
                   </div>
                   <span className="text-sm font-medium">{tech.name}</span>
                 </div>
@@ -284,12 +498,12 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
                       className="w-10 h-10 rounded-full flex items-center justify-center"
                       style={{ backgroundColor: tech.color ? `${tech.color}20` : '#eee' }}
                     >
-                      <span style={{ color: tech.color }}>{tech.iconName.charAt(0).toUpperCase()}</span>
+                      {renderIconPreview(tech.iconName)}
                     </div>
                     <div className="flex flex-col">
                       <span className="font-medium">{tech.name}</span>
                       <div className="flex items-center text-xs text-muted-foreground">
-                        <span className="mr-2">{tech.iconName}</span>
+                        <span className="mr-2">{tech.iconName.length > 20 ? tech.iconName.substring(0, 20) + '...' : tech.iconName}</span>
                         <div 
                           className="w-3 h-3 rounded-full mr-1" 
                           style={{ backgroundColor: tech.color || '#ccc' }}

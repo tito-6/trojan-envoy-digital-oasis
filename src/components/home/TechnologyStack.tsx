@@ -7,6 +7,7 @@ import { FaReact, FaVuejs, FaAngular, FaNodeJs, FaPython, FaJava, FaPhp, FaSwift
 import { SiTypescript, SiJavascript, SiFirebase, SiMongodb, SiGraphql, 
          SiTailwindcss, SiFlutter, SiKotlin } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
+import { Icon } from "@/components/ui/icon";
 
 const TechnologyStack: React.FC = () => {
   const [techStackContent, setTechStackContent] = useState<ContentItem | null>(null);
@@ -64,7 +65,7 @@ const TechnologyStack: React.FC = () => {
     };
   }, []);
 
-  // A map of icon components
+  // A map of icon components from react-icons library
   const iconMap: Record<string, React.ElementType> = {
     "react": FaReact,
     "typescript": SiTypescript,
@@ -117,6 +118,31 @@ const TechnologyStack: React.FC = () => {
   const description = techStackContent?.description || "We leverage cutting-edge technology to build modern, scalable solutions";
   const techItems = techStackContent?.techItems?.length ? techStackContent.techItems : defaultTechItems;
 
+  // Helper function to render the appropriate icon
+  const renderIcon = (tech: TechItem) => {
+    // First check if it's one of our pre-defined icons
+    if (iconMap[tech.iconName]) {
+      const IconComponent = iconMap[tech.iconName];
+      return <IconComponent size={36} style={{ color: tech.color }} />;
+    }
+    
+    // If it's a custom icon (could be a URL or a custom icon name)
+    if (tech.iconName.startsWith('http') || tech.iconName.startsWith('/')) {
+      // It's a URL to an image
+      return <img src={tech.iconName} alt={tech.name} className="w-8 h-8" style={{ color: tech.color }} />;
+    }
+    
+    // If we don't have an icon, show the first letter of the tech name in a colored circle
+    return (
+      <div className="w-8 h-8 rounded-full flex items-center justify-center" 
+           style={{ backgroundColor: `${tech.color}30` }}>
+        <span className="text-xl font-bold" style={{ color: tech.color }}>
+          {tech.name.charAt(0)}
+        </span>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="w-full py-20 text-center">
@@ -146,8 +172,6 @@ const TechnologyStack: React.FC = () => {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 max-w-5xl mx-auto">
           {techItems.map((tech, index) => {
-            const IconComponent = iconMap[tech.iconName] || FaReact;
-            
             return (
               <div 
                 key={`${tech.name}-${index}`}
@@ -160,7 +184,7 @@ const TechnologyStack: React.FC = () => {
                 <div 
                   className={`w-16 h-16 rounded-full bg-secondary/30 flex items-center justify-center mb-3 ${tech.animate || ""} hover:shadow-lg transition-all duration-300`}
                 >
-                  <IconComponent size={36} style={{ color: tech.color }} />
+                  {renderIcon(tech)}
                 </div>
                 <span className="text-sm font-medium">{tech.name}</span>
               </div>
