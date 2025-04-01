@@ -1,16 +1,19 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { storageService } from "@/lib/storage";
 import { ContentItem, TechItem } from "@/lib/types";
 import { FaReact, FaVuejs, FaAngular, FaNodeJs, FaPython, FaJava, FaPhp, FaSwift, 
          FaDatabase, FaDocker, FaAws, FaGithub } from "react-icons/fa";
 import { SiTypescript, SiJavascript, SiFirebase, SiMongodb, SiGraphql, 
          SiTailwindcss, SiFlutter, SiKotlin } from "react-icons/si";
+import { useToast } from "@/hooks/use-toast";
 
 const TechnologyStack: React.FC = () => {
   const [techStackContent, setTechStackContent] = useState<ContentItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchTechStack = () => {
@@ -29,18 +32,23 @@ const TechnologyStack: React.FC = () => {
     };
 
     fetchTechStack();
-    const unsubscribe = storageService.addEventListener("content-updated", fetchTechStack);
+    const unsubscribe = storageService.addEventListener("content-updated", () => {
+      fetchTechStack();
+      toast({
+        title: "Technology Stack Updated",
+        description: "The technology stack has been refreshed with the latest data.",
+      });
+    });
     
     return () => {
       unsubscribe();
     };
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     const handleScroll = () => {
-      const techSection = document.getElementById('tech-stack-section');
-      if (techSection) {
-        const rect = techSection.getBoundingClientRect();
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect();
         const isInView = rect.top <= window.innerHeight * 0.75 && rect.bottom >= 0;
         if (isInView) {
           setIsVisible(true);
@@ -120,6 +128,7 @@ const TechnologyStack: React.FC = () => {
   return (
     <div 
       id="tech-stack-section"
+      ref={sectionRef}
       className="w-full py-20 bg-gradient-to-b from-background via-background/90 to-background relative overflow-hidden"
     >
       <div className="container mx-auto px-4">
@@ -149,7 +158,7 @@ const TechnologyStack: React.FC = () => {
                 }}
               >
                 <div 
-                  className={`w-16 h-16 rounded-full bg-secondary/30 flex items-center justify-center mb-3 ${tech.animate} hover:shadow-lg transition-all duration-300`}
+                  className={`w-16 h-16 rounded-full bg-secondary/30 flex items-center justify-center mb-3 ${tech.animate || ""} hover:shadow-lg transition-all duration-300`}
                 >
                   <IconComponent size={36} style={{ color: tech.color }} />
                 </div>
