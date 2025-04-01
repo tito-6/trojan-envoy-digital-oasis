@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { storageService } from "@/lib/storage";
 import { ContentItem, TechItem } from "@/lib/types";
@@ -19,14 +18,19 @@ const TechnologyStack: React.FC = () => {
   useEffect(() => {
     const fetchTechStack = () => {
       const allContent = storageService.getContentByType("Technology Stack");
+      console.log("Tech stack content from storage:", allContent);
+      
       if (allContent.length > 0) {
         // Get the most recently updated tech stack content
         const sortedContent = [...allContent].sort((a, b) => 
           new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime()
         );
+        console.log("Using tech stack:", sortedContent[0]);
+        console.log("Tech items:", sortedContent[0].techItems);
         setTechStackContent(sortedContent[0]);
       } else {
         // Use default data if no tech stack content is found
+        console.log("No tech stack content found, using defaults");
         setTechStackContent(null);
       }
       setLoading(false);
@@ -34,6 +38,7 @@ const TechnologyStack: React.FC = () => {
 
     fetchTechStack();
     const unsubscribe = storageService.addEventListener("content-updated", () => {
+      console.log("Content updated event received, refreshing tech stack");
       fetchTechStack();
       toast({
         title: "Technology Stack Updated",
@@ -65,7 +70,6 @@ const TechnologyStack: React.FC = () => {
     };
   }, []);
 
-  // A map of icon components from react-icons library
   const iconMap: Record<string, React.ElementType> = {
     "react": FaReact,
     "typescript": SiTypescript,
@@ -89,7 +93,6 @@ const TechnologyStack: React.FC = () => {
     "github": FaGithub
   };
 
-  // Default tech items if none are found in CMS
   const defaultTechItems: TechItem[] = [
     { name: "React", iconName: "react", color: "#61DAFB", animate: "animate-float" },
     { name: "TypeScript", iconName: "typescript", color: "#3178C6", animate: "animate-pulse-soft" },
@@ -116,23 +119,29 @@ const TechnologyStack: React.FC = () => {
   const title = techStackContent?.title || "Our Technology Stack";
   const subtitle = techStackContent?.subtitle || "Comprehensive digital solutions for your business";
   const description = techStackContent?.description || "We leverage cutting-edge technology to build modern, scalable solutions";
-  const techItems = techStackContent?.techItems?.length ? techStackContent.techItems : defaultTechItems;
+  
+  const techItems = techStackContent?.techItems?.length 
+    ? techStackContent.techItems 
+    : defaultTechItems;
+  
+  console.log("Tech items to render:", techItems);
 
-  // Helper function to render the appropriate icon
   const renderIcon = (tech: TechItem) => {
-    // First check if it's one of our pre-defined icons
+    console.log("Rendering icon for tech:", tech.name, "icon:", tech.iconName);
+    
     if (iconMap[tech.iconName]) {
       const IconComponent = iconMap[tech.iconName];
       return <IconComponent size={36} style={{ color: tech.color }} />;
     }
     
-    // If it's a custom icon (could be a URL or a custom icon name)
     if (tech.iconName.startsWith('http') || tech.iconName.startsWith('/')) {
-      // It's a URL to an image
       return <img src={tech.iconName} alt={tech.name} className="w-8 h-8" style={{ color: tech.color }} />;
     }
     
-    // If we don't have an icon, show the first letter of the tech name in a colored circle
+    if (tech.iconName.startsWith('Fa') || tech.iconName.startsWith('Si')) {
+      return <Icon name={tech.iconName} color={tech.color} size={36} />;
+    }
+    
     return (
       <div className="w-8 h-8 rounded-full flex items-center justify-center" 
            style={{ backgroundColor: `${tech.color}30` }}>
@@ -193,7 +202,6 @@ const TechnologyStack: React.FC = () => {
         </div>
       </div>
 
-      {/* Decorative Elements */}
       <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-primary/5 blur-3xl"></div>
       <div className="absolute top-1/4 -right-10 w-40 h-40 rounded-full bg-accent/5 blur-3xl"></div>
     </div>

@@ -14,21 +14,21 @@ type IconProps = {
 
 export const Icon: React.FC<IconProps> = ({ name, color, size = 24, className = "" }) => {
   // Check if it's a FaIcon
-  if (name.startsWith("Fa") && FaIcons[name as keyof typeof FaIcons]) {
-    const FaIcon = FaIcons[name as keyof typeof FaIcons];
+  if (name.startsWith("Fa") && name in FaIcons) {
+    const FaIcon = FaIcons[name as keyof typeof FaIcons] as React.ElementType;
     return <FaIcon color={color} size={size} className={className} />;
   }
 
   // Check if it's a SiIcon
-  if (name.startsWith("Si") && SiIcons[name as keyof typeof SiIcons]) {
-    const SiIcon = SiIcons[name as keyof typeof SiIcons];
+  if (name.startsWith("Si") && name in SiIcons) {
+    const SiIcon = SiIcons[name as keyof typeof SiIcons] as React.ElementType;
     return <SiIcon color={color} size={size} className={className} />;
   }
 
   // Check if it's a Lucide icon
   if (name in LucideIcons) {
-    const LucideIconComponent = LucideIcons[name as keyof typeof LucideIcons] as React.ElementType;
-    return <LucideIconComponent color={color} size={size} className={className} />;
+    const LucideIcon = LucideIcons[name as keyof typeof LucideIcons] as React.ElementType;
+    return <LucideIcon color={color} size={size} className={className} />;
   }
 
   // If it's a URL, render an image
