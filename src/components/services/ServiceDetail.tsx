@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ExternalLink, FileText, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
