@@ -50,6 +50,32 @@ const useVimeoVideoId = (url: string): string | null => {
   return videoId;
 };
 
+// Helper function to get file extension
+const getFileExtension = (filename: string): string => {
+  const parts = filename.split('.');
+  if (parts.length === 1) return '';
+  return parts[parts.length - 1].toLowerCase();
+};
+
+// Helper function to get file icon based on extension
+const getFileIcon = (extension: string): React.ReactNode => {
+  switch (extension) {
+    case 'pdf':
+      return <FileText className="w-5 h-5 text-red-500" />;
+    case 'doc':
+    case 'docx':
+      return <FileText className="w-5 h-5 text-blue-500" />;
+    case 'xls':
+    case 'xlsx':
+      return <FileText className="w-5 h-5 text-green-500" />;
+    case 'ppt':
+    case 'pptx':
+      return <FileText className="w-5 h-5 text-orange-500" />;
+    default:
+      return <FileText className="w-5 h-5 text-gray-500" />;
+  }
+};
+
 interface ServiceDetailProps {
   service: ContentItem;
 }
@@ -61,6 +87,9 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
   const [lightboxImage, setLightboxImage] = useState("");
   
   const IconComponent = service.iconName ? getIconComponentByName(service.iconName) : null;
+  
+  // Ensure images array exists and has valid entries
+  const images = Array.isArray(service.images) ? service.images.filter(img => img && typeof img === 'string') : [];
   
   const renderContent = () => {
     // If there's formatted content, render it as HTML
@@ -152,7 +181,7 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
     );
   };
   
-  const hasMedia = (service.images && service.images.length > 0) || 
+  const hasMedia = (images.length > 0) || 
                   (service.videos && service.videos.length > 0) || 
                   (service.documents && service.documents.length > 0);
                   
@@ -204,24 +233,28 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
             
             {hasMedia && (
               <div className="space-y-8">
-                {service.images && service.images.length > 0 && (
+                {images.length > 0 && (
                   <Card>
                     <CardContent className="p-6">
                       <h3 className="text-xl font-semibold mb-4">Gallery</h3>
                       
                       {/* Main image */}
-                      <div className="mb-4 overflow-hidden rounded-lg cursor-pointer" onClick={() => service.images && openLightbox(service.images[activeImageIndex])}>
+                      <div className="mb-4 overflow-hidden rounded-lg cursor-pointer" onClick={() => openLightbox(images[activeImageIndex])}>
                         <img 
-                          src={service.images[activeImageIndex]} 
-                          alt={service.title} 
+                          src={images[activeImageIndex]} 
+                          alt={service.title}
                           className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            console.error("Error loading image:", images[activeImageIndex]);
+                            e.currentTarget.src = "/placeholder.svg";
+                          }}
                         />
                       </div>
                       
                       {/* Thumbnails */}
-                      {service.images.length > 1 && (
+                      {images.length > 1 && (
                         <div className="grid grid-cols-4 gap-2">
-                          {service.images.map((image, index) => (
+                          {images.map((image, index) => (
                             <div 
                               key={index}
                               className={`rounded-md overflow-hidden cursor-pointer ${index === activeImageIndex ? 'ring-2 ring-primary' : ''}`}
@@ -231,6 +264,9 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
                                 src={image} 
                                 alt={`${service.title} ${index + 1}`} 
                                 className="w-full h-14 object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.src = "/placeholder.svg";
+                                }}
                               />
                             </div>
                           ))}
@@ -307,35 +343,44 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
                       <div className="space-y-3">
                         {service.documents.map((doc, index) => {
                           const fileName = doc.split('/').pop() || `Document ${index + 1}`;
+                          const extension = getFileExtension(fileName);
+                          const fileIcon = getFileIcon(extension);
                           
                           return (
-                            <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
-                              <div className="flex items-center">
-                                <FileText className="w-5 h-5 mr-2 text-blue-500" />
-                                <span className="text-sm font-medium">{fileName}</span>
-                              </div>
-                              <div className="flex space-x-2">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => window.open(doc, '_blank')}
-                                >
-                                  <ExternalLink className="w-4 h-4 mr-1.5" />
-                                  View
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => {
-                                    const link = document.createElement('a');
-                                    link.href = doc;
-                                    link.download = fileName;
-                                    link.click();
-                                  }}
-                                >
-                                  <Download className="w-4 h-4 mr-1.5" />
-                                  Download
-                                </Button>
+                            <div key={index} className="p-3 bg-muted/50 rounded-md">
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                <div className="flex items-center">
+                                  {fileIcon}
+                                  <span className="text-sm font-medium ml-2 truncate max-w-[200px]">{fileName}</span>
+                                </div>
+                                <div className="flex space-x-2 ml-auto">
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => window.open(doc, '_blank')}
+                                    className="whitespace-nowrap"
+                                  >
+                                    <ExternalLink className="w-4 h-4 mr-1.5" />
+                                    View
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => {
+                                      // Create a temporary anchor element
+                                      const link = document.createElement('a');
+                                      link.href = doc;
+                                      link.setAttribute('download', fileName);
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                    }}
+                                    className="whitespace-nowrap"
+                                  >
+                                    <Download className="w-4 h-4 mr-1.5" />
+                                    Download
+                                  </Button>
+                                </div>
                               </div>
                             </div>
                           );
@@ -361,6 +406,9 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
               src={lightboxImage} 
               alt="Enlarged view" 
               className="max-w-full max-h-[80vh] object-contain"
+              onError={(e) => {
+                e.currentTarget.src = "/placeholder.svg";
+              }}
             />
             <button 
               className="absolute top-4 right-4 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center"

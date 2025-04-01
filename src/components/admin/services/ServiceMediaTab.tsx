@@ -20,6 +20,32 @@ interface ServiceMediaTabProps {
   onRemoveVideo: (video: string) => void;
 }
 
+// Helper function to get file extension
+const getFileExtension = (filename: string): string => {
+  const parts = filename.split('.');
+  if (parts.length === 1) return '';
+  return parts[parts.length - 1].toLowerCase();
+};
+
+// Helper function to get file icon based on extension
+const getFileIcon = (extension: string): React.ReactNode => {
+  switch (extension) {
+    case 'pdf':
+      return <FileText className="h-5 w-5 text-red-500" />;
+    case 'doc':
+    case 'docx':
+      return <FileText className="h-5 w-5 text-blue-500" />;
+    case 'xls':
+    case 'xlsx':
+      return <FileText className="h-5 w-5 text-green-500" />;
+    case 'ppt':
+    case 'pptx':
+      return <FileText className="h-5 w-5 text-orange-500" />;
+    default:
+      return <FileText className="h-5 w-5 text-gray-500" />;
+  }
+};
+
 const ServiceMediaTab: React.FC<ServiceMediaTabProps> = ({
   images,
   documents,
@@ -70,6 +96,9 @@ const ServiceMediaTab: React.FC<ServiceMediaTabProps> = ({
                     src={typeof image === 'string' ? image : URL.createObjectURL(image)}
                     alt={`Uploaded ${index}`}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = "/placeholder.svg";
+                    }}
                   />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Button
@@ -114,37 +143,43 @@ const ServiceMediaTab: React.FC<ServiceMediaTabProps> = ({
           
           {documents.length > 0 && (
             <div className="space-y-2 mb-6">
-              {documents.map((doc, index) => (
-                <div 
-                  key={index} 
-                  className="flex items-center justify-between border rounded-md p-3"
-                >
-                  <div className="flex items-center space-x-3">
-                    <FileText className="h-5 w-5 text-blue-500" />
-                    <span className="text-sm truncate max-w-[300px]">
-                      {typeof doc === 'string' ? doc.split('/').pop() : doc.name}
-                    </span>
+              {documents.map((doc, index) => {
+                const fileName = typeof doc === 'string' ? doc.split('/').pop() : doc.name;
+                const extension = getFileExtension(fileName || '');
+                const fileIcon = getFileIcon(extension);
+                
+                return (
+                  <div 
+                    key={index} 
+                    className="flex items-center justify-between border rounded-md p-3"
+                  >
+                    <div className="flex items-center space-x-3">
+                      {fileIcon}
+                      <span className="text-sm truncate max-w-[300px]">
+                        {fileName}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-8 h-8 p-0 rounded-full"
+                        onClick={() => window.open(typeof doc === 'string' ? doc : URL.createObjectURL(doc), '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-8 h-8 p-0 rounded-full"
+                        onClick={() => onRemoveDocument(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-8 h-8 p-0 rounded-full"
-                      onClick={() => window.open(typeof doc === 'string' ? doc : URL.createObjectURL(doc), '_blank')}
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-8 h-8 p-0 rounded-full"
-                      onClick={() => onRemoveDocument(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>

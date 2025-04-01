@@ -1,14 +1,20 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLanguage } from "@/lib/i18n";
+import { useToast } from "@/hooks/use-toast";
 
 const ServicesCTA: React.FC = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [service, setService] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const features = [
     t('services.cta.features.title1'),
@@ -18,6 +24,35 @@ const ServicesCTA: React.FC = () => {
     t('services.cta.features.title5'),
     t('services.cta.features.title6')
   ];
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Simple validation
+    if (!name.trim() || !email.trim() || !service.trim()) {
+      toast({
+        title: "Form Incomplete",
+        description: "Please fill in all fields.",
+        variant: "destructive"
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Simulate form submission
+    setTimeout(() => {
+      toast({
+        title: "Form Submitted",
+        description: "Thank you for your interest. We'll contact you soon!",
+        variant: "default"
+      });
+      setName("");
+      setEmail("");
+      setService("");
+      setIsSubmitting(false);
+    }, 1000);
+  };
   
   return (
     <section className="py-16 md:py-24 bg-card">
@@ -64,7 +99,7 @@ const ServicesCTA: React.FC = () => {
               {t('services.form.title')}
             </h3>
             
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <label htmlFor="name" className="text-sm font-medium">
                   {t('services.form.name')}
@@ -72,6 +107,9 @@ const ServicesCTA: React.FC = () => {
                 <Input 
                   id="name" 
                   placeholder={t('services.form.name.placeholder')} 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
                 />
               </div>
               
@@ -83,6 +121,9 @@ const ServicesCTA: React.FC = () => {
                   id="email" 
                   type="email" 
                   placeholder={t('services.form.email.placeholder')} 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
               
@@ -90,7 +131,7 @@ const ServicesCTA: React.FC = () => {
                 <label htmlFor="service" className="text-sm font-medium">
                   {t('services.form.service')}
                 </label>
-                <Select>
+                <Select value={service} onValueChange={setService}>
                   <SelectTrigger>
                     <SelectValue placeholder={t('services.form.service.placeholder')} />
                   </SelectTrigger>
@@ -106,8 +147,12 @@ const ServicesCTA: React.FC = () => {
                 </Select>
               </div>
               
-              <Button type="submit" className="w-full mt-2 bg-primary text-primary-foreground hover:opacity-90">
-                {t('services.form.submit')}
+              <Button 
+                type="submit" 
+                className="w-full mt-2 bg-primary text-primary-foreground hover:opacity-90"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? t('services.form.submitting') : t('services.form.submit')}
               </Button>
             </form>
           </div>
