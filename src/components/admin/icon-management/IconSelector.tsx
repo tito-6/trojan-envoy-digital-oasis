@@ -31,29 +31,50 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
   const [isJsonValid, setIsJsonValid] = useState(true);
   const [jsonErrorMessage, setJsonErrorMessage] = useState("");
 
-  // Handle search input changes with debounce for real-time suggestions
+  // Function to handle the search input changes with real-time results
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
+    
+    if (!value.trim()) {
+      // If search is cleared, show some default icons
+      if (activeTab === "library") {
+        performSearch("a"); // Show some default icons
+      }
+      return;
+    }
+    
+    performSearch(value);
+  };
+  
+  // Perform the actual search
+  const performSearch = (query: string) => {
+    console.log(`Performing search for: "${query}"`);
     setIsSearching(true);
     
-    // Perform the search using the utility function
     try {
-      const results = searchIcons(value, 300);
+      // Use the searchIcons utility to get matching icons
+      const results = searchIcons(query, 300);
+      console.log(`Search returned ${results.length} results`);
       
       // Filter by selected library if needed
       const filteredResults = selectedLibrary !== "all" 
         ? results.filter(icon => icon.library === selectedLibrary)
         : results;
       
-      // Convert search results to the format expected by the component
-      const formattedResults = filteredResults.map(({ name, library }) => ({
-        name,
-        component: getIconComponentByName(name) || (() => null),
-        library
-      })).filter(icon => icon.component);
+      console.log(`After library filtering: ${filteredResults.length} results`);
       
+      // Convert search results to the format expected by the component
+      const formattedResults = filteredResults.map(({ name, library }) => {
+        const component = getIconComponentByName(name);
+        return {
+          name,
+          component: component || (() => <div>Icon not found</div>),
+          library
+        };
+      }).filter(icon => icon.component);
+      
+      console.log(`Final formatted results: ${formattedResults.length} icons`);
       setFilteredIcons(formattedResults);
-      console.log("Search results:", formattedResults.length, "icons found");
     } catch (error) {
       console.error("Error searching icons:", error);
       setFilteredIcons([]);
@@ -65,10 +86,13 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
   // Apply library filter when it changes
   useEffect(() => {
     if (searchTerm) {
-      handleSearchChange(searchTerm);
+      performSearch(searchTerm);
+    } else if (activeTab === "library") {
+      performSearch("a"); // Show some default icons
     }
   }, [selectedLibrary]);
   
+  // Debounce the search to avoid too many requests
   const debouncedSearchChange = useCallback(
     (callback: Function, delay: number) => {
       let timeoutId: NodeJS.Timeout;
@@ -84,13 +108,13 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
   useEffect(() => {
     if (activeTab === "library" && searchInputRef.current) {
       searchInputRef.current.focus();
-    }
-  }, [activeTab]);
-
-  // Initial search to show some icons
-  useEffect(() => {
-    if (activeTab === "library" && searchTerm === "") {
-      debouncedSearchChange("a");
+      
+      // Show some default icons when the tab is opened
+      if (!searchTerm) {
+        performSearch("a");
+      } else {
+        performSearch(searchTerm);
+      }
     }
   }, [activeTab]);
 
@@ -105,11 +129,6 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
       reader.onload = (e) => {
         const result = e.target?.result as string;
         if (result) {
-          // Generate a unique name for the uploaded icon
-          const timestamp = new Date().getTime();
-          const fileName = file.name.replace(/\.[^/.]+$/, ""); // Remove file extension
-          const iconName = `custom-${fileName}-${timestamp}`;
-          
           // Pass the data URL to the parent component
           onSelectIcon(result);
           
@@ -148,12 +167,6 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
     try {
       const svgContent = await loadSvgFromUrl(customIconUrl);
       if (svgContent) {
-        // Generate a unique name for the imported icon
-        const timestamp = new Date().getTime();
-        const urlParts = customIconUrl.split('/');
-        const fileName = urlParts[urlParts.length - 1].replace(/\.[^/.]+$/, ""); // Remove file extension
-        const iconName = `url-${fileName}-${timestamp}`;
-        
         if (svgContent.startsWith('data:')) {
           // Already a data URL
           onSelectIcon(svgContent);
@@ -170,6 +183,8 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
         
         // Clear the URL input
         setCustomIconUrl("");
+      } else {
+        throw new Error("Failed to load icon from URL");
       }
     } catch (error) {
       console.error("Error importing icon from URL:", error);

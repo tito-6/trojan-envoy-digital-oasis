@@ -37,10 +37,11 @@ export const getIconComponentByName = (iconName: string): React.ComponentType<an
     return null;
   }
   
-  // Dynamic import approach for React Icons
+  // Extract the library prefix (first 2 characters usually) and icon name
+  const prefix = iconName.substring(0, 2).toLowerCase();
+  
   try {
-    // Extract the library prefix (first 2 characters) and icon name
-    const prefix = iconName.substring(0, 2).toLowerCase();
+    // Define the libraries mapping (prefix to package)
     const libraries: Record<string, any> = {
       fa: require('react-icons/fa'),
       si: require('react-icons/si'),
@@ -76,15 +77,21 @@ export const getIconComponentByName = (iconName: string): React.ComponentType<an
       return libraries.io5[iconName] || null;
     }
     
-    // Get the appropriate library
+    // Get the appropriate library based on the icon name prefix
     const library = libraries[prefix];
-    
     if (!library) {
+      console.warn(`Library not found for prefix: ${prefix}`);
       return null;
     }
     
     // Return the icon component
-    return library[iconName] || null;
+    const component = library[iconName];
+    if (!component) {
+      console.warn(`Icon not found: ${iconName} in library ${prefix}`);
+      return null;
+    }
+    
+    return component;
   } catch (error) {
     console.error(`Failed to load icon: ${iconName}`, error);
     return null;
@@ -297,53 +304,57 @@ export const searchIcons = (query: string, limit = 100): { name: string; library
     "Go": "Github Octicons"
   };
   
-  // Define libraries with their modules for direct access
-  const iconModules: Record<string, any> = {
-    "Fa": require('react-icons/fa'),
-    "Si": require('react-icons/si'),
-    "Ai": require('react-icons/ai'),
-    "Bs": require('react-icons/bs'),
-    "Fi": require('react-icons/fi'),
-    "Gr": require('react-icons/gr'),
-    "Hi": require('react-icons/hi'),
-    "Im": require('react-icons/im'),
-    "Md": require('react-icons/md'),
-    "Ti": require('react-icons/ti'),
-    "Vsc": require('react-icons/vsc'),
-    "Di": require('react-icons/di'),
-    "Bi": require('react-icons/bi'),
-    "Fc": require('react-icons/fc'),
-    "Io": require('react-icons/io'),
-    "Io5": require('react-icons/io5'),
-    "Ri": require('react-icons/ri'),
-    "Wi": require('react-icons/wi'),
-    "Ci": require('react-icons/ci'),
-    "Gi": require('react-icons/gi'),
-    "Cg": require('react-icons/cg'),
-    "Lu": require('react-icons/lu'),
-    "Pi": require('react-icons/pi'),
-    "Tb": require('react-icons/tb'),
-    "Sl": require('react-icons/sl'),
-    "Rx": require('react-icons/rx'),
-    "Go": require('react-icons/go')
-  };
+  // For debugging
+  console.log(`Searching for icons with query: "${query}"`);
   
-  // For each library, find matching icons
-  Object.entries(iconModules).forEach(([prefix, module]) => {
+  // Define libraries and try to load the modules
+  const iconLibraries = [
+    { prefix: "Fa", module: () => require('react-icons/fa') },
+    { prefix: "Si", module: () => require('react-icons/si') },
+    { prefix: "Ai", module: () => require('react-icons/ai') },
+    { prefix: "Bs", module: () => require('react-icons/bs') },
+    { prefix: "Fi", module: () => require('react-icons/fi') },
+    { prefix: "Gr", module: () => require('react-icons/gr') },
+    { prefix: "Hi", module: () => require('react-icons/hi') },
+    { prefix: "Im", module: () => require('react-icons/im') },
+    { prefix: "Md", module: () => require('react-icons/md') },
+    { prefix: "Ti", module: () => require('react-icons/ti') },
+    { prefix: "Vsc", module: () => require('react-icons/vsc') },
+    { prefix: "Di", module: () => require('react-icons/di') },
+    { prefix: "Bi", module: () => require('react-icons/bi') },
+    { prefix: "Fc", module: () => require('react-icons/fc') },
+    { prefix: "Io", module: () => require('react-icons/io') },
+    { prefix: "Io5", module: () => require('react-icons/io5') },
+    { prefix: "Ri", module: () => require('react-icons/ri') },
+    { prefix: "Wi", module: () => require('react-icons/wi') },
+    { prefix: "Ci", module: () => require('react-icons/ci') },
+    { prefix: "Gi", module: () => require('react-icons/gi') },
+    { prefix: "Cg", module: () => require('react-icons/cg') },
+    { prefix: "Lu", module: () => require('react-icons/lu') },
+    { prefix: "Pi", module: () => require('react-icons/pi') },
+    { prefix: "Tb", module: () => require('react-icons/tb') },
+    { prefix: "Sl", module: () => require('react-icons/sl') },
+    { prefix: "Rx", module: () => require('react-icons/rx') },
+    { prefix: "Go", module: () => require('react-icons/go') },
+  ];
+  
+  // Process each library
+  for (const { prefix, module } of iconLibraries) {
     try {
       const library = libraryNames[prefix] || prefix;
+      const iconModule = module();
       
       // Get all exported components from the module
-      Object.keys(module).forEach(iconName => {
+      Object.keys(iconModule).forEach(iconName => {
         // Skip non-component exports
-        if (iconName === 'default' || typeof module[iconName] !== 'object') {
+        if (iconName === 'default' || typeof iconModule[iconName] !== 'object') {
           return;
         }
         
         const fullName = `${prefix}${iconName}`;
         const lowerName = fullName.toLowerCase();
         
-        // Calculate a relevance score
+        // Calculate a relevance score based on the search query
         let score = 0;
         
         // Exact match gets highest score
@@ -360,7 +371,7 @@ export const searchIcons = (query: string, limit = 100): { name: string; library
         }
         // Check if individual parts of the name match
         else {
-          // Convert camelCase to words
+          // Convert camelCase to words for more flexible matching
           const words = iconName.replace(/([A-Z])/g, ' $1').toLowerCase().split(/\s+/);
           for (const word of words) {
             if (word.startsWith(lowerQuery)) {
@@ -384,11 +395,14 @@ export const searchIcons = (query: string, limit = 100): { name: string; library
     } catch (error) {
       console.warn(`Error searching icons in ${prefix}:`, error);
     }
-  });
+  }
   
-  // Sort by relevance score
+  // Sort by relevance score (highest first)
   results.sort((a, b) => b.score - a.score);
   
-  // Limit the results
+  // Log the number of results found
+  console.log(`Found ${results.length} icons matching "${query}"`);
+  
+  // Limit and return the results
   return results.slice(0, limit).map(({ name, library }) => ({ name, library }));
 };
