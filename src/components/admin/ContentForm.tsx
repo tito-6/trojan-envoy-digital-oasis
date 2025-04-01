@@ -49,6 +49,7 @@ const contentFormSchema = z.object({
   placementSectionId: z.string().optional().transform(val => val ? parseInt(val) : undefined),
   placementPosition: z.enum(["top", "middle", "bottom"] as const).optional(),
   category: z.string().optional(),
+  author: z.string().optional(),
   role: z.string().optional(),
   company: z.string().optional(),
   rating: z.string().optional().transform(val => val ? parseInt(val) : undefined),
@@ -123,6 +124,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     placement?: string;
   }>({});
   const [categoryInput, setCategoryInput] = useState(initialValues?.category || "");
+  const [authorInput, setAuthorInput] = useState(initialValues?.author || "");
   const [roleInput, setRoleInput] = useState(initialValues?.role || "");
   const [companyInput, setCompanyInput] = useState(initialValues?.company || "");
   const [ratingInput, setRatingInput] = useState(initialValues?.rating?.toString() || "5");
@@ -168,11 +170,12 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       placementSectionId: initialValues?.placement?.sectionId !== undefined ? initialValues.placement.sectionId.toString() : undefined,
       placementPosition: initialValues?.placement?.position,
       category: initialValues?.category || "",
+      author: initialValues?.author || "",
       role: initialValues?.role || "",
       company: initialValues?.company || "",
       rating: initialValues?.rating?.toString() || "5",
       answer: initialValues?.answer || "",
-      technologies: initialValues?.technologies?.join(', ') || "",
+      technologies: technologiesInput,
       duration: initialValues?.duration || "",
       client: initialValues?.client || "",
       challenge: initialValues?.challenge || "",
@@ -180,9 +183,9 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       results: initialValues?.results || "",
       location: initialValues?.location || "",
       department: initialValues?.department || "",
-      responsibilities: initialValues?.responsibilities?.join('\n') || "",
-      requirements: initialValues?.requirements?.join('\n') || "",
-      benefits: initialValues?.benefits?.join('\n') || "",
+      responsibilities: responsibilitiesInput,
+      requirements: requirementsInput,
+      benefits: benefitsInput,
       applyUrl: initialValues?.applyUrl || "",
       salaryMin: initialValues?.salaryMin?.toString() || "",
       salaryMax: initialValues?.salaryMax?.toString() || "",
@@ -274,6 +277,11 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     form.setValue("category", e.target.value);
   };
 
+  const handleAuthorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAuthorInput(e.target.value);
+    form.setValue("author", e.target.value);
+  };
+
   const handleRoleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setRoleInput(e.target.value);
     form.setValue("role", e.target.value);
@@ -309,17 +317,17 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     form.setValue("client", e.target.value);
   };
 
-  const handleChallengeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChallengeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setChallengeInput(e.target.value);
     form.setValue("challenge", e.target.value);
   };
 
-  const handleSolutionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSolutionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setSolutionInput(e.target.value);
     form.setValue("solution", e.target.value);
   };
 
-  const handleResultsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleResultsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setResultsInput(e.target.value);
     form.setValue("results", e.target.value);
   };
@@ -434,11 +442,12 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
         position: values.placementPosition,
       },
       category: categoryInput,
+      author: authorInput,
       role: roleInput,
       company: companyInput,
       rating: values.rating,
       answer: answerInput,
-      technologies: values.technologies,
+      technologies: values.technologies as string[],
       duration: durationInput,
       client: clientInput,
       challenge: challengeInput,
@@ -446,9 +455,9 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       results: resultsInput,
       location: locationInput,
       department: departmentInput,
-      responsibilities: values.responsibilities,
-      requirements: values.requirements,
-      benefits: values.benefits,
+      responsibilities: values.responsibilities as string[],
+      requirements: values.requirements as string[],
+      benefits: values.benefits as string[],
       applyUrl: applyUrlInput,
       salaryMin: values.salaryMin,
       salaryMax: values.salaryMax,
@@ -1052,7 +1061,11 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                     <FormItem>
                       <FormLabel>Client/Author Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter client name" {...field} />
+                        <Input 
+                          placeholder="Enter client name" 
+                          value={authorInput}
+                          onChange={handleAuthorChange}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1137,7 +1150,10 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                         placeholder="Enter the answer to this FAQ"
                         rows={6}
                         value={answerInput}
-                        onChange={(e) => handleAnswerChange(e as React.ChangeEvent<HTMLInputElement>)}
+                        onChange={e => handleAnswerChange({
+                          ...e, 
+                          target: { ...e.target, value: e.target.value }
+                        } as unknown as React.ChangeEvent<HTMLInputElement>)}
                       />
                     </FormControl>
                     <FormDescription>
@@ -1263,7 +1279,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                           placeholder="Describe the challenge the client faced"
                           rows={4}
                           value={challengeInput}
-                          onChange={(e) => handleChallengeChange(e as React.ChangeEvent<HTMLInputElement>)}
+                          onChange={handleChallengeChange}
                         />
                       </FormControl>
                       <FormMessage />
@@ -1282,7 +1298,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                           placeholder="Describe how you solved the problem"
                           rows={4}
                           value={solutionInput}
-                          onChange={(e) => handleSolutionChange(e as React.ChangeEvent<HTMLInputElement>)}
+                          onChange={handleSolutionChange}
                         />
                       </FormControl>
                       <FormMessage />
@@ -1301,7 +1317,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                           placeholder="Describe the outcomes and benefits achieved"
                           rows={4}
                           value={resultsInput}
-                          onChange={(e) => handleResultsChange(e as React.ChangeEvent<HTMLInputElement>)}
+                          onChange={handleResultsChange}
                         />
                       </FormControl>
                       <FormMessage />
