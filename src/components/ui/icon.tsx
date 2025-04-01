@@ -26,9 +26,9 @@ export const Icon: React.FC<IconProps> = ({ name, color, size = 24, className = 
   }
 
   // Check if it's a Lucide icon
-  if (LucideIcons[name as keyof typeof LucideIcons]) {
-    const LucideIcon = LucideIcons[name as keyof typeof LucideIcons];
-    return <LucideIcon color={color} size={size} className={className} />;
+  if (name in LucideIcons) {
+    const LucideIconComponent = LucideIcons[name as keyof typeof LucideIcons] as React.ElementType;
+    return <LucideIconComponent color={color} size={size} className={className} />;
   }
 
   // If it's a URL, render an image

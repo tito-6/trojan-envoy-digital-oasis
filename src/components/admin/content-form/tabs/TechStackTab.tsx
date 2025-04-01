@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { TabsContent } from "@/components/ui/tabs";
@@ -51,7 +50,6 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
   const [currentIconType, setCurrentIconType] = useState<"preset" | "custom">("preset");
   const [customIconUrl, setCustomIconUrl] = useState("");
   
-  // Predefined icon names (keys for the iconMap in TechnologyStack.tsx)
   const availableIcons = [
     "react", "typescript", "vue-js", "angular", "javascript", 
     "node-js", "python", "java", "php", "kotlin", "swift", 
@@ -59,16 +57,15 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
     "tailwind", "docker", "aws", "github"
   ];
   
-  // React Icons libraries
   const faIcons = Object.keys(FaIcons)
     .filter(key => key.startsWith("Fa") && typeof FaIcons[key as keyof typeof FaIcons] === "function")
     .filter(key => iconSearchTerm ? key.toLowerCase().includes(iconSearchTerm.toLowerCase()) : true)
-    .slice(0, 50); // Limit to 50 icons for performance
-
+    .slice(0, 50);
+  
   const siIcons = Object.keys(SiIcons)
     .filter(key => key.startsWith("Si") && typeof SiIcons[key as keyof typeof SiIcons] === "function")
     .filter(key => iconSearchTerm ? key.toLowerCase().includes(iconSearchTerm.toLowerCase()) : true)
-    .slice(0, 50); // Limit to 50 icons for performance
+    .slice(0, 50);
   
   const animationOptions = [
     { value: "animate-float", label: "Float" },
@@ -95,21 +92,17 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
   const toggleEditMode = (index: number | null) => {
     setEditingIndex(index);
     
-    // If we're closing edit mode, clear the new tech fields
     if (index === null) {
       setNewTechName("");
       setNewTechIcon("");
       setNewTechColor("");
       setCustomIconUrl("");
       setCurrentIconType("preset");
-    }
-    // If we're entering edit mode for an existing item, load its values
-    else if (index !== null && techItems[index]) {
+    } else if (index !== null && techItems[index]) {
       setNewTechName(techItems[index].name);
       setNewTechIcon(techItems[index].iconName);
       setNewTechColor(techItems[index].color || "#000000");
       
-      // Determine if it's a preset or custom icon
       if (availableIcons.includes(techItems[index].iconName) || 
           techItems[index].iconName.startsWith("Fa") || 
           techItems[index].iconName.startsWith("Si")) {
@@ -135,7 +128,6 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
     newItems[editingIndex] = updatedItem;
     setTechItems(newItems);
     
-    // Reset form and exit edit mode
     toggleEditMode(null);
   };
   
@@ -185,7 +177,6 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
   };
 
   const renderIconPreview = (iconName: string) => {
-    // For preset icons in our TechnologyStack.tsx iconMap
     if (availableIcons.includes(iconName)) {
       return (
         <div className="w-10 h-10 rounded-full bg-secondary/30 flex items-center justify-center">
@@ -196,24 +187,20 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
       );
     }
     
-    // For FA icons
     if (iconName.startsWith("Fa") && FaIcons[iconName as keyof typeof FaIcons]) {
       const Icon = FaIcons[iconName as keyof typeof FaIcons];
       return <Icon size={24} color={newTechColor || "#4285F4"} />;
     }
     
-    // For SI icons
     if (iconName.startsWith("Si") && SiIcons[iconName as keyof typeof SiIcons]) {
       const Icon = SiIcons[iconName as keyof typeof SiIcons];
       return <Icon size={24} color={newTechColor || "#4285F4"} />;
     }
     
-    // For custom URL
     if (iconName.startsWith('http') || iconName.startsWith('/')) {
       return <img src={iconName} alt="icon" className="w-8 h-8" />;
     }
     
-    // Fallback
     return (
       <div className="w-8 h-8 rounded-full bg-secondary/30 flex items-center justify-center">
         <span className="text-sm font-bold">?</span>
@@ -251,7 +238,6 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
         Add technologies that you want to showcase in the technology stack section
       </p>
 
-      {/* Add/Edit Technology Form */}
       {!previewMode && (
         <div className="bg-muted/30 p-4 rounded-md mb-6 border">
           <h4 className="font-medium mb-4">{editingIndex !== null ? "Edit Technology" : "Add New Technology"}</h4>
@@ -459,7 +445,6 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
         </div>
       )}
 
-      {/* Technology List */}
       {techItems.length > 0 ? (
         <div>
           <div className="mb-4 flex items-center justify-between">
@@ -575,7 +560,6 @@ export const TechStackTab: React.FC<TechStackTabProps> = ({
         </div>
       )}
       
-      {/* Import Default Technologies Button */}
       {techItems.length === 0 && (
         <Button 
           type="button" 
