@@ -1,4 +1,3 @@
-
 export type ContentType = 'Page' | 'Page Section' | 'Service' | 'Portfolio' | 'Blog Post' | 'Testimonial' | 'FAQ' | 'Team Member' | 'Case Study' | 'Job Posting';
 
 export type ContentPlacement = {
@@ -59,6 +58,9 @@ export interface ContentItem {
     h2?: string[];
     h3?: string[];
   };
+  iconName?: string;
+  color?: string;
+  bgColor?: string;
 }
 
 export interface User {
