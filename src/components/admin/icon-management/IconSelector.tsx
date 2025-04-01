@@ -30,7 +30,7 @@ import * as Tb from "react-icons/tb";
 import * as Sl from "react-icons/sl";
 import * as Rx from "react-icons/rx";
 import * as Go from "react-icons/go";
-import { svgToDataUrl, loadSvgFromUrl } from "@/lib/iconUtils";
+import { svgToDataUrl, loadSvgFromUrl, searchIcons } from "@/lib/iconUtils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -71,21 +71,24 @@ const iconLibraries = [
   { prefix: "Go", icons: Go, name: "Github Octicons" },
 ];
 
+// Get all icon components from a library
+const getAllIconsFromLibrary = (library: any, prefix: string) => {
+  return Object.entries(library)
+    .filter(([key]) => key !== 'default' && typeof library[key] === 'object')
+    .map(([name, component]) => ({
+      name: `${prefix}${name}`,
+      component: component as React.ComponentType<any>,
+      library: prefix
+    }));
+};
+
 // Function to get all icon names
 const getAllIconNames = () => {
   const iconNames: { name: string; component: React.ComponentType<any>; library: string }[] = [];
   
   iconLibraries.forEach(lib => {
-    Object.entries(lib.icons).forEach(([name, component]) => {
-      // Skip the "default" export
-      if (name !== "default" && typeof component === "object") {
-        iconNames.push({
-          name: `${lib.prefix}${name}`,
-          component: component as React.ComponentType<any>,
-          library: lib.name
-        });
-      }
-    });
+    const libIcons = getAllIconsFromLibrary(lib.icons, lib.prefix);
+    iconNames.push(...libIcons);
   });
   
   return iconNames;
@@ -95,12 +98,77 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLibrary, setSelectedLibrary] = useState<string>("all");
   const [allIcons, setAllIcons] = useState<{ name: string; component: React.ComponentType<any>; library: string }[]>([]);
+  const [filteredIcons, setFilteredIcons] = useState<{ name: string; component: React.ComponentType<any>; library: string }[]>([]);
   const [customIconUrl, setCustomIconUrl] = useState("");
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const [activeTab, setActiveTab] = useState("library");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Load all icons on component mount
+  useEffect(() => {
+    const loadIcons = async () => {
+      setIsLoading(true);
+      // Get all icons
+      const icons = getAllIconNames();
+      setAllIcons(icons);
+      setFilteredIcons(icons.slice(0, 100)); // Initially show a limited set
+      setIsLoading(false);
+    };
+    
+    loadIcons();
+    
+    // Focus the search input when component mounts
+    if (searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, []);
+  
+  // Update filtered icons when search term or selected library changes
+  useEffect(() => {
+    const updateFilteredIcons = () => {
+      let filtered = allIcons;
+      
+      // Filter by library if not "all"
+      if (selectedLibrary !== "all") {
+        const libPrefix = iconLibraries.find(lib => lib.name === selectedLibrary)?.prefix || "";
+        filtered = filtered.filter(icon => icon.name.startsWith(libPrefix));
+      }
+      
+      // Filter by search term if present
+      if (searchTerm.trim()) {
+        const term = searchTerm.toLowerCase();
+        filtered = filtered.filter(icon => {
+          const iconNameLower = icon.name.toLowerCase();
+          return iconNameLower.includes(term);
+        });
+        
+        // Sort results by relevance - exact matches first, then prefix matches, then includes
+        filtered.sort((a, b) => {
+          const aName = a.name.toLowerCase();
+          const bName = b.name.toLowerCase();
+          
+          // Exact match gets highest priority
+          if (aName === term && bName !== term) return -1;
+          if (bName === term && aName !== term) return 1;
+          
+          // Starts with gets second priority
+          if (aName.startsWith(term) && !bName.startsWith(term)) return -1;
+          if (bName.startsWith(term) && !aName.startsWith(term)) return 1;
+          
+          // Default to alphabetical
+          return aName.localeCompare(bName);
+        });
+      }
+      
+      // Limit results for performance
+      setFilteredIcons(filtered.slice(0, 300));
+    };
+    
+    updateFilteredIcons();
+  }, [searchTerm, selectedLibrary, allIcons]);
+  
   // Debounce function for search input
   const debounce = useCallback((func: Function, delay: number) => {
     let timeoutId: NodeJS.Timeout;
@@ -110,27 +178,16 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
     };
   }, []);
   
-  useEffect(() => {
-    // Get all icons on component mount
-    setAllIcons(getAllIconNames());
-    
-    // Focus the search input when component mounts
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, []);
+  // Handle search input changes with debounce for real-time suggestions
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+  };
   
-  // Filtered icons list with improved real-time suggestions
-  const filteredIcons = allIcons.filter(icon => {
-    const matchesSearch = searchTerm.length > 0 ? 
-      icon.name.toLowerCase().includes(searchTerm.toLowerCase()) : true;
-    const matchesLibrary = selectedLibrary === "all" || icon.library === selectedLibrary;
-    return matchesSearch && matchesLibrary;
-  });
-  
-  // For performance, limit the number of icons displayed
-  const displayedIcons = filteredIcons.slice(0, 300);
-  
+  const debouncedSearchChange = useCallback(
+    debounce(handleSearchChange, 150),
+    []
+  );
+
   // Handle file upload for custom icons
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -199,14 +256,9 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
       setIsLoadingUrl(false);
     }
   };
-  
-  // Handle search input changes with debounce for real-time suggestions
-  const handleSearchChange = debounce((value: string) => {
-    setSearchTerm(value);
-  }, 200);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'ArrowDown' && displayedIcons.length > 0) {
+    if (e.key === 'ArrowDown' && filteredIcons.length > 0) {
       e.preventDefault();
       // Focus the first icon element
       const iconElements = document.querySelectorAll('.icon-item');
@@ -232,8 +284,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
               <Input
                 ref={searchInputRef}
                 placeholder="Search icons by name..."
-                defaultValue={searchTerm}
-                onChange={(e) => handleSearchChange(e.target.value)}
+                onChange={(e) => debouncedSearchChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className="pl-8"
                 autoComplete="off"
@@ -251,10 +302,18 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
             </select>
           </div>
           
-          {displayedIcons.length > 0 ? (
+          {isLoading ? (
+            <div className="border rounded-md p-8 text-center">
+              <div className="animate-pulse flex flex-col items-center">
+                <div className="h-12 w-12 bg-gray-200 rounded-full mb-4"></div>
+                <div className="h-4 w-32 bg-gray-200 rounded mb-2"></div>
+                <div className="h-4 w-24 bg-gray-200 rounded"></div>
+              </div>
+            </div>
+          ) : filteredIcons.length > 0 ? (
             <ScrollArea className="h-[300px] border rounded-md p-4">
               <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-4">
-                {displayedIcons.map(({ name, component: Icon }) => {
+                {filteredIcons.map(({ name, component: Icon }) => {
                   const isSelected = selectedIcon === name;
                   return (
                     <TooltipProvider key={name}>
@@ -294,9 +353,10 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
             </div>
           )}
           
-          {filteredIcons.length > 300 && (
+          {filteredIcons.length > 0 && allIcons.length > filteredIcons.length && (
             <p className="text-xs text-muted-foreground text-center">
-              Showing 300 of {filteredIcons.length} icons. Refine your search to see more specific icons.
+              Showing {filteredIcons.length} of {allIcons.length} icons. 
+              {searchTerm ? " Refine your search to see more specific icons." : " Type to search for specific icons."}
             </p>
           )}
         </TabsContent>
