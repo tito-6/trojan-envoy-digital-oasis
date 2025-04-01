@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -866,4 +867,638 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                 {documents.length > 0 && (
                   <div className="mt-4 space-y-2">
                     {documents.map((doc, index) => (
-                      <div key={index} className="flex items-center justify-between bg-secondary/40
+                      <div key={index} className="flex items-center justify-between bg-secondary/40 p-2 rounded-md">
+                        <div className="flex items-center space-x-2 overflow-hidden">
+                          <FileText className="h-4 w-4 flex-shrink-0" />
+                          <p className="text-sm truncate">
+                            {typeof doc === 'string' 
+                              ? doc.split('/').pop() || doc 
+                              : doc.name}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeDocument(index)}
+                          className="h-6 w-6 bg-secondary text-muted-foreground rounded-full flex items-center justify-center flex-shrink-0"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Videos (YouTube)</label>
+                <div className="flex gap-2 mb-2">
+                  <Input
+                    value={videoInput}
+                    onChange={(e) => setVideoInput(e.target.value)}
+                    placeholder="Add YouTube URL"
+                    className="flex-grow"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addVideo();
+                      }
+                    }}
+                  />
+                  <Button 
+                    type="button" 
+                    onClick={addVideo}
+                    variant="outline"
+                    size="icon"
+                  >
+                    <Youtube className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                {videos.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {videos.map((video, index) => (
+                      <div key={index} className="flex items-center justify-between bg-secondary/40 p-2 rounded-md">
+                        <div className="flex items-center space-x-2 overflow-hidden">
+                          <Youtube className="h-4 w-4 flex-shrink-0" />
+                          <a 
+                            href={video} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-sm truncate text-blue-600 hover:underline"
+                          >
+                            {video}
+                          </a>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeVideo(video)}
+                          className="h-6 w-6 bg-secondary text-muted-foreground rounded-full flex items-center justify-center flex-shrink-0"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="placement" className="space-y-6">
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="placementPageId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Target Page</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a page" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        {pages.map(page => (
+                          <SelectItem key={page.id} value={page.id.toString()}>
+                            {page.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Choose which page this content should appear on
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="placementSectionId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Parent Section</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a section" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        {pageSections.map(section => (
+                          <SelectItem key={section.id} value={section.id.toString()}>
+                            {section.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      For nested content, choose a parent section
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="placementPosition"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Position on Page</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select position" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">Default</SelectItem>
+                        <SelectItem value="top">Top</SelectItem>
+                        <SelectItem value="middle">Middle</SelectItem>
+                        <SelectItem value="bottom">Bottom</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Set where this content should appear on the page
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </TabsContent>
+          
+          {showTestimonialFields && (
+            <TabsContent value="testimonial" className="space-y-6">
+              <div className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="author"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Client/Author Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter client name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Client Role/Position</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="E.g. CEO, Marketing Director" 
+                          value={roleInput}
+                          onChange={handleRoleChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="company"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Company Name</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter company name"
+                          value={companyInput}
+                          onChange={handleCompanyChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="rating"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Rating (1-5)</FormLabel>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="range"
+                          min="1"
+                          max="5"
+                          step="1"
+                          value={ratingInput}
+                          onChange={handleRatingChange}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                        />
+                        <div className="flex items-center">
+                          <span className="mr-2">{ratingInput}</span>
+                          <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                        </div>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </TabsContent>
+          )}
+          
+          {showFAQFields && (
+            <TabsContent value="faq" className="space-y-6">
+              <FormField
+                control={form.control}
+                name="answer"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Answer</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="Enter the answer to this FAQ"
+                        rows={6}
+                        value={answerInput}
+                        onChange={(e) => handleAnswerChange(e as React.ChangeEvent<HTMLInputElement>)}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Provide a clear and concise answer to the question in the title
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </TabsContent>
+          )}
+          
+          {showTeamMemberFields && (
+            <TabsContent value="team" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Role/Position</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="E.g. CEO, Marketing Director" 
+                          value={roleInput}
+                          onChange={handleRoleChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="department"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Department</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="E.g. Marketing, Development"
+                          value={departmentInput}
+                          onChange={handleDepartmentChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </TabsContent>
+          )}
+          
+          {showCaseStudyFields && (
+            <TabsContent value="case-study" className="space-y-6">
+              <div className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="client"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Client</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter client name"
+                          value={clientInput}
+                          onChange={handleClientChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="technologies"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Technologies Used</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="E.g. React, Node.js, AWS (comma separated)"
+                          value={technologiesInput}
+                          onChange={handleTechnologiesChange}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Enter technologies as a comma-separated list
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="duration"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Project Duration</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="E.g. 3 months, Jan-Mar 2024"
+                          value={durationInput}
+                          onChange={handleDurationChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="challenge"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Challenge</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Describe the challenge the client faced"
+                          rows={4}
+                          value={challengeInput}
+                          onChange={(e) => handleChallengeChange(e as React.ChangeEvent<HTMLInputElement>)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="solution"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Solution</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Describe how you solved the problem"
+                          rows={4}
+                          value={solutionInput}
+                          onChange={(e) => handleSolutionChange(e as React.ChangeEvent<HTMLInputElement>)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="results"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Results</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Describe the outcomes and benefits achieved"
+                          rows={4}
+                          value={resultsInput}
+                          onChange={(e) => handleResultsChange(e as React.ChangeEvent<HTMLInputElement>)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </TabsContent>
+          )}
+          
+          {showJobPostingFields && (
+            <TabsContent value="job" className="space-y-6">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Location</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="E.g. Remote, New York, NY"
+                            value={locationInput}
+                            onChange={handleLocationChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="department"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Department</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="E.g. Engineering, Marketing"
+                            value={departmentInput}
+                            onChange={handleDepartmentChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="salaryMin"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Minimum Salary</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="E.g. 50000"
+                            value={salaryMinInput}
+                            onChange={handleSalaryMinChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="salaryMax"
+                    render={() => (
+                      <FormItem>
+                        <FormLabel>Maximum Salary</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="E.g. 80000"
+                            value={salaryMaxInput}
+                            onChange={handleSalaryMaxChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="responsibilities"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Responsibilities</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="List job responsibilities (one per line)"
+                          rows={4}
+                          value={responsibilitiesInput}
+                          onChange={handleResponsibilitiesChange}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Enter each responsibility on a new line
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="requirements"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Requirements</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="List job requirements (one per line)"
+                          rows={4}
+                          value={requirementsInput}
+                          onChange={handleRequirementsChange}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Enter each requirement on a new line
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="benefits"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Benefits</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="List job benefits (one per line)"
+                          rows={4}
+                          value={benefitsInput}
+                          onChange={handleBenefitsChange}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Enter each benefit on a new line
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="applyUrl"
+                  render={() => (
+                    <FormItem>
+                      <FormLabel>Application URL</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="URL for online application"
+                          value={applyUrlInput}
+                          onChange={handleApplyUrlChange}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        External link where candidates can apply
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </TabsContent>
+          )}
+        </Tabs>
+        
+        <div className="flex justify-end gap-2">
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+          <Button type="submit">
+            {isEditing ? "Update Content" : "Create Content"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+};
+
+export default ContentForm;
