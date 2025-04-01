@@ -54,7 +54,7 @@ const contentFormSchema = z.object({
   company: z.string().optional(),
   rating: z.string().optional().transform(val => val ? parseInt(val) : undefined),
   answer: z.string().optional(),
-  technologies: z.string().optional().transform(val => val ? val.split(',').map(t => t.trim()) : []),
+  technologies: z.string().optional(),
   duration: z.string().optional(),
   client: z.string().optional(),
   challenge: z.string().optional(),
@@ -62,9 +62,9 @@ const contentFormSchema = z.object({
   results: z.string().optional(),
   location: z.string().optional(),
   department: z.string().optional(),
-  responsibilities: z.string().optional().transform(val => val ? val.split('\n').map(t => t.trim()).filter(t => t) : []),
-  requirements: z.string().optional().transform(val => val ? val.split('\n').map(t => t.trim()).filter(t => t) : []),
-  benefits: z.string().optional().transform(val => val ? val.split('\n').map(t => t.trim()).filter(t => t) : []),
+  responsibilities: z.string().optional(),
+  requirements: z.string().optional(),
+  benefits: z.string().optional(),
   applyUrl: z.string().optional(),
   salaryMin: z.string().optional().transform(val => val ? parseInt(val) : undefined),
   salaryMax: z.string().optional().transform(val => val ? parseInt(val) : undefined),
@@ -127,7 +127,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
   const [authorInput, setAuthorInput] = useState(initialValues?.author || "");
   const [roleInput, setRoleInput] = useState(initialValues?.role || "");
   const [companyInput, setCompanyInput] = useState(initialValues?.company || "");
-  const [ratingInput, setRatingInput] = useState(initialValues?.rating?.toString() || "5");
+  const [ratingInput, setRatingInput] = useState(initialValues?.rating !== undefined ? initialValues.rating.toString() : "5");
   const [answerInput, setAnswerInput] = useState(initialValues?.answer || "");
   const [technologiesInput, setTechnologiesInput] = useState(initialValues?.technologies?.join(', ') || "");
   const [durationInput, setDurationInput] = useState(initialValues?.duration || "");
@@ -141,8 +141,8 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
   const [requirementsInput, setRequirementsInput] = useState(initialValues?.requirements?.join('\n') || "");
   const [benefitsInput, setBenefitsInput] = useState(initialValues?.benefits?.join('\n') || "");
   const [applyUrlInput, setApplyUrlInput] = useState(initialValues?.applyUrl || "");
-  const [salaryMinInput, setSalaryMinInput] = useState(initialValues?.salaryMin?.toString() || "");
-  const [salaryMaxInput, setSalaryMaxInput] = useState(initialValues?.salaryMax?.toString() || "");
+  const [salaryMinInput, setSalaryMinInput] = useState(initialValues?.salaryMin !== undefined ? initialValues.salaryMin.toString() : "");
+  const [salaryMaxInput, setSalaryMaxInput] = useState(initialValues?.salaryMax !== undefined ? initialValues.salaryMax.toString() : "");
 
   useEffect(() => {
     const allPages = storageService.getContentByType("Page");
@@ -173,7 +173,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       author: initialValues?.author || "",
       role: initialValues?.role || "",
       company: initialValues?.company || "",
-      rating: initialValues?.rating?.toString() || "5",
+      rating: initialValues?.rating !== undefined ? initialValues.rating.toString() : "5",
       answer: initialValues?.answer || "",
       technologies: technologiesInput,
       duration: initialValues?.duration || "",
@@ -187,8 +187,8 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       requirements: requirementsInput,
       benefits: benefitsInput,
       applyUrl: initialValues?.applyUrl || "",
-      salaryMin: initialValues?.salaryMin?.toString() || "",
-      salaryMax: initialValues?.salaryMax?.toString() || "",
+      salaryMin: initialValues?.salaryMin !== undefined ? initialValues.salaryMin.toString() : "",
+      salaryMax: initialValues?.salaryMax !== undefined ? initialValues.salaryMax.toString() : "",
     },
   });
 
@@ -376,9 +376,11 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     setAutoGenerateSlug(!autoGenerateSlug);
     if (!autoGenerateSlug) {
       const title = form.watch("title");
-      const generatedSlug = title.toLowerCase().replace(/\s+/g, '-');
-      setSlugInput(generatedSlug);
-      form.setValue("slug", generatedSlug);
+      if (title) {
+        const generatedSlug = title.toLowerCase().replace(/\s+/g, '-');
+        setSlugInput(generatedSlug);
+        form.setValue("slug", generatedSlug);
+      }
     }
   };
 
@@ -428,6 +430,23 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       });
     }
     
+    // Parse and transform technologies, responsibilities, requirements, and benefits
+    const parsedTechnologies = values.technologies 
+      ? values.technologies.split(',').map(t => t.trim()).filter(Boolean) 
+      : [];
+    
+    const parsedResponsibilities = values.responsibilities 
+      ? values.responsibilities.split('\n').map(r => r.trim()).filter(Boolean) 
+      : [];
+    
+    const parsedRequirements = values.requirements 
+      ? values.requirements.split('\n').map(r => r.trim()).filter(Boolean) 
+      : [];
+    
+    const parsedBenefits = values.benefits 
+      ? values.benefits.split('\n').map(b => b.trim()).filter(Boolean) 
+      : [];
+    
     onSave({
       ...values,
       keywords,
@@ -437,17 +456,15 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       slug: slugInput,
       publishDate: new Date(),
       placement: {
-        pageId: values.placementPageId ? parseInt(values.placementPageId.toString()) : undefined,
-        sectionId: values.placementSectionId ? parseInt(values.placementSectionId.toString()) : undefined,
+        pageId: values.placementPageId,
+        sectionId: values.placementSectionId,
         position: values.placementPosition,
       },
       category: categoryInput,
       author: authorInput,
       role: roleInput,
       company: companyInput,
-      rating: values.rating,
-      answer: answerInput,
-      technologies: values.technologies as string[],
+      technologies: parsedTechnologies, 
       duration: durationInput,
       client: clientInput,
       challenge: challengeInput,
@@ -455,12 +472,10 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       results: resultsInput,
       location: locationInput,
       department: departmentInput,
-      responsibilities: values.responsibilities as string[],
-      requirements: values.requirements as string[],
-      benefits: values.benefits as string[],
-      applyUrl: applyUrlInput,
-      salaryMin: values.salaryMin,
-      salaryMax: values.salaryMax,
+      responsibilities: parsedResponsibilities,
+      requirements: parsedRequirements,
+      benefits: parsedBenefits,
+      applyUrl: applyUrlInput
     });
   };
 
@@ -804,107 +819,95 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Images</label>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex items-center gap-2"
-                    onClick={() => document.getElementById('image-upload')?.click()}
-                  >
-                    <Upload className="h-4 w-4" />
-                    <span>Upload Images</span>
-                  </Button>
-                  <input
-                    type="file"
-                    id="image-upload"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                </div>
-                
-                {images.length > 0 && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-4">
+                <div className="flex items-center space-x-4">
+                  <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-secondary/20 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                      <p className="text-xs text-muted-foreground text-center">Upload image</p>
+                    </div>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={handleImageChange}
+                      multiple
+                    />
+                  </label>
+                  
+                  <div className="flex flex-wrap gap-2">
                     {images.map((image, index) => (
-                      <div key={index} className="relative bg-secondary/40 rounded-md p-2">
-                        <img
-                          src={typeof image === 'string' ? image : URL.createObjectURL(image)}
-                          alt={`Uploaded ${index + 1}`}
-                          className="w-full h-20 object-cover rounded"
-                        />
+                      <div key={index} className="relative">
+                        <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden border border-border">
+                          {typeof image === 'string' ? (
+                            <img 
+                              src={image} 
+                              alt={`Preview ${index}`}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <img 
+                              src={URL.createObjectURL(image)} 
+                              alt={`Preview ${index}`}
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                        </div>
                         <button
                           type="button"
                           onClick={() => removeImage(index)}
-                          className="absolute top-1 right-1 h-5 w-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground w-5 h-5 rounded-full flex items-center justify-center hover:bg-destructive/80 transition-colors"
                         >
-                          <X className="h-3 w-3" />
+                          <X className="w-3 h-3" />
                         </button>
-                        <p className="text-xs mt-1 truncate">
-                          {typeof image === 'string' 
-                            ? image.split('/').pop() || image 
-                            : image.name}
-                        </p>
                       </div>
                     ))}
                   </div>
-                )}
+                </div>
               </div>
               
               <div>
                 <label className="block text-sm font-medium mb-2">Documents</label>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex items-center gap-2"
-                    onClick={() => document.getElementById('document-upload')?.click()}
-                  >
-                    <FileText className="h-4 w-4" />
-                    <span>Upload Documents</span>
-                  </Button>
-                  <input
-                    type="file"
-                    id="document-upload"
-                    multiple
-                    accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
-                    onChange={handleDocumentChange}
-                    className="hidden"
-                  />
-                </div>
-                
-                {documents.length > 0 && (
-                  <div className="mt-4 space-y-2">
+                <div className="flex items-center space-x-4">
+                  <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-secondary/20 transition-colors">
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <FileText className="w-8 h-8 text-muted-foreground mb-2" />
+                      <p className="text-xs text-muted-foreground text-center">Upload document</p>
+                    </div>
+                    <input 
+                      type="file" 
+                      accept=".pdf,.doc,.docx,.txt" 
+                      className="hidden" 
+                      onChange={handleDocumentChange}
+                      multiple
+                    />
+                  </label>
+                  
+                  <div className="flex flex-wrap gap-2">
                     {documents.map((doc, index) => (
-                      <div key={index} className="flex items-center justify-between bg-secondary/40 p-2 rounded-md">
-                        <div className="flex items-center space-x-2 overflow-hidden">
-                          <FileText className="h-4 w-4 flex-shrink-0" />
-                          <p className="text-sm truncate">
-                            {typeof doc === 'string' 
-                              ? doc.split('/').pop() || doc 
-                              : doc.name}
-                          </p>
+                      <div key={index} className="relative">
+                        <div className="w-20 h-20 bg-muted rounded-lg overflow-hidden border border-border flex items-center justify-center">
+                          <FileText className="w-8 h-8 text-muted-foreground" />
                         </div>
                         <button
                           type="button"
                           onClick={() => removeDocument(index)}
-                          className="h-6 w-6 bg-secondary text-muted-foreground rounded-full flex items-center justify-center flex-shrink-0"
+                          className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground w-5 h-5 rounded-full flex items-center justify-center hover:bg-destructive/80 transition-colors"
                         >
-                          <X className="h-3 w-3" />
+                          <X className="w-3 h-3" />
                         </button>
                       </div>
                     ))}
                   </div>
-                )}
+                </div>
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-2">Videos (YouTube)</label>
-                <div className="flex gap-2 mb-2">
+                <label className="block text-sm font-medium mb-2">Videos</label>
+                <div className="flex gap-2 mb-4">
                   <Input
                     value={videoInput}
                     onChange={(e) => setVideoInput(e.target.value)}
-                    placeholder="Add YouTube URL"
+                    placeholder="Add YouTube video URL"
                     className="flex-grow"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -919,31 +922,24 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                     variant="outline"
                     size="icon"
                   >
-                    <Youtube className="h-4 w-4" />
+                    <Plus className="h-4 w-4" />
                   </Button>
                 </div>
                 
                 {videos.length > 0 && (
-                  <div className="mt-4 space-y-2">
+                  <div className="space-y-3">
                     {videos.map((video, index) => (
-                      <div key={index} className="flex items-center justify-between bg-secondary/40 p-2 rounded-md">
-                        <div className="flex items-center space-x-2 overflow-hidden">
-                          <Youtube className="h-4 w-4 flex-shrink-0" />
-                          <a 
-                            href={video} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-sm truncate text-blue-600 hover:underline"
-                          >
-                            {video}
-                          </a>
+                      <div key={index} className="flex items-center justify-between p-3 border border-border rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Youtube className="w-5 h-5 text-red-500" />
+                          <span className="text-sm truncate max-w-md">{video}</span>
                         </div>
                         <button
                           type="button"
                           onClick={() => removeVideo(video)}
-                          className="h-6 w-6 bg-secondary text-muted-foreground rounded-full flex items-center justify-center flex-shrink-0"
+                          className="text-muted-foreground hover:text-destructive transition-colors"
                         >
-                          <X className="h-3 w-3" />
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
                     ))}
@@ -954,80 +950,92 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
           </TabsContent>
           
           <TabsContent value="placement" className="space-y-6">
-            <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="placementPageId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Target Page</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a page" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="">None</SelectItem>
-                        {pages.map(page => (
-                          <SelectItem key={page.id} value={page.id.toString()}>
-                            {page.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Choose which page this content should appear on
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <div className="space-y-6">
+              <div className="bg-muted p-4 rounded-md">
+                <div className="flex items-center gap-2 mb-2">
+                  <GanttChart className="w-5 h-5 text-primary" />
+                  <h3 className="text-sm font-medium">Content Placement</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Configure where this content should appear on your website. This is especially useful for Page Sections.
+                </p>
+              </div>
               
-              <FormField
-                control={form.control}
-                name="placementSectionId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Parent Section</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a section" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="">None</SelectItem>
-                        {pageSections.map(section => (
-                          <SelectItem key={section.id} value={section.id.toString()}>
-                            {section.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      For nested content, choose a parent section
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="placementPageId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Place on Page</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value !== undefined ? field.value.toString() : ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a page" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {pages.map(page => (
+                            <SelectItem key={page.id} value={page.id.toString()}>
+                              {page.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Choose a page where this content should appear
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="placementSectionId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Place in Section</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value !== undefined ? field.value.toString() : ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a section" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          {pageSections.map(section => (
+                            <SelectItem key={section.id} value={section.id.toString()}>
+                              {section.title}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        Choose a section where this content should appear
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               
               <FormField
                 control={form.control}
                 name="placementPosition"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Position on Page</FormLabel>
+                    <FormLabel>Position</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value || ""}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -1035,14 +1043,14 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Default</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         <SelectItem value="top">Top</SelectItem>
                         <SelectItem value="middle">Middle</SelectItem>
                         <SelectItem value="bottom">Bottom</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      Set where this content should appear on the page
+                      Define the vertical position within the parent container
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -1059,76 +1067,94 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                   name="author"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Client/Author Name</FormLabel>
+                      <FormLabel>Author Name *</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Enter client name" 
+                          placeholder="John Doe" 
                           value={authorInput}
-                          onChange={handleAuthorChange}
+                          onChange={handleAuthorChange} 
                         />
                       </FormControl>
+                      <FormDescription>
+                        The name of the person giving this testimonial
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="role"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Client Role/Position</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="E.g. CEO, Marketing Director" 
-                          value={roleInput}
-                          onChange={handleRoleChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="company"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Company Name</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Enter company name"
-                          value={companyInput}
-                          onChange={handleCompanyChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="CEO" 
+                            value={roleInput}
+                            onChange={handleRoleChange} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          The position or title of the testimonial author
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="company"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Company</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Company Name" 
+                            value={companyInput}
+                            onChange={handleCompanyChange} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          The organization the testimonial author represents
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
                 <FormField
                   control={form.control}
                   name="rating"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Rating (1-5)</FormLabel>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="range"
-                          min="1"
-                          max="5"
-                          step="1"
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          type="number" 
+                          min="1" 
+                          max="5" 
+                          placeholder="5" 
                           value={ratingInput}
-                          onChange={handleRatingChange}
-                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          onChange={handleRatingChange} 
+                          className="w-24"
                         />
-                        <div className="flex items-center">
-                          <span className="mr-2">{ratingInput}</span>
-                          <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" />
+                        <div className="flex text-yellow-400">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star 
+                              key={star} 
+                              className={`w-5 h-5 ${parseInt(ratingInput) >= star ? 'fill-current' : 'fill-none'}`} 
+                            />
+                          ))}
                         </div>
                       </div>
+                      <FormDescription>
+                        The rating given by the testimonial author (1-5 stars)
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -1137,69 +1163,76 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
             </TabsContent>
           )}
           
-          {showFAQFields && (
-            <TabsContent value="faq" className="space-y-6">
-              <FormField
-                control={form.control}
-                name="answer"
-                render={() => (
-                  <FormItem>
-                    <FormLabel>Answer</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        placeholder="Enter the answer to this FAQ"
-                        rows={6}
-                        value={answerInput}
-                        onChange={e => handleAnswerChange({
-                          ...e, 
-                          target: { ...e.target, value: e.target.value }
-                        } as unknown as React.ChangeEvent<HTMLInputElement>)}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Provide a clear and concise answer to the question in the title
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {showTeamMemberFields && (
+            <TabsContent value="team" className="space-y-6">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Position/Title" 
+                            value={roleInput}
+                            onChange={handleRoleChange} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          The team member's position or title
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="department"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Department</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Department" 
+                            value={departmentInput}
+                            onChange={handleDepartmentChange} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          The department the team member belongs to
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </TabsContent>
           )}
           
-          {showTeamMemberFields && (
-            <TabsContent value="team" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {showFAQFields && (
+            <TabsContent value="faq" className="space-y-6">
+              <div className="space-y-6">
                 <FormField
                   control={form.control}
-                  name="role"
-                  render={() => (
+                  name="answer"
+                  render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Role/Position</FormLabel>
+                      <FormLabel>Answer *</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="E.g. CEO, Marketing Director" 
-                          value={roleInput}
-                          onChange={handleRoleChange}
+                        <Textarea 
+                          placeholder="Enter the answer to this FAQ" 
+                          rows={6}
+                          value={answerInput}
+                          onChange={(e) => setAnswerInput(e.target.value)} 
                         />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="department"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Department</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="E.g. Marketing, Development"
-                          value={departmentInput}
-                          onChange={handleDepartmentChange}
-                        />
-                      </FormControl>
+                      <FormDescription>
+                        The answer to this frequently asked question
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -1211,39 +1244,65 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
           {showCaseStudyFields && (
             <TabsContent value="case-study" className="space-y-6">
               <div className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="client"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Client</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Enter client name"
-                          value={clientInput}
-                          onChange={handleClientChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="client"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Client *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Client Name" 
+                            value={clientInput}
+                            onChange={handleClientChange} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          The name of the client this case study is about
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="duration"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Duration</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="e.g. 3 months" 
+                            value={durationInput}
+                            onChange={handleDurationChange} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          How long the project or case study lasted
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
                 <FormField
                   control={form.control}
                   name="technologies"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Technologies Used</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="E.g. React, Node.js, AWS (comma separated)"
+                          placeholder="e.g. React, Node.js, AWS (comma separated)" 
                           value={technologiesInput}
-                          onChange={handleTechnologiesChange}
+                          onChange={handleTechnologiesChange} 
                         />
                       </FormControl>
                       <FormDescription>
-                        Enter technologies as a comma-separated list
+                        List of technologies, tools, or methodologies used
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -1252,36 +1311,21 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                 
                 <FormField
                   control={form.control}
-                  name="duration"
-                  render={() => (
-                    <FormItem>
-                      <FormLabel>Project Duration</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="E.g. 3 months, Jan-Mar 2024"
-                          value={durationInput}
-                          onChange={handleDurationChange}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
                   name="challenge"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Challenge</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Describe the challenge the client faced"
+                          placeholder="Describe the challenge or problem that needed to be solved" 
                           rows={4}
                           value={challengeInput}
-                          onChange={handleChallengeChange}
+                          onChange={handleChallengeChange} 
                         />
                       </FormControl>
+                      <FormDescription>
+                        The challenges faced by the client
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -1290,17 +1334,20 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                 <FormField
                   control={form.control}
                   name="solution"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Solution</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Describe how you solved the problem"
+                          placeholder="Describe the solution implemented" 
                           rows={4}
                           value={solutionInput}
-                          onChange={handleSolutionChange}
+                          onChange={handleSolutionChange} 
                         />
                       </FormControl>
+                      <FormDescription>
+                        The solution provided to solve the client's challenges
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -1309,17 +1356,20 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                 <FormField
                   control={form.control}
                   name="results"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Results</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="Describe the outcomes and benefits achieved"
+                          placeholder="Describe the outcomes and results achieved" 
                           rows={4}
                           value={resultsInput}
-                          onChange={handleResultsChange}
+                          onChange={handleResultsChange} 
                         />
                       </FormControl>
+                      <FormDescription>
+                        The measurable results and outcomes achieved
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -1335,16 +1385,19 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                   <FormField
                     control={form.control}
                     name="location"
-                    render={() => (
+                    render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Location</FormLabel>
+                        <FormLabel>Location *</FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="E.g. Remote, New York, NY"
+                            placeholder="e.g. New York, NY or Remote" 
                             value={locationInput}
-                            onChange={handleLocationChange}
+                            onChange={handleLocationChange} 
                           />
                         </FormControl>
+                        <FormDescription>
+                          The location of the job
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1353,16 +1406,19 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                   <FormField
                     control={form.control}
                     name="department"
-                    render={() => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Department</FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="E.g. Engineering, Marketing"
+                            placeholder="e.g. Engineering, Marketing" 
                             value={departmentInput}
-                            onChange={handleDepartmentChange}
+                            onChange={handleDepartmentChange} 
                           />
                         </FormControl>
+                        <FormDescription>
+                          The department this job belongs to
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1373,17 +1429,20 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                   <FormField
                     control={form.control}
                     name="salaryMin"
-                    render={() => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Minimum Salary</FormLabel>
                         <FormControl>
                           <Input 
-                            type="number"
-                            placeholder="E.g. 50000"
+                            type="number" 
+                            placeholder="e.g. 50000" 
                             value={salaryMinInput}
-                            onChange={handleSalaryMinChange}
+                            onChange={handleSalaryMinChange} 
                           />
                         </FormControl>
+                        <FormDescription>
+                          The minimum salary range (optional)
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1392,17 +1451,20 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                   <FormField
                     control={form.control}
                     name="salaryMax"
-                    render={() => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Maximum Salary</FormLabel>
                         <FormControl>
                           <Input 
-                            type="number"
-                            placeholder="E.g. 80000"
+                            type="number" 
+                            placeholder="e.g. 80000" 
                             value={salaryMaxInput}
-                            onChange={handleSalaryMaxChange}
+                            onChange={handleSalaryMaxChange} 
                           />
                         </FormControl>
+                        <FormDescription>
+                          The maximum salary range (optional)
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -1412,19 +1474,19 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                 <FormField
                   control={form.control}
                   name="responsibilities"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Responsibilities</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="List job responsibilities (one per line)"
-                          rows={4}
+                          placeholder="List the job responsibilities (one per line)" 
+                          rows={5}
                           value={responsibilitiesInput}
-                          onChange={handleResponsibilitiesChange}
+                          onChange={handleResponsibilitiesChange} 
                         />
                       </FormControl>
                       <FormDescription>
-                        Enter each responsibility on a new line
+                        Key responsibilities for this role (one per line)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -1434,19 +1496,19 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                 <FormField
                   control={form.control}
                   name="requirements"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Requirements</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="List job requirements (one per line)"
-                          rows={4}
+                          placeholder="List the job requirements (one per line)" 
+                          rows={5}
                           value={requirementsInput}
-                          onChange={handleRequirementsChange}
+                          onChange={handleRequirementsChange} 
                         />
                       </FormControl>
                       <FormDescription>
-                        Enter each requirement on a new line
+                        Requirements and qualifications (one per line)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -1456,19 +1518,19 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                 <FormField
                   control={form.control}
                   name="benefits"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Benefits</FormLabel>
                       <FormControl>
                         <Textarea 
-                          placeholder="List job benefits (one per line)"
+                          placeholder="List the job benefits (one per line)" 
                           rows={4}
                           value={benefitsInput}
-                          onChange={handleBenefitsChange}
+                          onChange={handleBenefitsChange} 
                         />
                       </FormControl>
                       <FormDescription>
-                        Enter each benefit on a new line
+                        Benefits and perks (one per line)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -1478,18 +1540,18 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                 <FormField
                   control={form.control}
                   name="applyUrl"
-                  render={() => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>Application URL</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="URL for online application"
+                          placeholder="https://example.com/careers/apply" 
                           value={applyUrlInput}
-                          onChange={handleApplyUrlChange}
+                          onChange={handleApplyUrlChange} 
                         />
                       </FormControl>
                       <FormDescription>
-                        External link where candidates can apply
+                        Direct link to apply for this position
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -1500,7 +1562,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
           )}
         </Tabs>
         
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end gap-3">
           <Button 
             type="button" 
             variant="outline" 
@@ -1509,7 +1571,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
             Cancel
           </Button>
           <Button type="submit">
-            {isEditing ? "Update Content" : "Create Content"}
+            {isEditing ? "Update Content" : "Save Content"}
           </Button>
         </div>
       </form>
