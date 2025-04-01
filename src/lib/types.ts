@@ -1,3 +1,4 @@
+
 export type ContentType = 'Page' | 'Page Section' | 'Service' | 'Portfolio' | 'Blog Post' | 'Testimonial' | 'FAQ' | 'Team Member' | 'Case Study' | 'Job Posting';
 
 export type ContentPlacement = {
