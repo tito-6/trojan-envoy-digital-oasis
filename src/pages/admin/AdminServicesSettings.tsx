@@ -6,12 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Pen, Plus, Trash2, MoveVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { Pen, Plus, Trash2, MoveVertical, ArrowUp, ArrowDown, RotateCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import AdminLayout from '@/components/admin/AdminLayout';
 import { storageService } from '@/lib/storage';
 import { ServiceItem, ServicesSettings } from '@/lib/types';
 import IconSelector from '@/components/admin/icon-management/IconSelector';
+import RichTextEditor from '@/components/admin/richtext/RichTextEditor';
+import ServiceSEOTab from '@/components/admin/services/ServiceSEOTab';
+import ServiceMediaTab from '@/components/admin/services/ServiceMediaTab';
 import {
   Dialog,
   DialogContent,
@@ -52,16 +55,58 @@ const AdminServicesSettings: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [serviceToDelete, setServiceToDelete] = useState<ServiceItem | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [serviceFormTab, setServiceFormTab] = useState('general');
+  
+  // SEO state
+  const [seoTitle, setSeoTitle] = useState('');
+  const [seoDescription, setSeoDescription] = useState('');
+  const [seoKeywords, setSeoKeywords] = useState<string[]>([]);
+  const [keywordInput, setKeywordInput] = useState('');
+  const [h1Heading, setH1Heading] = useState('');
+  const [h2Headings, setH2Headings] = useState<string[]>([]);
+  const [h2Input, setH2Input] = useState('');
+  const [h3Headings, setH3Headings] = useState<string[]>([]);
+  const [h3Input, setH3Input] = useState('');
+  
+  // Media state
+  const [images, setImages] = useState<(File | string)[]>([]);
+  const [documents, setDocuments] = useState<(File | string)[]>([]);
+  const [videos, setVideos] = useState<string[]>([]);
+  const [videoInput, setVideoInput] = useState('');
+  
+  // State for real-time sync status
+  const [isSyncing, setIsSyncing] = useState(false);
   
   const { toast } = useToast();
 
   useEffect(() => {
+    loadServicesSettings();
+    
+    // Set up real-time sync listeners
+    const unsubscribeContentUpdated = storageService.addEventListener('content-updated', handleRealTimeSync);
+    const unsubscribeContentAdded = storageService.addEventListener('content-added', handleRealTimeSync);
+    const unsubscribeContentDeleted = storageService.addEventListener('content-deleted', handleRealTimeSync);
+    
+    return () => {
+      unsubscribeContentUpdated();
+      unsubscribeContentAdded();
+      unsubscribeContentDeleted();
+    };
+  }, []);
+
+  const loadServicesSettings = () => {
     const storedSettings = storageService.getServicesSettings();
     if (storedSettings) {
       setSettings(storedSettings);
       setServices(storedSettings.services || []);
     }
-  }, []);
+  };
+
+  const handleRealTimeSync = () => {
+    setIsSyncing(true);
+    loadServicesSettings();
+    setTimeout(() => setIsSyncing(false), 1000);
+  };
 
   const handleSaveGeneralSettings = () => {
     const updatedSettings = {
@@ -91,13 +136,63 @@ const AdminServicesSettings: React.FC = () => {
       order: services.length + 1,
       color: '#3b82f6',
       bgColor: '#eff6ff',
+      seoTitle: '',
+      seoDescription: '',
+      seoKeywords: [],
+      seoHeadingStructure: {
+        h1: '',
+        h2: [],
+        h3: []
+      },
+      images: [],
+      videos: [],
+      documents: []
     });
+    
+    // Reset form state
+    setSeoTitle('');
+    setSeoDescription('');
+    setSeoKeywords([]);
+    setKeywordInput('');
+    setH1Heading('');
+    setH2Headings([]);
+    setH2Input('');
+    setH3Headings([]);
+    setH3Input('');
+    setImages([]);
+    setDocuments([]);
+    setVideos([]);
+    setVideoInput('');
+    setServiceFormTab('general');
     
     setIsServiceDialogOpen(true);
   };
 
   const handleEditService = (service: ServiceItem) => {
     setEditingService(service);
+    
+    // Set form state from service data
+    setSeoTitle(service.seoTitle || '');
+    setSeoDescription(service.seoDescription || '');
+    setSeoKeywords(service.seoKeywords || []);
+    
+    // Set heading structure
+    if (service.seoHeadingStructure) {
+      setH1Heading(service.seoHeadingStructure.h1 || '');
+      setH2Headings(service.seoHeadingStructure.h2 || []);
+      setH3Headings(service.seoHeadingStructure.h3 || []);
+    } else {
+      setH1Heading('');
+      setH2Headings([]);
+      setH3Headings([]);
+    }
+    
+    // Set media
+    setImages(service.images || []);
+    setDocuments(service.documents || []);
+    setVideos(service.videos || []);
+    
+    setServiceFormTab('general');
     setIsServiceDialogOpen(true);
   };
 
@@ -174,6 +269,22 @@ const AdminServicesSettings: React.FC = () => {
       order: editingService.order,
       color: editingService.color,
       bgColor: editingService.bgColor,
+      formattedDescription: editingService.formattedDescription,
+      
+      // SEO fields
+      seoTitle: seoTitle,
+      seoDescription: seoDescription,
+      seoKeywords: seoKeywords,
+      seoHeadingStructure: {
+        h1: h1Heading,
+        h2: h2Headings,
+        h3: h3Headings
+      },
+      
+      // Media fields
+      images: processFilesForStorage(images),
+      documents: processFilesForStorage(documents),
+      videos: videos
     };
     
     let updatedServices = [...services];
@@ -207,10 +318,125 @@ const AdminServicesSettings: React.FC = () => {
     setIsServiceDialogOpen(false);
   };
 
+  // Process files for storage
+  const processFilesForStorage = (files: (File | string)[]): string[] => {
+    return files.map(file => {
+      if (typeof file === 'string') {
+        return file;
+      }
+      // In a real implementation, this would upload the file to a server
+      // For now, we'll use a simulated URL
+      return `/uploads/${file.name}`;
+    });
+  };
+
+  // Handle image uploads
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newImages = Array.from(e.target.files);
+      setImages(prev => [...prev, ...newImages]);
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle document uploads
+  const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newDocuments = Array.from(e.target.files);
+      setDocuments(prev => [...prev, ...newDocuments]);
+    }
+  };
+
+  const handleRemoveDocument = (index: number) => {
+    setDocuments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle videos
+  const handleAddVideo = () => {
+    if (
+      videoInput.trim() && 
+      !videos.includes(videoInput.trim()) && 
+      (videoInput.includes('youtube.com') || videoInput.includes('youtu.be') || videoInput.includes('vimeo.com'))
+    ) {
+      setVideos(prev => [...prev, videoInput.trim()]);
+      setVideoInput('');
+    } else {
+      toast({
+        title: "Invalid video URL",
+        description: "Please enter a valid YouTube or Vimeo video URL",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveVideo = (video: string) => {
+    setVideos(prev => prev.filter(v => v !== video));
+  };
+
+  // SEO handlers
+  const handleAddKeyword = () => {
+    if (keywordInput.trim() && !seoKeywords.includes(keywordInput.trim())) {
+      setSeoKeywords(prev => [...prev, keywordInput.trim()]);
+      setKeywordInput('');
+    }
+  };
+
+  const handleRemoveKeyword = (keyword: string) => {
+    setSeoKeywords(prev => prev.filter(k => k !== keyword));
+  };
+
+  const handleAddH2Heading = () => {
+    if (h2Input.trim() && !h2Headings.includes(h2Input.trim())) {
+      setH2Headings(prev => [...prev, h2Input.trim()]);
+      setH2Input('');
+    }
+  };
+
+  const handleRemoveH2Heading = (index: number) => {
+    setH2Headings(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleAddH3Heading = () => {
+    if (h3Input.trim() && !h3Headings.includes(h3Input.trim())) {
+      setH3Headings(prev => [...prev, h3Input.trim()]);
+      setH3Input('');
+    }
+  };
+
+  const handleRemoveH3Heading = (index: number) => {
+    setH3Headings(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle rich text changes
+  const handleDescriptionChange = (value: any) => {
+    if (editingService) {
+      setEditingService({
+        ...editingService,
+        formattedDescription: value
+      });
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="container mx-auto py-10">
-        <h1 className="text-3xl font-bold mb-8">Services Section Settings</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Services Section Settings</h1>
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRealTimeSync} 
+              className={`${isSyncing ? 'bg-green-50' : ''}`}
+            >
+              <RotateCw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin text-green-500' : ''}`} />
+              {isSyncing ? 'Syncing...' : 'Refresh'}
+            </Button>
+          </div>
+        </div>
         
         <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
@@ -322,10 +548,26 @@ const AdminServicesSettings: React.FC = () => {
                   <CardContent className="pt-4">
                     <p className="text-sm text-muted-foreground mb-4">{service.description}</p>
                     
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {service.seoKeywords && service.seoKeywords.length > 0 && 
+                        service.seoKeywords.map((keyword, idx) => (
+                          <span key={idx} className="inline-flex text-xs bg-secondary px-2 py-1 rounded-full">
+                            {keyword}
+                          </span>
+                        ))
+                      }
+                    </div>
+                    
                     <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                       <span>Icon: {service.iconName}</span>
                       <span>•</span>
                       <span>Order: {service.order}</span>
+                      {service.images && service.images.length > 0 && (
+                        <>
+                          <span>•</span>
+                          <span>Images: {service.images.length}</span>
+                        </>
+                      )}
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between">
@@ -360,7 +602,7 @@ const AdminServicesSettings: React.FC = () => {
         </Tabs>
         
         <Dialog open={isServiceDialogOpen} onOpenChange={setIsServiceDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingService && services.some(s => s.id === editingService.id) 
@@ -369,103 +611,169 @@ const AdminServicesSettings: React.FC = () => {
                 }
               </DialogTitle>
               <DialogDescription>
-                Configure the service details that will be displayed on the homepage.
+                Configure the service details that will be displayed on the homepage and service page.
               </DialogDescription>
             </DialogHeader>
             
             <form onSubmit={handleServiceFormSubmit}>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Tabs value={serviceFormTab} onValueChange={setServiceFormTab} className="mt-4">
+                <TabsList className="w-full mb-6">
+                  <TabsTrigger value="general">General</TabsTrigger>
+                  <TabsTrigger value="content">Content</TabsTrigger>
+                  <TabsTrigger value="seo">SEO</TabsTrigger>
+                  <TabsTrigger value="media">Media</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="general" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="service-title">Title</Label>
+                      <Input 
+                        id="service-title" 
+                        value={editingService?.title || ''} 
+                        onChange={(e) => setEditingService(prev => prev ? {...prev, title: e.target.value} : null)}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="service-link">Link</Label>
+                      <Input 
+                        id="service-link" 
+                        value={editingService?.link || ''} 
+                        onChange={(e) => setEditingService(prev => prev ? {...prev, link: e.target.value} : null)}
+                      />
+                    </div>
+                  </div>
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="service-title">Title</Label>
-                    <Input 
-                      id="service-title" 
-                      value={editingService?.title || ''} 
-                      onChange={(e) => setEditingService(prev => prev ? {...prev, title: e.target.value} : null)}
+                    <Label htmlFor="service-description">Description</Label>
+                    <Textarea 
+                      id="service-description" 
+                      value={editingService?.description || ''} 
+                      onChange={(e) => setEditingService(prev => prev ? {...prev, description: e.target.value} : null)}
+                      rows={3}
                       required
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="service-link">Link</Label>
-                    <Input 
-                      id="service-link" 
-                      value={editingService?.link || ''} 
-                      onChange={(e) => setEditingService(prev => prev ? {...prev, link: e.target.value} : null)}
+                    <Label>Icon</Label>
+                    <IconSelector 
+                      selectedIcon={editingService?.iconName || 'code'} 
+                      onSelectIcon={(iconName) => setEditingService(prev => prev ? {...prev, iconName} : null)}
                     />
                   </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="service-description">Description</Label>
-                  <Textarea 
-                    id="service-description" 
-                    value={editingService?.description || ''} 
-                    onChange={(e) => setEditingService(prev => prev ? {...prev, description: e.target.value} : null)}
-                    rows={3}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Icon</Label>
-                  <IconSelector 
-                    selectedIcon={editingService?.iconName || 'code'} 
-                    onSelectIcon={(iconName) => setEditingService(prev => prev ? {...prev, iconName} : null)}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="service-color">Text Color</Label>
-                    <div className="flex space-x-2">
-                      <Input 
-                        id="service-color" 
-                        type="color" 
-                        value={editingService?.color || '#3b82f6'} 
-                        onChange={(e) => setEditingService(prev => prev ? {...prev, color: e.target.value} : null)}
-                        className="w-12 h-10 p-1"
-                      />
-                      <Input 
-                        type="text" 
-                        value={editingService?.color || '#3b82f6'} 
-                        onChange={(e) => setEditingService(prev => prev ? {...prev, color: e.target.value} : null)}
-                      />
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="service-color">Text Color</Label>
+                      <div className="flex space-x-2">
+                        <Input 
+                          id="service-color" 
+                          type="color" 
+                          value={editingService?.color || '#3b82f6'} 
+                          onChange={(e) => setEditingService(prev => prev ? {...prev, color: e.target.value} : null)}
+                          className="w-12 h-10 p-1"
+                        />
+                        <Input 
+                          type="text" 
+                          value={editingService?.color || '#3b82f6'} 
+                          onChange={(e) => setEditingService(prev => prev ? {...prev, color: e.target.value} : null)}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="service-bg-color">Background Color</Label>
+                      <div className="flex space-x-2">
+                        <Input 
+                          id="service-bg-color" 
+                          type="color" 
+                          value={editingService?.bgColor || '#eff6ff'} 
+                          onChange={(e) => setEditingService(prev => prev ? {...prev, bgColor: e.target.value} : null)}
+                          className="w-12 h-10 p-1"
+                        />
+                        <Input 
+                          type="text" 
+                          value={editingService?.bgColor || '#eff6ff'} 
+                          onChange={(e) => setEditingService(prev => prev ? {...prev, bgColor: e.target.value} : null)}
+                        />
+                      </div>
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="service-bg-color">Background Color</Label>
-                    <div className="flex space-x-2">
-                      <Input 
-                        id="service-bg-color" 
-                        type="color" 
-                        value={editingService?.bgColor || '#eff6ff'} 
-                        onChange={(e) => setEditingService(prev => prev ? {...prev, bgColor: e.target.value} : null)}
-                        className="w-12 h-10 p-1"
-                      />
-                      <Input 
-                        type="text" 
-                        value={editingService?.bgColor || '#eff6ff'} 
-                        onChange={(e) => setEditingService(prev => prev ? {...prev, bgColor: e.target.value} : null)}
-                      />
-                    </div>
+                    <Label htmlFor="service-order">Order</Label>
+                    <Input 
+                      id="service-order" 
+                      type="number" 
+                      min="1"
+                      value={editingService?.order || services.length + 1} 
+                      onChange={(e) => setEditingService(prev => prev ? {...prev, order: parseInt(e.target.value)} : null)}
+                    />
                   </div>
-                </div>
+                </TabsContent>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="service-order">Order</Label>
-                  <Input 
-                    id="service-order" 
-                    type="number" 
-                    min="1"
-                    value={editingService?.order || services.length + 1} 
-                    onChange={(e) => setEditingService(prev => prev ? {...prev, order: parseInt(e.target.value)} : null)}
+                <TabsContent value="content" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Rich Content Editor</Label>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Use the editor below to create formatted content for your service. You can add text styling, colors, emojis, and more.
+                    </p>
+                    <RichTextEditor
+                      label="Service Content"
+                      value={editingService?.formattedDescription || editingService?.description || ''}
+                      onChange={handleDescriptionChange}
+                      height="300px"
+                    />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="seo">
+                  <ServiceSEOTab 
+                    seoTitle={seoTitle}
+                    seoDescription={seoDescription}
+                    seoKeywords={seoKeywords}
+                    keywordInput={keywordInput}
+                    h1Heading={h1Heading}
+                    h2Headings={h2Headings}
+                    h2Input={h2Input}
+                    h3Headings={h3Headings}
+                    h3Input={h3Input}
+                    onSeoTitleChange={setSeoTitle}
+                    onSeoDescriptionChange={setSeoDescription}
+                    onKeywordInputChange={setKeywordInput}
+                    onAddKeyword={handleAddKeyword}
+                    onRemoveKeyword={handleRemoveKeyword}
+                    onH1HeadingChange={setH1Heading}
+                    onH2InputChange={setH2Input}
+                    onAddH2Heading={handleAddH2Heading}
+                    onRemoveH2Heading={handleRemoveH2Heading}
+                    onH3InputChange={setH3Input}
+                    onAddH3Heading={handleAddH3Heading}
+                    onRemoveH3Heading={handleRemoveH3Heading}
                   />
-                </div>
-              </div>
+                </TabsContent>
+                
+                <TabsContent value="media">
+                  <ServiceMediaTab 
+                    images={images}
+                    documents={documents}
+                    videos={videos}
+                    videoInput={videoInput}
+                    onImageChange={handleImageChange}
+                    onDocumentChange={handleDocumentChange}
+                    onRemoveImage={handleRemoveImage}
+                    onRemoveDocument={handleRemoveDocument}
+                    onVideoInputChange={setVideoInput}
+                    onAddVideo={handleAddVideo}
+                    onRemoveVideo={handleRemoveVideo}
+                  />
+                </TabsContent>
+              </Tabs>
               
-              <DialogFooter>
+              <DialogFooter className="mt-6">
                 <DialogClose asChild>
                   <Button type="button" variant="outline">Cancel</Button>
                 </DialogClose>

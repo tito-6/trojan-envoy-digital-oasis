@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
-import ServiceDetail from "@/components/services/ServiceDetail";
+import ServiceDetailComponent from "@/components/services/ServiceDetail";
 import ServicesCTA from "@/components/services/ServicesCTA";
 import { storageService } from "@/lib/storage";
 import { ContentItem } from "@/lib/types";
@@ -18,20 +18,85 @@ const ServiceDetailPage: React.FC = () => {
   
   useEffect(() => {
     if (slug) {
+      // First try to get services from services settings (which will have the rich formatted content)
+      const servicesSettings = storageService.getServicesSettings();
+      let foundService = null;
+      
+      if (servicesSettings && servicesSettings.services) {
+        foundService = servicesSettings.services.find(service => 
+          service.link.endsWith(slug) || 
+          service.link === `/services/${slug}`
+        );
+        
+        if (foundService) {
+          // Convert service to ContentItem format
+          const contentItem: ContentItem = {
+            id: foundService.id,
+            title: foundService.title,
+            type: "Service",
+            description: foundService.description,
+            formattedContent: foundService.formattedDescription,
+            seoTitle: foundService.seoTitle,
+            seoDescription: foundService.seoDescription,
+            seoKeywords: foundService.seoKeywords,
+            seoHeadingStructure: foundService.seoHeadingStructure,
+            images: foundService.images,
+            videos: foundService.videos,
+            documents: foundService.documents,
+            published: true,
+            lastUpdated: new Date().toISOString(),
+            iconName: foundService.iconName
+          };
+          
+          setService(contentItem);
+          document.title = foundService.seoTitle || `${foundService.title} | Trojan Envoy`;
+          
+          // If there's a seoDescription, add it as a meta tag
+          if (foundService.seoDescription) {
+            const metaDescription = document.querySelector('meta[name="description"]');
+            if (metaDescription) {
+              metaDescription.setAttribute('content', foundService.seoDescription);
+            } else {
+              const meta = document.createElement('meta');
+              meta.name = 'description';
+              meta.content = foundService.seoDescription;
+              document.head.appendChild(meta);
+            }
+          }
+          
+          setLoading(false);
+          return;
+        }
+      }
+      
+      // Fallback to the content items if not found in services settings
       const allContent = storageService.getAllContent();
       const serviceItems = allContent.filter(item => 
         item.type === "Service" && item.published === true
       );
       
       // Try to find by slug
-      let foundService = serviceItems.find(item => 
+      foundService = serviceItems.find(item => 
         (item.slug && item.slug.toLowerCase() === slug.toLowerCase()) || 
         item.title.toLowerCase().replace(/\s+/g, '-') === slug.toLowerCase()
       );
       
       if (foundService) {
         setService(foundService);
-        document.title = `${foundService.title} | Trojan Envoy`;
+        document.title = foundService.seoTitle || `${foundService.title} | Trojan Envoy`;
+        
+        // Add meta description if available
+        if (foundService.seoDescription) {
+          const metaDescription = document.querySelector('meta[name="description"]');
+          if (metaDescription) {
+            metaDescription.setAttribute('content', foundService.seoDescription);
+          } else {
+            const meta = document.createElement('meta');
+            meta.name = 'description';
+            meta.content = foundService.seoDescription;
+            document.head.appendChild(meta);
+          }
+        }
       } else {
         navigate('/services', { replace: true });
       }
@@ -55,7 +120,14 @@ const ServiceDetailPage: React.FC = () => {
     // Scroll to top
     window.scrollTo(0, 0);
     
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      // Clean up meta tags
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (metaDescription) {
+        metaDescription.remove();
+      }
+    };
   }, [slug, navigate]);
   
   if (loading) {
@@ -90,7 +162,7 @@ const ServiceDetailPage: React.FC = () => {
       <Header />
       
       <main>
-        <ServiceDetail service={service} />
+        <ServiceDetailComponent service={service} />
         <ServicesCTA />
       </main>
       

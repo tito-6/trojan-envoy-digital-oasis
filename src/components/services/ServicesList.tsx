@@ -6,20 +6,51 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { useLanguage } from "@/lib/i18n";
 import { storageService } from "@/lib/storage";
 import { ContentItem } from "@/lib/types";
+import draftToHtml from 'draftjs-to-html';
 
 interface ServiceCardProps {
   title: string;
   description: string;
+  formattedDescription?: {
+    blocks: any[];
+    entityMap: Record<string, any>;
+  };
   icon: React.ReactNode;
   features: string[];
   link: string;
   delay: number;
+  images?: string[];
 }
 
 const ServiceCard: React.FC<ServiceCardProps> = ({ 
-  title, description, icon, features, link, delay 
+  title, 
+  description, 
+  formattedDescription,
+  icon, 
+  features, 
+  link, 
+  delay,
+  images
 }) => {
   const { t } = useLanguage();
+  
+  const renderDescription = () => {
+    if (formattedDescription) {
+      try {
+        const htmlContent = draftToHtml(formattedDescription);
+        return (
+          <div className="prose prose-sm max-w-none">
+            <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+          </div>
+        );
+      } catch (error) {
+        console.error("Error rendering formatted description:", error);
+        return <CardDescription>{description}</CardDescription>;
+      }
+    }
+    
+    return <CardDescription>{description}</CardDescription>;
+  };
   
   return (
     <Card className={`overflow-hidden group hover:border-primary/50 hover:shadow-lg transition-all duration-300 should-animate delay-${delay}`}>
@@ -28,8 +59,19 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           {icon}
         </div>
         <CardTitle className="text-xl font-display">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        {renderDescription()}
       </CardHeader>
+      
+      {images && images.length > 0 && (
+        <div className="px-6 mb-4">
+          <img 
+            src={images[0]} 
+            alt={title} 
+            className="w-full h-40 object-cover rounded-md"
+          />
+        </div>
+      )}
+      
       <CardContent>
         <ul className="space-y-2 mb-6">
           {features.map((feature, index) => (
@@ -92,11 +134,13 @@ const ServicesList: React.FC = () => {
     const unsubscribe = storageService.addEventListener('content-updated', loadServices);
     const unsubscribeAdded = storageService.addEventListener('content-added', loadServices);
     const unsubscribeDeleted = storageService.addEventListener('content-deleted', loadServices);
+    const unsubscribeSettings = storageService.addEventListener('services-settings-updated', loadServices);
     
     return () => {
       unsubscribe();
       unsubscribeAdded();
       unsubscribeDeleted();
+      unsubscribeSettings();
     };
   }, []);
   
@@ -141,10 +185,12 @@ const ServicesList: React.FC = () => {
                 key={service.id}
                 title={service.title}
                 description={service.description}
+                formattedDescription={service.formattedContent}
                 icon={getIconForService(service.title)}
                 features={features.length > 0 ? features : [t('service.details')]}
                 link={`/services/${service.slug || service.title.toLowerCase().replace(/\s+/g, '-')}`}
                 delay={index * 100}
+                images={service.images}
               />
             );
           })}

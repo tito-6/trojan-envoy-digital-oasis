@@ -1,3 +1,4 @@
+
 export type ContentType = 'Page' | 'Page Section' | 'Service' | 'Portfolio' | 'Blog Post' | 'Testimonial' | 'FAQ' | 'Team Member' | 'Case Study' | 'Job Posting';
 
 export type ContentPlacement = {
@@ -17,6 +18,10 @@ export interface ContentItem {
   seoDescription?: string;
   seoKeywords?: string[];
   content?: string;
+  formattedContent?: {
+    blocks: any[];
+    entityMap: Record<string, any>;
+  };
   slug?: string;
   images?: string[];  // These will be URLs/paths after processing
   videos?: string[];
@@ -49,6 +54,11 @@ export interface ContentItem {
   applyUrl?: string;
   salaryMin?: number;
   salaryMax?: number;
+  seoHeadingStructure?: {
+    h1?: string;
+    h2?: string[];
+    h3?: string[];
+  };
 }
 
 export interface User {
@@ -149,6 +159,21 @@ export interface ServiceItem {
   order: number;
   color?: string;
   bgColor?: string;
+  formattedDescription?: {
+    blocks: any[];
+    entityMap: Record<string, any>;
+  };
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string[];
+  seoHeadingStructure?: {
+    h1?: string;
+    h2?: string[];
+    h3?: string[];
+  };
+  images?: string[];
+  videos?: string[];
+  documents?: string[];
 }
 
 export interface ServicesSettings {
