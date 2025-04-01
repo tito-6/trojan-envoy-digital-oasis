@@ -247,7 +247,7 @@ export const getIconCatalog = (): Record<string, string[]> => {
         );
         
         if (iconNames.length > 0) {
-          catalog[prefix] = iconNames.map(name => `${prefix}${name}`);
+          catalog[prefix] = iconNames;
         }
       } catch (error) {
         console.warn(`Failed to load icon library: ${prefix}`, error);
@@ -258,6 +258,39 @@ export const getIconCatalog = (): Record<string, string[]> => {
   } catch (error) {
     console.error('Error creating icon catalog:', error);
     return {};
+  }
+};
+
+/**
+ * Get all icons from a specific library
+ * @param libraryPrefix The library prefix (e.g., "Fa", "Si")
+ * @returns Array of icon objects with name and component
+ */
+export const getIconsFromLibrary = (libraryPrefix: string): { name: string; component: React.ComponentType<any> }[] => {
+  try {
+    if (!libraryPrefix) return [];
+    
+    const lowercasePrefix = libraryPrefix.substring(0, 2).toLowerCase();
+    let library;
+    
+    try {
+      library = require(`react-icons/${lowercasePrefix}`);
+    } catch (error) {
+      console.warn(`Failed to load icon library: ${libraryPrefix}`, error);
+      return [];
+    }
+    
+    const icons = Object.keys(library)
+      .filter(key => key !== 'default' && typeof library[key] === 'object')
+      .map(name => ({
+        name: libraryPrefix + name,
+        component: library[name]
+      }));
+    
+    return icons;
+  } catch (error) {
+    console.error(`Error getting icons from library ${libraryPrefix}:`, error);
+    return [];
   }
 };
 
@@ -353,6 +386,7 @@ export const searchIcons = (query: string, limit = 100): { name: string; library
         
         const fullName = `${prefix}${iconName}`;
         const lowerName = fullName.toLowerCase();
+        const lowerIconName = iconName.toLowerCase();
         
         // Calculate a relevance score based on the search query
         let score = 0;
@@ -370,6 +404,9 @@ export const searchIcons = (query: string, limit = 100): { name: string; library
           score = 60;
         }
         // Check if individual parts of the name match
+        else if (lowerIconName.includes(lowerQuery)) {
+          score = 50;
+        }
         else {
           // Convert camelCase to words for more flexible matching
           const words = iconName.replace(/([A-Z])/g, ' $1').toLowerCase().split(/\s+/);

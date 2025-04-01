@@ -92,18 +92,13 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
     }
   }, [selectedLibrary]);
   
-  // Debounce the search to avoid too many requests
-  const debouncedSearchChange = useCallback(
-    (callback: Function, delay: number) => {
-      let timeoutId: NodeJS.Timeout;
-      return (...args: any[]) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => callback(...args), delay);
-      };
-    },
-    []
-  )(handleSearchChange, 300);
-
+  // Display initial icons when the component mounts
+  useEffect(() => {
+    if (activeTab === "library") {
+      performSearch("a"); // Show some default icons on mount
+    }
+  }, []);
+  
   // Focus the search input when tab changes to library
   useEffect(() => {
     if (activeTab === "library" && searchInputRef.current) {
@@ -124,6 +119,16 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
     if (!file) return;
     
     try {
+      // Check if file is an image or SVG
+      if (!file.type.startsWith('image/') && file.type !== 'image/svg+xml') {
+        toast({
+          title: "Invalid file type",
+          description: "Please upload an image or SVG file.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Read the file as a data URL
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -299,7 +304,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
               <Input
                 ref={searchInputRef}
                 placeholder="Search icons by name..."
-                onChange={(e) => debouncedSearchChange(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className="pl-8"
                 autoComplete="off"
