@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -44,14 +45,17 @@ const contentFormSchema = z.object({
   slug: z.string().optional(),
   showInNavigation: z.boolean().default(false),
   language: z.string().optional(),
-  placementPageId: z.string().optional().transform(val => val && val !== "none" ? parseInt(val) : undefined),
-  placementSectionId: z.string().optional().transform(val => val && val !== "none" ? parseInt(val) : undefined),
+  placementPageId: z.string().optional()
+    .transform(val => val && val !== "none" ? parseInt(val) : undefined),
+  placementSectionId: z.string().optional()
+    .transform(val => val && val !== "none" ? parseInt(val) : undefined),
   placementPosition: z.enum(["top", "middle", "bottom", "none"] as const).optional(),
   category: z.string().optional(),
   author: z.string().optional(),
   role: z.string().optional(),
   company: z.string().optional(),
-  rating: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+  rating: z.string().optional()
+    .transform(val => val ? Number(val) : undefined),
   answer: z.string().optional(),
   technologies: z.string().optional(),
   duration: z.string().optional(),
@@ -65,8 +69,10 @@ const contentFormSchema = z.object({
   requirements: z.string().optional(),
   benefits: z.string().optional(),
   applyUrl: z.string().optional(),
-  salaryMin: z.string().optional().transform(val => val ? parseInt(val) : undefined),
-  salaryMax: z.string().optional().transform(val => val ? parseInt(val) : undefined),
+  salaryMin: z.string().optional()
+    .transform(val => val ? Number(val) : undefined),
+  salaryMax: z.string().optional()
+    .transform(val => val ? Number(val) : undefined),
 });
 
 type ContentFormValues = z.infer<typeof contentFormSchema>;
@@ -99,6 +105,10 @@ interface ContentFormProps {
       sectionId?: number;
       position?: 'top' | 'middle' | 'bottom';
     };
+    technologies?: string[];
+    responsibilities?: string[];
+    requirements?: string[];
+    benefits?: string[];
   }) => void;
   onCancel: () => void;
   isEditing?: boolean;
@@ -958,13 +968,24 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Placement Page</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Select page" 
-                        value={form.getValues("placementPageId") ? pages.find(p => p.id === form.getValues("placementPageId"))?.title : ""}
-                        onChange={handleCategoryChange}
-                      />
-                    </FormControl>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      value={field.value || "none"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select page" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {pages.map(page => (
+                          <SelectItem key={page.id} value={page.id.toString()}>
+                            {page.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -976,13 +997,24 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Placement Section</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Select section" 
-                        value={form.getValues("placementSectionId") ? pageSections.find(p => p.id === form.getValues("placementSectionId"))?.title : ""}
-                        onChange={handleCategoryChange}
-                      />
-                    </FormControl>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      value={field.value || "none"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select section" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">None</SelectItem>
+                        {pageSections.map(section => (
+                          <SelectItem key={section.id} value={section.id.toString()}>
+                            {section.title}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -996,7 +1028,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
                     <FormLabel>Placement Position</FormLabel>
                     <Select 
                       onValueChange={field.onChange} 
-                      defaultValue={field.value}
+                      defaultValue={field.value || "none"}
                     >
                       <FormControl>
                         <SelectTrigger>
