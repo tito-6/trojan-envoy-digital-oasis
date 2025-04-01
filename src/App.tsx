@@ -29,6 +29,7 @@ import CaseStudies from "./pages/CaseStudies";
 import CaseStudyDetail from "./pages/CaseStudyDetail";
 import FAQ from "./pages/FAQ";
 import Careers from "./pages/Careers";
+import AdminServicesSettings from "./pages/admin/AdminServicesSettings";
 import { LanguageCode, availableLanguages } from "./lib/i18n";
 
 const queryClient = new QueryClient();
@@ -129,6 +130,7 @@ const App = () => {
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/header" element={<AdminHeader />} />
             <Route path="/admin/hero" element={<AdminHero />} />
+            <Route path="/admin/services-settings" element={<AdminServicesSettings />} />
             
             {/* Keep this catch-all route at the end */}
             <Route path="*" element={<NotFound />} />

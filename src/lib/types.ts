@@ -140,3 +140,25 @@ export interface HeroSettings {
   techIcons: TechIcon[];
   lastUpdated: string;
 }
+
+export interface ServiceItem {
+  id: number;
+  title: string;
+  description: string;
+  iconName: string;
+  link: string;
+  order: number;
+  color?: string;
+  bgColor?: string;
+}
+
+export interface ServicesSettings {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  viewAllText: string;
+  viewAllUrl: string;
+  services: ServiceItem[];
+  lastUpdated: string;
+}

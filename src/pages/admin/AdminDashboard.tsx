@@ -1,7 +1,6 @@
-
 import React from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { 
   Users, 
   MessageSquare, 
@@ -11,9 +10,12 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const AdminDashboard: React.FC = () => {
-  // Sample data - in a real app, this would come from an API
+  const navigate = useNavigate();
+
   const stats = [
     { 
       title: "Total Visitors", 
@@ -120,6 +122,29 @@ const AdminDashboard: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle>Services Section</CardTitle>
+            <CardDescription>
+              Manage the services displayed on the homepage
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Edit the services section title, content, and individual service cards.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button
+              variant="secondary"
+              onClick={() => navigate("/admin/services-settings")}
+              className="w-full"
+            >
+              Manage Services
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     </AdminLayout>
   );

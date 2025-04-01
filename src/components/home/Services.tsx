@@ -1,17 +1,32 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Code, Smartphone, Paintbrush, BarChart } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
+import { storageService } from "@/lib/storage";
+import { ServiceItem, ServicesSettings } from "@/lib/types";
+import { getIconComponentByName } from "@/lib/iconUtils";
 
-const ServicesCard: React.FC<{
+interface ServicesCardProps {
   title: string;
   description: string;
   icon: React.ReactNode;
   link: string;
   className?: string;
-}> = ({ title, description, icon, link, className }) => {
+  iconBgColor?: string;
+  iconColor?: string;
+}
+
+const ServicesCard: React.FC<ServicesCardProps> = ({ 
+  title, 
+  description, 
+  icon, 
+  link, 
+  className,
+  iconBgColor = "bg-secondary",
+  iconColor = "text-foreground"
+}) => {
   return (
     <div 
       className={cn(
@@ -20,8 +35,10 @@ const ServicesCard: React.FC<{
       )}
     >
       <div className="flex flex-col h-full">
-        <div className="bg-secondary rounded-lg w-12 h-12 flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-          {icon}
+        <div className={cn("rounded-lg w-12 h-12 flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-primary-foreground transition-colors", iconBgColor)}>
+          <div className={cn("w-5 h-5", iconColor)}>
+            {icon}
+          </div>
         </div>
         
         <h3 className="text-xl font-semibold mb-3">{title}</h3>
@@ -42,69 +59,117 @@ const ServicesCard: React.FC<{
   );
 };
 
+const defaultServices: ServiceItem[] = [
+  {
+    id: 1,
+    title: "Web Development",
+    description: "Custom websites and web applications built with modern technologies to meet your business needs.",
+    iconName: "Code",
+    link: "/services/web-development",
+    order: 1,
+  },
+  {
+    id: 2,
+    title: "Mobile Development",
+    description: "Native and cross-platform mobile applications for iOS and Android devices.",
+    iconName: "Smartphone",
+    link: "/services/mobile-development",
+    order: 2,
+  },
+  {
+    id: 3,
+    title: "UI/UX Design",
+    description: "User-centered design that enhances the user experience and increases conversion rates.",
+    iconName: "Paintbrush",
+    link: "/services/ui-ux-design",
+    order: 3,
+  },
+  {
+    id: 4,
+    title: "Digital Marketing",
+    description: "Data-driven marketing strategies to increase your online presence and drive results.",
+    iconName: "BarChart",
+    link: "/services/digital-marketing",
+    order: 4,
+  },
+];
+
+const defaultSettings: ServicesSettings = {
+  id: 1,
+  title: "Our Services",
+  subtitle: "What We Do",
+  description: "We provide comprehensive digital solutions to help businesses succeed in the digital age.",
+  viewAllText: "View All Services",
+  viewAllUrl: "/services",
+  services: defaultServices,
+  lastUpdated: new Date().toISOString(),
+};
+
 const Services: React.FC = () => {
   const { t } = useLanguage();
+  const [settings, setSettings] = useState<ServicesSettings>(defaultSettings);
   
-  const services = [
-    {
-      title: t('services.web.title'),
-      description: t('services.web.description'),
-      icon: <Code className="w-5 h-5" />,
-      link: "/services/web-development",
-    },
-    {
-      title: t('services.mobile.title'),
-      description: t('services.mobile.description'),
-      icon: <Smartphone className="w-5 h-5" />,
-      link: "/services/mobile-development",
-    },
-    {
-      title: t('services.ui.title'),
-      description: t('services.ui.description'),
-      icon: <Paintbrush className="w-5 h-5" />,
-      link: "/services/ui-ux-design",
-    },
-    {
-      title: t('services.digital.title'),
-      description: t('services.digital.description'),
-      icon: <BarChart className="w-5 h-5" />,
-      link: "/services/digital-marketing",
-    },
-  ];
+  useEffect(() => {
+    const loadSettings = () => {
+      const storedSettings = storageService.getServicesSettings();
+      if (storedSettings) {
+        setSettings(storedSettings);
+      }
+    };
+    
+    loadSettings();
+    
+    const unsubscribe = storageService.addEventListener('services-settings-updated', loadSettings);
+    
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+  
+  // Sort services by order
+  const sortedServices = [...settings.services].sort((a, b) => a.order - b.order);
 
   return (
     <section className="section-padding bg-background" id="services">
       <div className="container mx-auto">
         <div className="text-center max-w-xl mx-auto mb-12 md:mb-16">
           <div className="inline-block px-4 py-1.5 rounded-full bg-secondary mb-4 text-sm font-medium animate-slide-up">
-            What We Do
+            {settings.subtitle}
           </div>
           
           <h2 className="text-3xl md:text-4xl font-display font-bold mb-4 animate-slide-up">
-            {t('services.title')}
+            {settings.title}
           </h2>
           
           <p className="text-muted-foreground animate-slide-up">
-            {t('services.subtitle')}
+            {settings.description}
           </p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {services.map((service, index) => (
-            <ServicesCard
-              key={service.title}
-              {...service}
-              className={`animate-slide-up delay-${index * 100}`}
-            />
-          ))}
+          {sortedServices.map((service, index) => {
+            const IconComponent = getIconComponentByName(service.iconName);
+            return (
+              <ServicesCard
+                key={service.id}
+                title={service.title}
+                description={service.description}
+                icon={IconComponent ? <IconComponent /> : null}
+                link={service.link}
+                className={`animate-slide-up delay-${index * 100}`}
+                iconBgColor={service.bgColor || "bg-secondary"}
+                iconColor={service.color || "text-foreground"}
+              />
+            );
+          })}
         </div>
         
         <div className="mt-12 text-center">
           <Link
-            to="/services"
+            to={settings.viewAllUrl}
             className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground px-6 py-3 rounded-lg font-medium transition-colors"
           >
-            View All Services
+            {settings.viewAllText}
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

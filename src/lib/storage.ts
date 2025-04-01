@@ -617,6 +617,16 @@ class StorageService {
     
     return settings.techIcons;
   }
+
+  getServicesSettings(): ServicesSettings | null {
+    const settings = localStorage.getItem('services-settings');
+    return settings ? JSON.parse(settings) : null;
+  }
+
+  setServicesSettings(settings: ServicesSettings): void {
+    localStorage.setItem('services-settings', JSON.stringify(settings));
+    this.dispatchEvent('services-settings-updated', settings);
+  }
 }
 
 export const storageService = new StorageService();
