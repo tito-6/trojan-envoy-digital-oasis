@@ -3,17 +3,17 @@ import { z } from "zod";
 
 // Define schemas for PartnerLogo and TechIcon
 const partnerLogoSchema = z.object({
-  name: z.string(),
-  icon: z.string(),
-  color: z.string(),
-  bgColor: z.string(),
-  certified: z.boolean().optional()
+  name: z.string().min(1),
+  icon: z.string().min(1),
+  color: z.string().min(1),
+  bgColor: z.string().min(1),
+  certified: z.boolean().optional().default(false)
 });
 
 const techIconSchema = z.object({
-  name: z.string(),
-  icon: z.string(),
-  color: z.string(),
+  name: z.string().min(1),
+  icon: z.string().min(1),
+  color: z.string().min(1),
   bgColor: z.string().optional(),
   animate: z.string().optional()
 });

@@ -4,10 +4,11 @@ export const AVAILABLE_ICONS = [
   'FaReact', 'SiTypescript', 'FaVuejs', 'FaAngular', 'SiJavascript', 'FaNode', 'FaPython',
   'FaJava', 'FaPhp', 'SiKotlin', 'FaSwift', 'SiFlutter', 'SiFirebase', 'SiMongodb',
   'FaDatabase', 'SiGraphql', 'SiTailwindcss', 'FaDocker', 'FaAwsLogo', 'FaGithub',
+  'FaMicrosoft', 'FaWindows', 
   'SiNextdotjs', 'SiExpress', 'SiDjango', 'SiSpring', 'SiLaravel', 'SiRuby', 
   'SiDotnet', 'SiGo', 'SiRust', 'SiElixir', 'SiPostgresql', 'SiMysql', 'SiRedis', 
   'SiElasticsearch', 'SiKubernetes', 'SiTerraform', 'SiAmazon', 'SiGooglecloud', 
-  'SiAzure', 'SiVercel', 'SiNetlify', 'SiHeroku', 'SiDigitalocean'
+  'SiMicrosoftazure', 'SiVercel', 'SiNetlify', 'SiHeroku', 'SiDigitalocean'
 ];
 
 export const ANIMATION_OPTIONS = [

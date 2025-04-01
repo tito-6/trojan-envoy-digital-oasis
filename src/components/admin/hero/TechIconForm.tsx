@@ -47,6 +47,7 @@ const TechIconForm: React.FC<TechIconFormProps> = ({
             id="techName"
             value={currentTechIcon.name || ''}
             onChange={(e) => onTechIconChange('name', e.target.value)}
+            required
           />
         </div>
         <div>
@@ -54,6 +55,7 @@ const TechIconForm: React.FC<TechIconFormProps> = ({
           <Select 
             value={currentTechIcon.icon || ''} 
             onValueChange={(value) => onTechIconChange('icon', value)}
+            required
           >
             <SelectTrigger>
               <SelectValue placeholder="Select an icon" />
@@ -78,6 +80,7 @@ const TechIconForm: React.FC<TechIconFormProps> = ({
             value={currentTechIcon.color || '#000000'}
             onChange={(e) => onTechIconChange('color', e.target.value)}
             className="h-10"
+            required
           />
         </div>
         <div>
