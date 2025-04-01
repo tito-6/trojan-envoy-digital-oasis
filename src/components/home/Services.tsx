@@ -67,6 +67,8 @@ const defaultServices: ServiceItem[] = [
     iconName: "Code",
     link: "/services/web-development",
     order: 1,
+    color: "text-blue-600",
+    bgColor: "bg-blue-100",
   },
   {
     id: 2,
@@ -75,6 +77,8 @@ const defaultServices: ServiceItem[] = [
     iconName: "Smartphone",
     link: "/services/mobile-development",
     order: 2,
+    color: "text-green-600",
+    bgColor: "bg-green-100",
   },
   {
     id: 3,
@@ -83,6 +87,8 @@ const defaultServices: ServiceItem[] = [
     iconName: "Paintbrush",
     link: "/services/ui-ux-design",
     order: 3,
+    color: "text-purple-600",
+    bgColor: "bg-purple-100",
   },
   {
     id: 4,
@@ -91,6 +97,8 @@ const defaultServices: ServiceItem[] = [
     iconName: "BarChart",
     link: "/services/digital-marketing",
     order: 4,
+    color: "text-orange-600",
+    bgColor: "bg-orange-100",
   },
 ];
 

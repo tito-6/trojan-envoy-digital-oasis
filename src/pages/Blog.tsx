@@ -97,7 +97,12 @@ const Blog: React.FC = () => {
       });
       
       const categories: BlogCategory[] = Array.from(categoryMap.entries())
-        .map(([name, count]) => ({ name, count }))
+        .map(([name, count], index) => ({ 
+          id: index + 1, 
+          name, 
+          slug: name.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''), 
+          count 
+        }))
         .sort((a, b) => b.count - a.count);
       
       setBlogStats({

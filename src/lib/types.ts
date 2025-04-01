@@ -33,7 +33,7 @@ export interface ContentItem {
   placement?: {
     pageId?: number;
     sectionId?: number;
-    position?: "before" | "after";
+    position?: "top" | "middle" | "bottom" | "before" | "after";
   };
   category?: string;
   author?: string;

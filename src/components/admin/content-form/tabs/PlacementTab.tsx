@@ -132,7 +132,7 @@ export const PlacementTab: React.FC<PlacementTabProps> = ({
                   <FormControl>
                     <Select
                       value={field.value || "none"}
-                      onValueChange={(value) => field.onChange(value === "none" ? undefined : value as "top" | "middle" | "bottom")}
+                      onValueChange={(value) => field.onChange(value === "none" ? undefined : value)}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select position" />
@@ -142,6 +142,8 @@ export const PlacementTab: React.FC<PlacementTabProps> = ({
                         <SelectItem value="top">Top</SelectItem>
                         <SelectItem value="middle">Middle</SelectItem>
                         <SelectItem value="bottom">Bottom</SelectItem>
+                        <SelectItem value="before">Before</SelectItem>
+                        <SelectItem value="after">After</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>

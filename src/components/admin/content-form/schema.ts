@@ -19,7 +19,7 @@ export const contentFormSchema = z.object({
     .transform(val => val && val !== "none" ? val : undefined),
   placementSectionId: z.string().optional()
     .transform(val => val && val !== "none" ? val : undefined),
-  placementPosition: z.enum(["top", "middle", "bottom", "none"] as const).optional(),
+  placementPosition: z.enum(["top", "middle", "bottom", "before", "after", "none"] as const).optional(),
   category: z.string().optional(),
   author: z.string().optional(),
   role: z.string().optional(),
