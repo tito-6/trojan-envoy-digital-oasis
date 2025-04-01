@@ -6,10 +6,6 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import './rich-text-editor.css';
 
 // Import the polyfill at the component level to ensure it's loaded
@@ -97,17 +93,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
     );
   };
 
-  // Custom link modal with improved styling
-  const customLinkModal = (config: any) => {
-    return (
-      <Dialog>
-        <DialogContent className="rdw-link-modal bg-background p-4 rounded-md">
-          {config.children}
-        </DialogContent>
-      </Dialog>
-    );
-  };
-
   return (
     <div className={`w-full ${className}`}>
       {label && <Label className="mb-2 block">{label}</Label>}
@@ -173,7 +158,6 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
               options: ['link', 'unlink'],
               className: 'link-toolbar-item',
               popupClassName: 'link-popup',
-              component: customLinkModal,
               defaultTargetOption: '_blank',
               showOpenOptionOnHover: true,
             },

@@ -348,39 +348,37 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
                           
                           return (
                             <div key={index} className="p-3 bg-muted/50 rounded-md">
-                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                <div className="flex items-center">
-                                  {fileIcon}
-                                  <span className="text-sm font-medium ml-2 truncate max-w-[200px]">{fileName}</span>
-                                </div>
-                                <div className="flex space-x-2 ml-auto">
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline"
-                                    onClick={() => window.open(doc, '_blank')}
-                                    className="whitespace-nowrap"
-                                  >
-                                    <ExternalLink className="w-4 h-4 mr-1.5" />
-                                    View
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="outline"
-                                    onClick={() => {
-                                      // Create a temporary anchor element
-                                      const link = document.createElement('a');
-                                      link.href = doc;
-                                      link.setAttribute('download', fileName);
-                                      document.body.appendChild(link);
-                                      link.click();
-                                      document.body.removeChild(link);
-                                    }}
-                                    className="whitespace-nowrap"
-                                  >
-                                    <Download className="w-4 h-4 mr-1.5" />
-                                    Download
-                                  </Button>
-                                </div>
+                              <div className="flex items-center mb-2">
+                                {fileIcon}
+                                <span className="text-sm font-medium ml-2">{fileName}</span>
+                              </div>
+                              <div className="flex space-x-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => window.open(doc, '_blank')}
+                                  className="w-full"
+                                >
+                                  <ExternalLink className="w-4 h-4 mr-1.5" />
+                                  View
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => {
+                                    // Create a temporary anchor element
+                                    const link = document.createElement('a');
+                                    link.href = doc;
+                                    link.setAttribute('download', fileName);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                  }}
+                                  className="w-full"
+                                >
+                                  <Download className="w-4 h-4 mr-1.5" />
+                                  Download
+                                </Button>
                               </div>
                             </div>
                           );
