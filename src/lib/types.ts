@@ -1,4 +1,3 @@
-
 export type ContentType =
   | "Page"
   | "Blog Post"
@@ -103,7 +102,6 @@ export interface ServiceItem {
   documents?: string[];
 }
 
-// Adding the missing type definitions for NavigationItem
 export interface NavigationItem {
   id: number;
   label: string;
@@ -111,7 +109,6 @@ export interface NavigationItem {
   order: number;
 }
 
-// Adding the missing type definitions for HeaderSettings
 export interface HeaderSettings {
   id: number;
   siteTitle: string;
@@ -126,7 +123,6 @@ export interface HeaderSettings {
   lastUpdated: string;
 }
 
-// Adding the missing type definitions for HeroSettings
 export interface HeroSettings {
   id: number;
   title: string;
@@ -148,7 +144,6 @@ export interface HeroSettings {
   lastUpdated: string;
 }
 
-// Adding the missing type definitions for PartnerLogo
 export interface PartnerLogo {
   id: number;
   name: string;
@@ -158,7 +153,6 @@ export interface PartnerLogo {
   order: number;
 }
 
-// Adding the missing type definitions for TechIcon
 export interface TechIcon {
   id: number;
   name: string;
@@ -168,7 +162,6 @@ export interface TechIcon {
   order: number;
 }
 
-// Adding BlogCategory interface
 export interface BlogCategory {
   id: number;
   name: string;
@@ -176,7 +169,6 @@ export interface BlogCategory {
   count: number;
 }
 
-// Adding the missing type definitions for User
 export interface User {
   id: number;
   name: string;
@@ -185,7 +177,6 @@ export interface User {
   lastLogin: string;
 }
 
-// Adding the missing type definitions for ContactRequest
 export interface ContactRequest {
   id: number;
   name: string;
@@ -196,4 +187,32 @@ export interface ContactRequest {
   message: string;
   dateSubmitted: string;
   status: 'New' | 'In Progress' | 'Completed';
+}
+
+export interface AboutSettings {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  missionTitle: string;
+  missionDescription: string;
+  keyPoints: KeyPoint[];
+  learnMoreText: string;
+  learnMoreUrl: string;
+  stats: StatItem[];
+  lastUpdated: string;
+}
+
+export interface KeyPoint {
+  id: number;
+  text: string;
+  order: number;
+}
+
+export interface StatItem {
+  id: number;
+  value: string;
+  label: string;
+  start: string;
+  order: number;
 }

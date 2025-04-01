@@ -13,7 +13,8 @@ import {
   MonitorSmartphone,
   Shield,
   Settings,
-  Palette
+  Palette,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -108,6 +109,12 @@ const AdminDashboard: React.FC = () => {
       description: "Update homepage hero section content and images",
       icon: <Shield className="w-5 h-5" />,
       href: "/admin/hero"
+    },
+    {
+      title: "About",
+      description: "Manage about section content and statistics",
+      icon: <Info className="w-5 h-5" />,
+      href: "/admin/about-settings"
     },
     {
       title: "Services",

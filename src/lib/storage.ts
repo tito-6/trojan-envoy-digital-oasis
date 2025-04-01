@@ -1,4 +1,4 @@
-import { ContentItem, ContactRequest, User, NavigationItem, HeaderSettings, HeroSettings, PartnerLogo, TechIcon, ServicesSettings, ServiceItem } from './types';
+import { ContentItem, ContactRequest, User, NavigationItem, HeaderSettings, HeroSettings, PartnerLogo, TechIcon, ServicesSettings, ServiceItem, AboutSettings, KeyPoint, StatItem } from './types';
 
 // Initial sample data for content - we'll keep this minimal
 const initialContent: ContentItem[] = [];
@@ -86,6 +86,33 @@ const initialHeroSettings: HeroSettings = {
   lastUpdated: "2023-11-15"
 };
 
+// Initial about settings
+const initialAboutSettings: AboutSettings = {
+  id: 1,
+  title: "Empowering Businesses",
+  subtitle: "With Innovative Digital Solutions",
+  description: "We empower businesses with innovative digital solutions that drive growth, enhance customer engagement, and create competitive advantages in today's rapidly evolving digital landscape.",
+  missionTitle: "Our Mission",
+  missionDescription: "At Trojan Envoy, we are committed to delivering exceptional digital experiences that transform businesses and drive meaningful results. We combine technical expertise with strategic thinking to address your unique challenges and help you achieve your goals.",
+  learnMoreText: "Learn more about us",
+  learnMoreUrl: "/about",
+  keyPoints: [
+    { id: 1, text: "Industry-leading expertise", order: 1 },
+    { id: 2, text: "Results-driven approach", order: 2 },
+    { id: 3, text: "Innovative technologies", order: 3 },
+    { id: 4, text: "Dedicated support", order: 4 },
+    { id: 5, text: "Transparent communication", order: 5 },
+    { id: 6, text: "Agile methodology", order: 6 }
+  ],
+  stats: [
+    { id: 1, value: "10+", label: "Years Experience", start: "0", order: 1 },
+    { id: 2, value: "200+", label: "Projects Completed", start: "0", order: 2 },
+    { id: 3, value: "50+", label: "Team Members", start: "0", order: 3 },
+    { id: 4, value: "98%", label: "Client Satisfaction", start: "0", order: 4 }
+  ],
+  lastUpdated: "2023-11-15"
+};
+
 class StorageService {
   private contentKey = 'trojan-envoy-content';
   private usersKey = 'trojan-envoy-users';
@@ -93,6 +120,7 @@ class StorageService {
   private navigationKey = 'trojan-envoy-navigation';
   private headerSettingsKey = 'trojan-envoy-header-settings';
   private heroSettingsKey = 'trojan-envoy-hero-settings';
+  private aboutSettingsKey = 'trojan-envoy-about-settings';
   private eventListeners: Record<string, Function[]> = {};
 
   constructor() {
@@ -122,6 +150,10 @@ class StorageService {
     
     if (!localStorage.getItem(this.heroSettingsKey)) {
       localStorage.setItem(this.heroSettingsKey, JSON.stringify(initialHeroSettings));
+    }
+    
+    if (!localStorage.getItem(this.aboutSettingsKey)) {
+      localStorage.setItem(this.aboutSettingsKey, JSON.stringify(initialAboutSettings));
     }
   }
 
@@ -634,6 +666,138 @@ class StorageService {
     this.dispatchEvent('services-settings-updated', updatedSettings);
     
     return updatedSettings;
+  }
+
+  getAboutSettings(): AboutSettings {
+    const settings = localStorage.getItem(this.aboutSettingsKey);
+    return settings ? JSON.parse(settings) : initialAboutSettings;
+  }
+
+  updateAboutSettings(settings: Partial<AboutSettings>): AboutSettings {
+    const currentSettings = this.getAboutSettings();
+    const updatedSettings: AboutSettings = {
+      ...currentSettings,
+      ...settings,
+      lastUpdated: new Date().toISOString().split('T')[0]
+    };
+    
+    localStorage.setItem(this.aboutSettingsKey, JSON.stringify(updatedSettings));
+    
+    this.dispatchEvent('about-settings-updated', updatedSettings);
+    
+    return updatedSettings;
+  }
+
+  addKeyPoint(keyPoint: Omit<KeyPoint, 'id'>): KeyPoint {
+    const settings = this.getAboutSettings();
+    const newId = settings.keyPoints.length > 0 ? 
+      Math.max(...settings.keyPoints.map(point => point.id)) + 1 : 1;
+    
+    const newKeyPoint: KeyPoint = { ...keyPoint, id: newId };
+    
+    settings.keyPoints.push(newKeyPoint);
+    this.updateAboutSettings(settings);
+    
+    return newKeyPoint;
+  }
+
+  updateKeyPoint(id: number, keyPoint: Partial<KeyPoint>): KeyPoint | null {
+    const settings = this.getAboutSettings();
+    const index = settings.keyPoints.findIndex(point => point.id === id);
+    
+    if (index === -1) return null;
+    
+    const updatedKeyPoint = { ...settings.keyPoints[index], ...keyPoint };
+    settings.keyPoints[index] = updatedKeyPoint;
+    
+    this.updateAboutSettings(settings);
+    
+    return updatedKeyPoint;
+  }
+
+  deleteKeyPoint(id: number): boolean {
+    const settings = this.getAboutSettings();
+    const filteredKeyPoints = settings.keyPoints.filter(point => point.id !== id);
+    
+    if (filteredKeyPoints.length === settings.keyPoints.length) return false;
+    
+    settings.keyPoints = filteredKeyPoints;
+    this.updateAboutSettings(settings);
+    
+    return true;
+  }
+
+  reorderKeyPoints(items: { id: number, order: number }[]): KeyPoint[] {
+    const settings = this.getAboutSettings();
+    
+    items.forEach(item => {
+      const index = settings.keyPoints.findIndex(point => point.id === item.id);
+      if (index !== -1) {
+        settings.keyPoints[index].order = item.order;
+      }
+    });
+    
+    settings.keyPoints.sort((a, b) => a.order - b.order);
+    
+    this.updateAboutSettings(settings);
+    
+    return settings.keyPoints;
+  }
+
+  addStatItem(statItem: Omit<StatItem, 'id'>): StatItem {
+    const settings = this.getAboutSettings();
+    const newId = settings.stats.length > 0 ? 
+      Math.max(...settings.stats.map(stat => stat.id)) + 1 : 1;
+    
+    const newStatItem: StatItem = { ...statItem, id: newId };
+    
+    settings.stats.push(newStatItem);
+    this.updateAboutSettings(settings);
+    
+    return newStatItem;
+  }
+
+  updateStatItem(id: number, statItem: Partial<StatItem>): StatItem | null {
+    const settings = this.getAboutSettings();
+    const index = settings.stats.findIndex(stat => stat.id === id);
+    
+    if (index === -1) return null;
+    
+    const updatedStatItem = { ...settings.stats[index], ...statItem };
+    settings.stats[index] = updatedStatItem;
+    
+    this.updateAboutSettings(settings);
+    
+    return updatedStatItem;
+  }
+
+  deleteStatItem(id: number): boolean {
+    const settings = this.getAboutSettings();
+    const filteredStats = settings.stats.filter(stat => stat.id !== id);
+    
+    if (filteredStats.length === settings.stats.length) return false;
+    
+    settings.stats = filteredStats;
+    this.updateAboutSettings(settings);
+    
+    return true;
+  }
+
+  reorderStatItems(items: { id: number, order: number }[]): StatItem[] {
+    const settings = this.getAboutSettings();
+    
+    items.forEach(item => {
+      const index = settings.stats.findIndex(stat => stat.id === item.id);
+      if (index !== -1) {
+        settings.stats[index].order = item.order;
+      }
+    });
+    
+    settings.stats.sort((a, b) => a.order - b.order);
+    
+    this.updateAboutSettings(settings);
+    
+    return settings.stats;
   }
 }
 

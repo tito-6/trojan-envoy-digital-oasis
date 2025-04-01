@@ -32,8 +32,23 @@ const Index: React.FC = () => {
     const headerSettings = storageService.getHeaderSettings();
     document.title = `${t('hero.title')} | ${headerSettings.siteTitle}`;
 
-    return () => observer.disconnect();
+    // Set up storage listeners for live updates
+    const aboutUpdateListener = () => {
+      // Force re-render when about settings change
+      forceUpdate(n => !n);
+    };
+    
+    // Subscribe to about settings updates
+    const unsubscribe = storageService.addEventListener('about-settings-updated', aboutUpdateListener);
+    
+    return () => {
+      observer.disconnect();
+      unsubscribe();
+    };
   }, [t]);
+  
+  // Force update state to trigger re-renders when settings change
+  const [update, forceUpdate] = React.useState(false);
 
   return (
     <div className="min-h-screen">
@@ -42,7 +57,7 @@ const Index: React.FC = () => {
       <main>
         <Hero />
         <Services />
-        <About />
+        <About key={`about-${update}`} />
         <References />
         <HomeFAQ />
         <Contact />
