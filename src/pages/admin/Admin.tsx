@@ -1,9 +1,8 @@
 
 import React, { useEffect, useState } from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { storageService } from "@/lib/storage";
-import AdminLayout from "@/components/admin/AdminLayout";
 
 // This is a wrapper component that will redirect to the admin login or dashboard
 const Admin: React.FC = () => {
@@ -74,11 +73,7 @@ const Admin: React.FC = () => {
   
   // Redirect to the appropriate page
   if (isLoggedIn) {
-    return (
-      <AdminLayout>
-        <Outlet />
-      </AdminLayout>
-    );
+    return <Navigate to="/admin/dashboard" replace />;
   } else {
     return <Navigate to="/admin/login" replace />;
   }

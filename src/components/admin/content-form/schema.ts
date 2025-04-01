@@ -1,27 +1,10 @@
 
 import { z } from "zod";
 
-// Define schemas for PartnerLogo and TechIcon
-const partnerLogoSchema = z.object({
-  name: z.string().min(1),
-  icon: z.string().min(1),
-  color: z.string().min(1),
-  bgColor: z.string().min(1),
-  certified: z.boolean().optional().default(false)
-});
-
-const techIconSchema = z.object({
-  name: z.string().min(1),
-  icon: z.string().min(1),
-  color: z.string().min(1),
-  bgColor: z.string().optional(),
-  animate: z.string().optional()
-});
-
 // Schema to handle proper type conversions
 export const contentFormSchema = z.object({
   title: z.string().min(3, { message: "Title must be at least 3 characters" }),
-  type: z.enum(["Page", "Page Section", "Service", "Portfolio", "Blog Post", "Testimonial", "FAQ", "Team Member", "Case Study", "Job Posting", "Hero", "Tech Stack"] as const),
+  type: z.enum(["Page", "Page Section", "Service", "Portfolio", "Blog Post", "Testimonial", "FAQ", "Team Member", "Case Study", "Job Posting"] as const),
   subtitle: z.string().optional(),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
   seoTitle: z.string().optional(),
@@ -57,13 +40,6 @@ export const contentFormSchema = z.object({
   applyUrl: z.string().optional(),
   salaryMin: z.coerce.number().optional(),
   salaryMax: z.coerce.number().optional(),
-  // Hero specific fields
-  ctaLabel: z.string().optional(),
-  ctaUrl: z.string().optional(),
-  secondaryCtaLabel: z.string().optional(),
-  secondaryCtaUrl: z.string().optional(),
-  partnerLogos: z.array(partnerLogoSchema).optional(),
-  techIcons: z.array(techIconSchema).optional()
 });
 
 export type ContentFormValues = z.infer<typeof contentFormSchema>;

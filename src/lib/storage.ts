@@ -1,4 +1,4 @@
-import { ContentItem, ContactRequest, User, NavigationItem, PartnerLogo, TechIcon } from './types';
+import { ContentItem, ContactRequest, User, NavigationItem } from './types';
 
 // Initial sample data for content - we'll keep this minimal
 const initialContent: ContentItem[] = [];
@@ -91,14 +91,6 @@ class StorageService {
     const allContent = this.getAllContent();
     const newId = allContent.length > 0 ? Math.max(...allContent.map(item => item.id)) + 1 : 1;
     
-    let partnerLogos: PartnerLogo[] | undefined;
-    let techIcons: TechIcon[] | undefined;
-    
-    if (content.type === 'Hero') {
-      partnerLogos = content.partnerLogos;
-      techIcons = content.techIcons;
-    }
-    
     const normalizedContent: ContentItem = {
       ...content,
       id: newId,
@@ -114,9 +106,7 @@ class StorageService {
       responsibilities: content.responsibilities || [],
       requirements: content.requirements || [],
       benefits: content.benefits || [],
-      technologies: content.technologies || [],
-      partnerLogos,
-      techIcons
+      technologies: content.technologies || []
     };
     
     allContent.push(normalizedContent);
@@ -152,19 +142,6 @@ class StorageService {
       updatedSlug = content.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
     }
     
-    let partnerLogos = originalContent.partnerLogos;
-    let techIcons = originalContent.techIcons;
-    
-    if (content.type === 'Hero' || originalContent.type === 'Hero') {
-      if (content.partnerLogos !== undefined) {
-        partnerLogos = content.partnerLogos;
-      }
-      
-      if (content.techIcons !== undefined) {
-        techIcons = content.techIcons;
-      }
-    }
-    
     const updatedContent: ContentItem = {
       ...originalContent,
       ...content,
@@ -174,9 +151,7 @@ class StorageService {
       responsibilities: content.responsibilities || originalContent.responsibilities || [],
       requirements: content.requirements || originalContent.requirements || [],
       benefits: content.benefits || originalContent.benefits || [],
-      technologies: content.technologies || originalContent.technologies || [],
-      partnerLogos,
-      techIcons
+      technologies: content.technologies || originalContent.technologies || []
     };
     
     allContent[index] = updatedContent;
