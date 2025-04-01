@@ -95,13 +95,13 @@ const ServicesCTA: React.FC = () => {
                     <SelectValue placeholder={t('services.form.service.placeholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="web">{t('services.web.title')}</SelectItem>
-                    <SelectItem value="mobile">{t('services.mobile.title')}</SelectItem>
-                    <SelectItem value="ui">{t('services.ui.title')}</SelectItem>
-                    <SelectItem value="digital">{t('services.digital.title')}</SelectItem>
-                    <SelectItem value="seo">{t('services.seo.title')}</SelectItem>
-                    <SelectItem value="ecommerce">{t('services.ecommerce.title')}</SelectItem>
-                    <SelectItem value="content">{t('services.content.title')}</SelectItem>
+                    <SelectItem value="web-development">{t('services.web.title')}</SelectItem>
+                    <SelectItem value="mobile-development">{t('services.mobile.title')}</SelectItem>
+                    <SelectItem value="ui-design">{t('services.ui.title')}</SelectItem>
+                    <SelectItem value="digital-marketing">{t('services.digital.title')}</SelectItem>
+                    <SelectItem value="seo-optimization">{t('services.seo.title')}</SelectItem>
+                    <SelectItem value="ecommerce-solutions">{t('services.ecommerce.title')}</SelectItem>
+                    <SelectItem value="content-creation">{t('services.content.title')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
