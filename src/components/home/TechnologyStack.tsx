@@ -1,7 +1,10 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { storageService } from "@/lib/storage";
 import { ContentItem, TechItem } from "@/lib/types";
+import { FaReact, FaVuejs, FaAngular, FaNodeJs, FaPython, FaJava, FaPhp, FaSwift, 
+         FaDatabase, FaDocker, FaAws, FaGithub } from "react-icons/fa";
+import { SiTypescript, SiJavascript, SiFirebase, SiMongodb, SiGraphql, 
+         SiTailwindcss, SiFlutter, SiKotlin } from "react-icons/si";
 import { useToast } from "@/hooks/use-toast";
 import { Icon } from "@/components/ui/icon";
 
@@ -14,7 +17,6 @@ const TechnologyStack: React.FC = () => {
 
   useEffect(() => {
     const fetchTechStack = () => {
-      setLoading(true);
       const allContent = storageService.getContentByType("Technology Stack");
       console.log("Tech stack content from storage:", allContent);
       
@@ -35,8 +37,6 @@ const TechnologyStack: React.FC = () => {
     };
 
     fetchTechStack();
-    
-    // Listen for content updates and refresh when they happen
     const unsubscribe = storageService.addEventListener("content-updated", () => {
       console.log("Content updated event received, refreshing tech stack");
       fetchTechStack();
@@ -70,6 +70,29 @@ const TechnologyStack: React.FC = () => {
     };
   }, []);
 
+  const iconMap: Record<string, React.ElementType> = {
+    "react": FaReact,
+    "typescript": SiTypescript,
+    "vue-js": FaVuejs,
+    "angular": FaAngular,
+    "javascript": SiJavascript,
+    "node-js": FaNodeJs,
+    "python": FaPython,
+    "java": FaJava,
+    "php": FaPhp,
+    "kotlin": SiKotlin,
+    "swift": FaSwift,
+    "flutter": SiFlutter,
+    "firebase": SiFirebase,
+    "mongodb": SiMongodb,
+    "sql": FaDatabase,
+    "graphql": SiGraphql,
+    "tailwind": SiTailwindcss,
+    "docker": FaDocker,
+    "aws": FaAws,
+    "github": FaGithub
+  };
+
   const defaultTechItems: TechItem[] = [
     { name: "React", iconName: "react", color: "#61DAFB", animate: "animate-float" },
     { name: "TypeScript", iconName: "typescript", color: "#3178C6", animate: "animate-pulse-soft" },
@@ -97,8 +120,7 @@ const TechnologyStack: React.FC = () => {
   const subtitle = techStackContent?.subtitle || "Comprehensive digital solutions for your business";
   const description = techStackContent?.description || "We leverage cutting-edge technology to build modern, scalable solutions";
   
-  // Ensure we always have techItems array
-  const techItems = techStackContent?.techItems && techStackContent.techItems.length > 0
+  const techItems = techStackContent?.techItems?.length 
     ? techStackContent.techItems 
     : defaultTechItems;
   
@@ -106,7 +128,28 @@ const TechnologyStack: React.FC = () => {
 
   const renderIcon = (tech: TechItem) => {
     console.log("Rendering icon for tech:", tech.name, "icon:", tech.iconName);
-    return <Icon name={tech.iconName} color={tech.color} size={36} />;
+    
+    if (iconMap[tech.iconName]) {
+      const IconComponent = iconMap[tech.iconName];
+      return <IconComponent size={36} style={{ color: tech.color }} />;
+    }
+    
+    if (tech.iconName.startsWith('http') || tech.iconName.startsWith('/')) {
+      return <img src={tech.iconName} alt={tech.name} className="w-8 h-8" style={{ color: tech.color }} />;
+    }
+    
+    if (tech.iconName.startsWith('Fa') || tech.iconName.startsWith('Si')) {
+      return <Icon name={tech.iconName} color={tech.color} size={36} />;
+    }
+    
+    return (
+      <div className="w-8 h-8 rounded-full flex items-center justify-center" 
+           style={{ backgroundColor: `${tech.color}30` }}>
+        <span className="text-xl font-bold" style={{ color: tech.color }}>
+          {tech.name.charAt(0)}
+        </span>
+      </div>
+    );
   };
 
   if (loading) {

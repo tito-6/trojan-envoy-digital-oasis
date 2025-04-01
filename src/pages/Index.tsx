@@ -41,7 +41,7 @@ const Index: React.FC = () => {
       <main>
         <Hero />
         <Services />
-        <TechnologyStack key="technology-stack" />
+        <TechnologyStack />
         <About />
         <References />
         <HomeFAQ />
