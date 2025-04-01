@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -21,6 +20,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminContent from "./pages/admin/AdminContent";
 import AdminContacts from "./pages/admin/AdminContacts";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminHeader from "./pages/admin/AdminHeader";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -126,6 +126,7 @@ const App = () => {
             <Route path="/admin/content" element={<AdminContent />} />
             <Route path="/admin/contacts" element={<AdminContacts />} />
             <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/header" element={<AdminHeader />} />
             
             {/* Keep this catch-all route at the end */}
             <Route path="*" element={<NotFound />} />
