@@ -35,6 +35,18 @@ const About: React.FC = () => {
   // Filter active stats
   const activeStats = aboutSettings.stats.filter(stat => stat.isActive !== false);
 
+  // Fix the URL path by ensuring it starts with a slash and removing any double slashes
+  const getLinkPath = (url: string) => {
+    // If URL is external (has http or https), return as is
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // For internal links, ensure they start with a slash but don't have double slashes
+    const path = url.startsWith('/') ? url : `/${url}`;
+    return path.replace(/\/+/g, '/');
+  };
+
   return (
     <section className="section-padding bg-secondary/30">
       <div className="container mx-auto">
@@ -71,13 +83,29 @@ const About: React.FC = () => {
               ))}
             </div>
             
-            <Link
-              to={aboutSettings.learnMoreUrl}
-              className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
-            >
-              {aboutSettings.learnMoreText}
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            {aboutSettings.learnMoreUrl && (
+              aboutSettings.learnMoreUrl.startsWith('http') ? (
+                // External link
+                <a
+                  href={aboutSettings.learnMoreUrl}
+                  className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {aboutSettings.learnMoreText}
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+              ) : (
+                // Internal link
+                <Link
+                  to={getLinkPath(aboutSettings.learnMoreUrl)}
+                  className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
+                >
+                  {aboutSettings.learnMoreText}
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              )
+            )}
           </div>
           
           <div className="relative" ref={statsRef}>

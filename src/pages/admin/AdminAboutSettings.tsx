@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -286,8 +285,13 @@ const AdminAboutSettings: React.FC = () => {
                         value={settings.learnMoreUrl} 
                         onChange={handleGeneralSettingsChange}
                         className="rounded-l-none"
+                        placeholder="/about or https://example.com"
                       />
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      For internal pages, start with a slash (e.g., "/about"). 
+                      For external links, include the full URL (e.g., "https://example.com").
+                    </p>
                   </div>
                 </div>
                 
