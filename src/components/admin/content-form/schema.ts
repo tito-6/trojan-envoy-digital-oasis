@@ -24,8 +24,7 @@ export const contentFormSchema = z.object({
   author: z.string().optional(),
   role: z.string().optional(),
   company: z.string().optional(),
-  rating: z.string().optional()
-    .transform(val => val ? Number(val) : undefined),
+  rating: z.coerce.number().optional(),
   answer: z.string().optional(),
   technologies: z.string().optional(),
   duration: z.string().optional(),
@@ -39,10 +38,8 @@ export const contentFormSchema = z.object({
   requirements: z.string().optional(),
   benefits: z.string().optional(),
   applyUrl: z.string().optional(),
-  salaryMin: z.string().optional()
-    .transform(val => val ? Number(val) : undefined),
-  salaryMax: z.string().optional()
-    .transform(val => val ? Number(val) : undefined),
+  salaryMin: z.coerce.number().optional(),
+  salaryMax: z.coerce.number().optional(),
 });
 
 export type ContentFormValues = z.infer<typeof contentFormSchema>;

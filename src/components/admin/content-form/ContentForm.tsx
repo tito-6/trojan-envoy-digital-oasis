@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -105,7 +104,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       author: initialValues?.author || "",
       role: initialValues?.role || "",
       company: initialValues?.company || "",
-      rating: initialValues?.rating !== undefined ? String(initialValues.rating) : "5",
+      rating: initialValues?.rating !== undefined ? initialValues.rating : 5,
       answer: initialValues?.answer || "",
       technologies: technologiesInput,
       duration: initialValues?.duration || "",
@@ -119,8 +118,8 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       requirements: requirementsInput,
       benefits: benefitsInput,
       applyUrl: initialValues?.applyUrl || "",
-      salaryMin: initialValues?.salaryMin !== undefined ? String(initialValues.salaryMin) : "",
-      salaryMax: initialValues?.salaryMax !== undefined ? String(initialValues.salaryMax) : "",
+      salaryMin: initialValues?.salaryMin,
+      salaryMax: initialValues?.salaryMax,
     },
   });
 
@@ -171,16 +170,11 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     return !newErrors.slug;
   };
 
-  // Process files before saving
   const processFilesForSaving = (): { imageUrls: string[], documentUrls: string[] } => {
-    // In a real implementation, we would upload files to a server and get URLs back
-    // For this demo, we'll simulate the process by converting Files to fake URLs
-    
     const imageUrls: string[] = images.map((image, index) => {
       if (typeof image === 'string') {
         return image; // Already a URL/path
       }
-      // Simulate a URL for File objects - in a real app, this would be the result of file upload
       return `/uploads/images/${image.name}`;
     });
     
@@ -188,7 +182,6 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       if (typeof doc === 'string') {
         return doc; // Already a URL/path
       }
-      // Simulate a URL for File objects
       return `/uploads/documents/${doc.name}`;
     });
     
@@ -213,10 +206,8 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       });
     }
     
-    // Process files to get URLs
     const { imageUrls, documentUrls } = processFilesForSaving();
     
-    // Parse string inputs into arrays
     const parsedTechnologies = technologiesInput
       ? technologiesInput.split(',').map(t => t.trim()).filter(Boolean) 
       : [];
@@ -237,11 +228,6 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       ? values.seoKeywords.split(',').map(k => k.trim()).filter(Boolean)
       : keywords;
       
-    // Extract and convert numeric values - using the schema transformations
-    const rating = values.rating ? Number(values.rating) : undefined;
-    const salaryMin = values.salaryMin ? Number(values.salaryMin) : undefined;
-    const salaryMax = values.salaryMax ? Number(values.salaryMax) : undefined;
-    
     const formattedValues: Partial<ContentItem> = {
       ...values,
       slug: slugInput,
@@ -249,13 +235,10 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       images: imageUrls,
       documents: documentUrls,
       videos,
-      rating,
       technologies: parsedTechnologies,
       responsibilities: parsedResponsibilities,
       requirements: parsedRequirements,
       benefits: parsedBenefits,
-      salaryMin,
-      salaryMax,
       placement: {
         pageId: values.placementPageId ? Number(values.placementPageId) : undefined,
         sectionId: values.placementSectionId ? Number(values.placementSectionId) : undefined,
@@ -268,7 +251,6 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     onSave(formattedValues as ContentItem);
   };
 
-  // Helper methods for the form fields
   const addKeyword = () => {
     if (keywordInput.trim() && !keywords.includes(keywordInput.trim())) {
       setKeywords([...keywords, keywordInput.trim()]);
@@ -342,7 +324,6 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     }
   };
 
-  // Value handlers for specialized fields
   const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCategoryInput(e.target.value);
     form.setValue("category", e.target.value);
@@ -365,7 +346,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
 
   const handleRatingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setRatingInput(e.target.value);
-    form.setValue("rating", e.target.value);
+    form.setValue("rating", Number(e.target.value));
   };
 
   const handleAnswerChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -435,21 +416,19 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
 
   const handleSalaryMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSalaryMinInput(e.target.value);
-    form.setValue("salaryMin", e.target.value);
+    form.setValue("salaryMin", e.target.value ? Number(e.target.value) : undefined);
   };
 
   const handleSalaryMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSalaryMaxInput(e.target.value);
-    form.setValue("salaryMax", e.target.value);
+    form.setValue("salaryMax", e.target.value ? Number(e.target.value) : undefined);
   };
 
-  // Form tab state and helper fields
   const formTabProps = {
     activeTab,
     setActiveTab,
     contentType,
     form,
-    // Form state
     slugInput,
     autoGenerateSlug,
     keywordInput,
@@ -461,32 +440,26 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     videoInput,
     pages,
     pageSections,
-    // Testimonial fields
     authorInput,
     roleInput,
     companyInput,
     ratingInput,
-    // FAQ fields
     answerInput,
-    // Team Member fields
-    departmentInput,
-    responsibilitiesInput,
-    // Case Study fields
-    clientInput,
-    durationInput,
     technologiesInput,
+    durationInput,
+    clientInput,
     challengeInput,
     solutionInput,
     resultsInput,
-    // Job Posting fields
     locationInput,
+    departmentInput,
+    responsibilitiesInput,
     requirementsInput,
     benefitsInput,
     applyUrlInput,
     salaryMinInput,
     salaryMaxInput,
     categoryInput,
-    // Handlers
     handleSlugChange,
     toggleAutoGenerateSlug,
     addKeyword,
