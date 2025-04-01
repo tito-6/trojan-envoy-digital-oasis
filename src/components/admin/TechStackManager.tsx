@@ -88,7 +88,7 @@ const animationOptions = [
   { value: "hover:animate-spin", label: "Spin on Hover" },
   { value: "hover:scale-110 transition-transform", label: "Scale on Hover" },
   { value: "hover:rotate-12 transition-transform", label: "Rotate on Hover" },
-  { value: "", label: "No Animation" },
+  { value: "none", label: "No Animation" }, // Changed from empty string to "none"
 ];
 
 const TechIconItem: React.FC<{
@@ -546,3 +546,4 @@ const TechStackManager: React.FC = () => {
 };
 
 export default TechStackManager;
+
