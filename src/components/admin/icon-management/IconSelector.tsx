@@ -49,20 +49,16 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
   
   // Perform the actual search
   const performSearch = (query: string) => {
-    console.log(`Performing search for: "${query}"`);
     setIsSearching(true);
     
     try {
       // Use the searchIcons utility to get matching icons
       const results = searchIcons(query, 300);
-      console.log(`Search returned ${results.length} results`);
       
       // Filter by selected library if needed
       const filteredResults = selectedLibrary !== "all" 
         ? results.filter(icon => icon.library === selectedLibrary)
         : results;
-      
-      console.log(`After library filtering: ${filteredResults.length} results`);
       
       // Convert search results to the format expected by the component
       const formattedResults = filteredResults.map(({ name, library }) => {
@@ -74,7 +70,6 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
         };
       }).filter(icon => icon.component);
       
-      console.log(`Final formatted results: ${formattedResults.length} icons`);
       setFilteredIcons(formattedResults);
     } catch (error) {
       console.error("Error searching icons:", error);
@@ -292,8 +287,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
   // Function to check if an icon is the selected one - handles both named icons and data URLs
   const isIconSelected = (iconValue: string) => {
     if (selectedIcon.startsWith('data:') && iconValue.startsWith('data:')) {
-      // Both are data URLs - this is a simplified check
-      return true;
+      return selectedIcon === iconValue;
     }
     
     return selectedIcon === iconValue;
@@ -368,9 +362,7 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
               <option value="Simple Icons">Simple Icons</option>
               <option value="Ant Design Icons">Ant Design</option>
               <option value="Bootstrap Icons">Bootstrap</option>
-              <option value="Feather Icons">Feather</option>
               <option value="Material Design Icons">Material Design</option>
-              <option value="Heroicons">Heroicons</option>
               <option value="Lucide Icons">Lucide</option>
             </select>
           </div>

@@ -1,8 +1,42 @@
+
 import React from 'react';
+import * as LucideIcons from 'lucide-react';
+import * as FaIcons from 'react-icons/fa';
+import * as SiIcons from 'react-icons/si';
+import * as LuIcons from 'react-icons/lu';
+import * as MdIcons from 'react-icons/md';
+import * as BsIcons from 'react-icons/bs';
+import * as AiIcons from 'react-icons/ai';
+import * as BiIcons from 'react-icons/bi';
+import * as IoIcons from 'react-icons/io';
+import * as Io5Icons from 'react-icons/io5';
+import * as DiIcons from 'react-icons/di';
+import * as GiIcons from 'react-icons/gi';
+import * as TiIcons from 'react-icons/ti';
+import * as CgIcons from 'react-icons/cg';
+import * as RiIcons from 'react-icons/ri';
 
 /**
  * Utility functions for icon management
  */
+
+// Define a map of all imported icon libraries
+const iconLibraries: Record<string, Record<string, React.ComponentType<any>>> = {
+  Fa: FaIcons,
+  Si: SiIcons,
+  Lu: LucideIcons,
+  Md: MdIcons,
+  Bs: BsIcons,
+  Ai: AiIcons,
+  Bi: BiIcons,
+  Io: IoIcons,
+  Io5: Io5Icons,
+  Di: DiIcons,
+  Gi: GiIcons,
+  Ti: TiIcons,
+  Cg: CgIcons,
+  Ri: RiIcons
+};
 
 /**
  * Convert an SVG string to a data URL
@@ -36,54 +70,33 @@ export const getIconComponentByName = (iconName: string): React.ComponentType<an
     return (props: any) => React.createElement('img', {
       src: iconName,
       alt: "Custom Icon",
+      className: "w-full h-full object-contain",
       style: { width: props.size || '24px', height: props.size || '24px' },
       ...props
     });
   }
   
   // Extract the library prefix (first 2 characters usually) and icon name
-  const prefix = iconName.substring(0, 2).toLowerCase();
+  const prefix = iconName.substring(0, 2);
   
-  // Import the relevant library dynamically
-  try {
-    let iconComponent = null;
-    
-    // Special case for Io5 (since it starts with "Io5" not just "Io")
-    if (iconName.startsWith('Io5')) {
-      const Io5Icons = require('react-icons/io5');
-      iconComponent = Io5Icons[iconName];
-    } else {
-      // Map of prefixes to libraries
-      const libraryMap: Record<string, string> = {
-        fa: 'fa', si: 'si', ai: 'ai', bs: 'bs', fi: 'fi',
-        gr: 'gr', hi: 'hi', im: 'im', md: 'md', ti: 'ti',
-        vs: 'vsc', di: 'di', bi: 'bi', fc: 'fc', io: 'io',
-        ri: 'ri', wi: 'wi', ci: 'ci', gi: 'gi', cg: 'cg',
-        lu: 'lu', pi: 'pi', tb: 'tb', sl: 'sl', rx: 'rx',
-        go: 'go',
-      };
-      
-      const libraryName = libraryMap[prefix];
-      if (!libraryName) {
-        console.warn(`Library not found for prefix: ${prefix}`);
-        return null;
-      }
-      
-      // Import the library
-      const iconLibrary = require(`react-icons/${libraryName}`);
-      iconComponent = iconLibrary[iconName];
-    }
-    
-    if (!iconComponent) {
-      console.warn(`Icon not found: ${iconName}`);
-      return null;
-    }
-    
-    return iconComponent;
-  } catch (error) {
-    console.error(`Failed to load icon: ${iconName}`, error);
-    return null;
+  // Special case for Io5 (since it starts with "Io5" not just "Io")
+  if (iconName.startsWith('Io5')) {
+    return Io5Icons[iconName] || null;
   }
+  
+  // Try to find the icon in the corresponding library
+  const library = iconLibraries[prefix];
+  if (library) {
+    return library[iconName] || null;
+  }
+  
+  // If not found in our libraries, check if it's a Lucide icon
+  if (LucideIcons[iconName as keyof typeof LucideIcons]) {
+    return LucideIcons[iconName as keyof typeof LucideIcons] as React.ComponentType<any>;
+  }
+  
+  console.warn(`Icon not found: ${iconName}`);
+  return null;
 };
 
 /**
@@ -195,6 +208,7 @@ export const renderIcon = (icon: string | React.ComponentType<any>): React.Compo
     return (props: any) => React.createElement('img', {
       src: icon,
       alt: "Custom Icon",
+      className: "w-full h-full object-contain",
       style: { width: props.size || '24px', height: props.size || '24px' },
       ...props
     });
@@ -251,15 +265,15 @@ export const searchIcons = (query: string, limit = 100): { name: string; library
     "Go": "Github Octicons"
   };
   
-  // For debugging
-  console.log(`Searching for icons with query: "${query}"`);
+  // Create a list of all available icon names
+  // Since we can't dynamically require all icons, we'll use a predefined list for each library
+  // This is a simplified approach - in a production app, this might be generated at build time
   
-  // Create a list of all available icon names from react-icons
-  const allIcons = [
+  const commonIcons = [
     // Font Awesome icons
-    { prefix: 'Fa', icons: ['FaReact', 'FaAngular', 'FaVuejs', 'FaNode', 'FaNpm', 'FaGithub', 'FaAws', 'FaGoogle', 'FaFacebook', 'FaTwitter', 'FaInstagram', 'FaLinkedin', 'FaYoutube', 'FaAmazon', 'FaApple', 'FaMicrosoft', 'FaSlack', 'FaJira', 'FaWordpress', 'FaShopify'] },
+    { prefix: 'Fa', icons: ['FaReact', 'FaAngular', 'FaVuejs', 'FaNode', 'FaNpm', 'FaGithub', 'FaAws', 'FaGoogle', 'FaFacebook', 'FaTwitter', 'FaInstagram', 'FaLinkedin', 'FaYoutube', 'FaAmazon', 'FaApple', 'FaMicrosoft', 'FaSlack', 'FaJira', 'FaWordpress', 'FaShopify', 'FaDocker', 'FaDatabase', 'FaPython', 'FaJava', 'FaPhp', 'FaSwift', 'FaAward'] },
     // Simple Icons
-    { prefix: 'Si', icons: ['SiJavascript', 'SiTypescript', 'SiReact', 'SiNextdotjs', 'SiVuedotjs', 'SiAngular', 'SiTailwindcss', 'SiBootstrap', 'SiMongodb', 'SiPostgresql', 'SiMysql', 'SiFirebase', 'SiGraphql', 'SiDocker', 'SiKubernetes', 'SiGooglecloud', 'SiAmazonaws', 'SiMicrosoft', 'SiVercel', 'SiNetlify'] },
+    { prefix: 'Si', icons: ['SiJavascript', 'SiTypescript', 'SiReact', 'SiNextdotjs', 'SiVuedotjs', 'SiAngular', 'SiTailwindcss', 'SiBootstrap', 'SiMongodb', 'SiPostgresql', 'SiMysql', 'SiFirebase', 'SiGraphql', 'SiDocker', 'SiKubernetes', 'SiGooglecloud', 'SiAmazonaws', 'SiMicrosoft', 'SiVercel', 'SiNetlify', 'SiFlutter', 'SiKotlin', 'SiMongodb', 'SiGraphql'] },
     // Lucide Icons
     { prefix: 'Lu', icons: ['LuActivity', 'LuAirplay', 'LuAlertCircle', 'LuAlertOctagon', 'LuAlertTriangle', 'LuAlignCenter', 'LuAlignJustify', 'LuAlignLeft', 'LuAlignRight', 'LuAnchor', 'LuAperture', 'LuArchive', 'LuArrowDown', 'LuArrowLeft', 'LuArrowRight', 'LuArrowUp', 'LuAtSign', 'LuAward', 'LuBarChart', 'LuBattery'] },
     // Material Design Icons
@@ -269,7 +283,7 @@ export const searchIcons = (query: string, limit = 100): { name: string; library
   ];
   
   // Process each library and search for matching icons
-  for (const library of allIcons) {
+  for (const library of commonIcons) {
     const libraryName = libraryNames[library.prefix] || library.prefix;
     
     for (const iconName of library.icons) {
@@ -316,55 +330,51 @@ export const searchIcons = (query: string, limit = 100): { name: string; library
     }
   }
   
+  // Also check actual imported libraries for exact matches
+  for (const [prefix, library] of Object.entries(iconLibraries)) {
+    const libraryName = libraryNames[prefix] || prefix;
+    
+    for (const iconName of Object.keys(library)) {
+      // Skip non-icon exports
+      if (iconName === 'default' || typeof library[iconName] !== 'function') continue;
+      
+      const lowerName = iconName.toLowerCase();
+      let score = 0;
+      
+      if (lowerName === lowerQuery) {
+        score = 100;
+      } else if (lowerName.startsWith(lowerQuery)) {
+        score = 80;
+      } else if (lowerName.includes(lowerQuery)) {
+        score = 60;
+      } else {
+        const words = iconName.replace(/([A-Z])/g, ' $1').toLowerCase().split(/\s+/);
+        for (const word of words) {
+          if (word.startsWith(lowerQuery)) {
+            score = 40;
+            break;
+          } else if (word.includes(lowerQuery)) {
+            score = 30;
+            break;
+          }
+        }
+      }
+      
+      if (score > 0 && !results.some(r => r.name === iconName)) {
+        results.push({
+          name: iconName,
+          library: libraryName,
+          score
+        });
+      }
+    }
+  }
+  
   // Sort by relevance score (highest first)
   results.sort((a, b) => b.score - a.score);
   
-  // Log the number of results found
-  console.log(`Found ${results.length} icons matching "${query}"`);
-  
   // Limit and return the results
   return results.slice(0, limit).map(({ name, library }) => ({ name, library }));
-};
-
-/**
- * Get a catalog of available icons by library
- * @returns A map of library prefixes to arrays of icon names
- */
-export const getIconCatalog = (): Record<string, string[]> => {
-  try {
-    const catalog: Record<string, string[]> = {};
-    
-    // Define the libraries to catalog
-    const libraryPrefixes = [
-      'Fa', 'Si', 'Ai', 'Bs', 'Fi', 'Gr', 'Hi', 'Im', 'Md', 'Ti', 
-      'Vsc', 'Di', 'Bi', 'Fc', 'Io', 'Io5', 'Ri', 'Wi', 'Ci', 'Gi', 
-      'Cg', 'Lu', 'Pi', 'Tb', 'Sl', 'Rx', 'Go'
-    ];
-    
-    // Import each library and extract icon names
-    libraryPrefixes.forEach(prefix => {
-      try {
-        const lowercasePrefix = prefix.toLowerCase();
-        const library = require(`react-icons/${lowercasePrefix}`);
-        
-        // Filter to include only component exports
-        const iconNames = Object.keys(library).filter(key => 
-          key !== 'default' && typeof library[key] === 'object'
-        );
-        
-        if (iconNames.length > 0) {
-          catalog[prefix] = iconNames;
-        }
-      } catch (error) {
-        console.warn(`Failed to load icon library: ${prefix}`, error);
-      }
-    });
-    
-    return catalog;
-  } catch (error) {
-    console.error('Error creating icon catalog:', error);
-    return {};
-  }
 };
 
 /**
@@ -376,26 +386,38 @@ export const getIconsFromLibrary = (libraryPrefix: string): { name: string; comp
   try {
     if (!libraryPrefix) return [];
     
-    const lowercasePrefix = libraryPrefix.substring(0, 2).toLowerCase();
-    let library;
-    
-    try {
-      library = require(`react-icons/${lowercasePrefix}`);
-    } catch (error) {
-      console.warn(`Failed to load icon library: ${libraryPrefix}`, error);
+    const library = iconLibraries[libraryPrefix];
+    if (!library) {
+      console.warn(`Library not found: ${libraryPrefix}`);
       return [];
     }
     
-    const icons = Object.keys(library)
-      .filter(key => key !== 'default' && typeof library[key] === 'object')
-      .map(name => ({
-        name: libraryPrefix + name,
-        component: library[name]
+    return Object.entries(library)
+      .filter(([key, value]) => key !== 'default' && typeof value === 'function')
+      .map(([name, component]) => ({
+        name,
+        component
       }));
-    
-    return icons;
   } catch (error) {
     console.error(`Error getting icons from library ${libraryPrefix}:`, error);
     return [];
   }
+};
+
+/**
+ * Get a catalog of available icon names
+ * @returns A list of icon names by library
+ */
+export const getIconCatalog = (): string[] => {
+  const catalog: string[] = [];
+  
+  for (const [prefix, library] of Object.entries(iconLibraries)) {
+    for (const iconName of Object.keys(library)) {
+      if (iconName !== 'default' && typeof library[iconName] === 'function') {
+        catalog.push(iconName);
+      }
+    }
+  }
+  
+  return catalog;
 };

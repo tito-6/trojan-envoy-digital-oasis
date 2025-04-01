@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from "react";
+
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Award, Check } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
@@ -30,7 +31,7 @@ const Hero: React.FC = () => {
   const { t } = useLanguage();
   const heroRef = useRef<HTMLDivElement>(null);
   const techSectionRef = useRef<HTMLDivElement>(null);
-  const heroSettings = storageService.getHeroSettings();
+  const [heroSettings, setHeroSettings] = useState(storageService.getHeroSettings());
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -87,13 +88,11 @@ const Hero: React.FC = () => {
 
   useEffect(() => {
     const unsubscribe = storageService.addEventListener('hero-settings-updated', () => {
-      setForceUpdate(prev => prev + 1);
+      setHeroSettings(storageService.getHeroSettings());
     });
     
     return unsubscribe;
   }, []);
-
-  const [forceUpdate, setForceUpdate] = React.useState(0);
   
   const renderPartnerLogo = (logo: PartnerLogo) => {
     return (
