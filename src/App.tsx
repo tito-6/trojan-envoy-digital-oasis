@@ -17,6 +17,7 @@ import AdminContacts from "@/pages/admin/AdminContacts";
 import AdminLogin from "@/pages/admin/AdminLogin";
 import AdminUsers from "@/pages/admin/AdminUsers";
 import AdminHero from "@/pages/admin/AdminHero";
+import AdminSettings from "@/pages/admin/AdminSettings";
 import FAQ from "@/pages/FAQ";
 import Careers from "@/pages/Careers";
 import CaseStudies from "@/pages/CaseStudies";
@@ -59,6 +60,7 @@ function App() {
               <Route path="hero" element={<AdminHero />} />
               <Route path="contacts" element={<AdminContacts />} />
               <Route path="users" element={<AdminUsers />} />
+              <Route path="settings" element={<AdminSettings />} />
             </Route>
             <Route path="/admin/login" element={<AdminLogin />} />
             
