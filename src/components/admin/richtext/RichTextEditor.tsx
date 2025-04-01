@@ -6,6 +6,11 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 
+// Polyfill for global object needed by draft-js
+if (typeof window !== 'undefined' && typeof window.global === 'undefined') {
+  window.global = window;
+}
+
 interface RichTextEditorProps {
   label?: string;
   value: string | { blocks: any[]; entityMap: Record<string, any> } | undefined;
