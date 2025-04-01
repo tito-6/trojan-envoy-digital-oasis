@@ -28,12 +28,54 @@ export const Icon: React.FC<IconProps> = ({ name, color, size = 24, className = 
   // Check if it's a Lucide icon
   if (name in LucideIcons) {
     const LucideIcon = LucideIcons[name as keyof typeof LucideIcons] as React.ElementType;
-    return <LucideIcon color={color} size={size} className={className} />;
+    // Ensure LucideIcon is a valid React component before rendering
+    if (typeof LucideIcon === 'function' || typeof LucideIcon === 'object') {
+      return <LucideIcon color={color} size={size} className={className} />;
+    }
   }
 
   // If it's a URL, render an image
   if (name.startsWith('http') || name.startsWith('/')) {
     return <img src={name} alt="icon" className={className} style={{ width: size, height: size }} />;
+  }
+
+  // Map common tech names to known icons if explicit icon name not found
+  const techIconMap: Record<string, string> = {
+    'react': 'FaReact',
+    'vue': 'FaVuejs',
+    'angular': 'FaAngular',
+    'javascript': 'SiJavascript',
+    'typescript': 'SiTypescript',
+    'node': 'FaNodeJs',
+    'nodejs': 'FaNodeJs',
+    'python': 'FaPython',
+    'java': 'FaJava',
+    'php': 'FaPhp',
+    'kotlin': 'SiKotlin',
+    'swift': 'FaSwift',
+    'flutter': 'SiFlutter',
+    'firebase': 'SiFirebase',
+    'mongodb': 'SiMongodb',
+    'sql': 'FaDatabase',
+    'graphql': 'SiGraphql',
+    'tailwind': 'SiTailwindcss',
+    'docker': 'FaDocker',
+    'aws': 'FaAws',
+    'github': 'FaGithub',
+    'nextjs': 'SiNextdotjs'
+  };
+
+  // Try to find a matching icon in the map
+  const lowerName = name.toLowerCase();
+  if (lowerName in techIconMap) {
+    const iconName = techIconMap[lowerName];
+    if (iconName.startsWith('Fa') && iconName in FaIcons) {
+      const MappedIcon = FaIcons[iconName as keyof typeof FaIcons] as React.ElementType;
+      return <MappedIcon color={color} size={size} className={className} />;
+    } else if (iconName.startsWith('Si') && iconName in SiIcons) {
+      const MappedIcon = SiIcons[iconName as keyof typeof SiIcons] as React.ElementType;
+      return <MappedIcon color={color} size={size} className={className} />;
+    }
   }
 
   // Fallback for when no icon is found
