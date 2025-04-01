@@ -33,15 +33,15 @@ import { useLanguage } from "./lib/i18n";
 import { Toaster } from "@/components/ui/sonner";
 
 function App() {
-  const { setLanguage, language } = useLanguage();
+  const { setLanguage, currentLanguage } = useLanguage();
   
   useEffect(() => {
     const htmlEl = document.querySelector("html");
     if (htmlEl) {
-      htmlEl.setAttribute("lang", language);
-      htmlEl.setAttribute("dir", language === "ar" ? "rtl" : "ltr");
+      htmlEl.setAttribute("lang", currentLanguage);
+      htmlEl.setAttribute("dir", currentLanguage === "ar" ? "rtl" : "ltr");
     }
-  }, [language]);
+  }, [currentLanguage]);
 
   return (
     <BrowserRouter>
