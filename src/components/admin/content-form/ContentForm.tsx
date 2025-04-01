@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { ContentType, ContentItem } from "@/lib/types";
+import { ContentType, ContentItem, TechItem } from "@/lib/types";
 import { storageService } from "@/lib/storage";
 import { FormTabs } from "./FormTabs";
 import { contentFormSchema, ContentFormValues } from "./schema";
@@ -75,6 +75,31 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     initialValues?.salaryMax !== undefined ? String(initialValues.salaryMax) : ""
   );
 
+  const [techItems, setTechItems] = useState<TechItem[]>(initialValues?.techItems || []);
+  const [newTechName, setNewTechName] = useState("");
+  const [newTechIcon, setNewTechIcon] = useState("");
+  const [newTechColor, setNewTechColor] = useState("#4285F4");
+
+  const addTechItem = () => {
+    if (newTechName && newTechIcon) {
+      const newItem: TechItem = {
+        name: newTechName,
+        iconName: newTechIcon,
+        color: newTechColor || "#4285F4",
+        animate: Math.random() > 0.5 ? "animate-float" : "animate-pulse-soft"
+      };
+      
+      setTechItems(prev => [...prev, newItem]);
+      setNewTechName("");
+      setNewTechIcon("");
+      setNewTechColor("#4285F4");
+    }
+  };
+
+  const removeTechItem = (index: number) => {
+    setTechItems(prev => prev.filter((_, i) => i !== index));
+  };
+
   useEffect(() => {
     const allPages = storageService.getContentByType("Page");
     const allSections = storageService.getContentByType("Page Section");
@@ -120,6 +145,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       applyUrl: initialValues?.applyUrl || "",
       salaryMin: initialValues?.salaryMin,
       salaryMax: initialValues?.salaryMax,
+      techItems: JSON.stringify(initialValues?.techItems || []),
     },
   });
 
@@ -239,6 +265,7 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       responsibilities: parsedResponsibilities,
       requirements: parsedRequirements,
       benefits: parsedBenefits,
+      techItems: techItems,
       placement: {
         pageId: values.placementPageId ? Number(values.placementPageId) : undefined,
         sectionId: values.placementSectionId ? Number(values.placementSectionId) : undefined,
@@ -460,6 +487,16 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     salaryMinInput,
     salaryMaxInput,
     categoryInput,
+    techItems,
+    newTechName,
+    newTechIcon,
+    newTechColor,
+    setTechItems,
+    setNewTechName,
+    setNewTechIcon,
+    setNewTechColor,
+    addTechItem,
+    removeTechItem,
     handleSlugChange,
     toggleAutoGenerateSlug,
     addKeyword,

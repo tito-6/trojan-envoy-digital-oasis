@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ContentType } from "@/lib/types";
+import { ContentType, TechItem } from "@/lib/types";
 import { UseFormReturn } from "react-hook-form";
 import { ContentFormValues } from "./schema";
 import { BasicInfoTab } from "./tabs/BasicInfoTab";
@@ -13,6 +13,7 @@ import { FAQTab } from "./tabs/FAQTab";
 import { TeamMemberTab } from "./tabs/TeamMemberTab";
 import { CaseStudyTab } from "./tabs/CaseStudyTab";
 import { JobPostingTab } from "./tabs/JobPostingTab";
+import { TechStackTab } from "./tabs/TechStackTab";
 
 interface FormTabsProps {
   activeTab: string;
@@ -60,6 +61,11 @@ interface FormTabsProps {
   salaryMinInput: string;
   salaryMaxInput: string;
   categoryInput: string;
+  // Tech Stack fields
+  techItems: TechItem[];
+  newTechName: string;
+  newTechIcon: string;
+  newTechColor: string;
   // Handlers
   handleSlugChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   toggleAutoGenerateSlug: () => void;
@@ -93,6 +99,13 @@ interface FormTabsProps {
   handleApplyUrlChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSalaryMinChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSalaryMaxChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  // Tech Stack handlers
+  setTechItems: React.Dispatch<React.SetStateAction<TechItem[]>>;
+  setNewTechName: React.Dispatch<React.SetStateAction<string>>;
+  setNewTechIcon: React.Dispatch<React.SetStateAction<string>>;
+  setNewTechColor: React.Dispatch<React.SetStateAction<string>>;
+  addTechItem: () => void;
+  removeTechItem: (index: number) => void;
 }
 
 export const FormTabs: React.FC<FormTabsProps> = ({
@@ -107,6 +120,7 @@ export const FormTabs: React.FC<FormTabsProps> = ({
   const showFAQFields = contentType === "FAQ";
   const showCaseStudyFields = contentType === "Case Study";
   const showJobPostingFields = contentType === "Job Posting";
+  const showTechStackFields = contentType === "Technology Stack";
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -129,6 +143,9 @@ export const FormTabs: React.FC<FormTabsProps> = ({
         )}
         {showJobPostingFields && (
           <TabsTrigger value="job" className="flex-1">Job Posting</TabsTrigger>
+        )}
+        {showTechStackFields && (
+          <TabsTrigger value="tech-stack" className="flex-1">Tech Stack</TabsTrigger>
         )}
       </TabsList>
       
@@ -225,6 +242,22 @@ export const FormTabs: React.FC<FormTabsProps> = ({
           handleRequirementsChange={props.handleRequirementsChange}
           handleBenefitsChange={props.handleBenefitsChange}
           handleApplyUrlChange={props.handleApplyUrlChange}
+        />
+      )}
+      
+      {showTechStackFields && (
+        <TechStackTab
+          form={form}
+          techItems={props.techItems}
+          setTechItems={props.setTechItems}
+          newTechName={props.newTechName}
+          setNewTechName={props.setNewTechName}
+          newTechIcon={props.newTechIcon}
+          setNewTechIcon={props.setNewTechIcon}
+          newTechColor={props.newTechColor}
+          setNewTechColor={props.setNewTechColor}
+          addTechItem={props.addTechItem}
+          removeTechItem={props.removeTechItem}
         />
       )}
     </Tabs>

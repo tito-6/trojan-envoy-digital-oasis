@@ -2,6 +2,7 @@
 import React, { useEffect } from "react";
 import Hero from "@/components/home/Hero";
 import Services from "@/components/home/Services";
+import TechnologyStack from "@/components/home/TechnologyStack";
 import About from "@/components/home/About";
 import Contact from "@/components/home/Contact";
 import Header from "@/components/common/Header";
@@ -40,6 +41,7 @@ const Index: React.FC = () => {
       <main>
         <Hero />
         <Services />
+        <TechnologyStack />
         <About />
         <References />
         <HomeFAQ />

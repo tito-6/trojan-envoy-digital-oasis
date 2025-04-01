@@ -179,6 +179,7 @@ const AdminContent: React.FC = () => {
             <SelectItem value="Team Member">Team Member</SelectItem>
             <SelectItem value="Case Study">Case Study</SelectItem>
             <SelectItem value="Job Posting">Job Posting</SelectItem>
+            <SelectItem value="Technology Stack">Technology Stack</SelectItem>
           </SelectContent>
         </Select>
 
@@ -274,6 +275,14 @@ const AdminContent: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">Information about services offered.</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Technology Stack</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Technology stack showcased on the homepage.</p>
               </CardContent>
             </Card>
           </div>
