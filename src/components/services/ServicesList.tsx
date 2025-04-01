@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Code, Smartphone, Paintbrush, BarChart, Globe, ShoppingCart, FileText } from "lucide-react";
+import { ArrowRight, Code, Smartphone, Paintbrush2, BarChart, Globe, ShoppingCart, FileText } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/lib/i18n";
 import { storageService } from "@/lib/storage";
@@ -70,6 +69,9 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             src={images[0]} 
             alt={title} 
             className="w-full h-40 object-cover rounded-md"
+            onError={(e) => {
+              e.currentTarget.src = "/placeholder.svg";
+            }}
           />
         </div>
       )}
@@ -102,7 +104,7 @@ const getIconForService = (title: string) => {
   const normalizedTitle = title.toLowerCase();
   if (normalizedTitle.includes('web')) return <Code className="w-5 h-5 text-primary" />;
   if (normalizedTitle.includes('mobile')) return <Smartphone className="w-5 h-5 text-primary" />;
-  if (normalizedTitle.includes('ui') || normalizedTitle.includes('ux') || normalizedTitle.includes('design')) return <Paintbrush className="w-5 h-5 text-primary" />;
+  if (normalizedTitle.includes('ui') || normalizedTitle.includes('ux') || normalizedTitle.includes('design')) return <Paintbrush2 className="w-5 h-5 text-primary" />;
   if (normalizedTitle.includes('market')) return <BarChart className="w-5 h-5 text-primary" />;
   if (normalizedTitle.includes('seo')) return <Globe className="w-5 h-5 text-primary" />;
   if (normalizedTitle.includes('commerce')) return <ShoppingCart className="w-5 h-5 text-primary" />;
