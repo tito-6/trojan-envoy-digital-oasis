@@ -13,7 +13,6 @@ import { storageService } from "@/lib/storage";
 
 const Index: React.FC = () => {
   const { t } = useLanguage();
-  const [update, forceUpdate] = React.useState(false);
 
   useEffect(() => {
     // Add fade-in animation to elements with the fade-in-element class
@@ -47,6 +46,9 @@ const Index: React.FC = () => {
       unsubscribe();
     };
   }, [t]);
+  
+  // Force update state to trigger re-renders when settings change
+  const [update, forceUpdate] = React.useState(false);
 
   return (
     <div className="min-h-screen">

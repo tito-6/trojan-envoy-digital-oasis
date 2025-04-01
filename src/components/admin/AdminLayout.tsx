@@ -1,194 +1,231 @@
-import React, { ReactNode, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Layers, Users, Mail, Settings, Package, FileText, Home, Globe, Briefcase, MessageSquare, Image, Info } from 'lucide-react';
+import React, { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { 
+  LayoutDashboard, 
+  FileText, 
+  MessageSquare, 
+  Settings, 
+  LogOut, 
+  Menu, 
+  X, 
+  ChevronDown,
+  Users,
+  Shield,
+  MonitorSmartphone,
+  LucideIcon,
+  Palette,
+  Info
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useLanguage } from '@/lib/i18n';
-import { cn } from '@/lib/utils';
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import ThemeToggle from "@/components/ui/ThemeToggle";
+import { useToast } from "@/hooks/use-toast";
+
+interface SidebarItemProps {
+  icon: React.ReactNode;
+  title: string;
+  active?: boolean;
+  href: string;
+  onClick?: () => void;
+}
+
+const SidebarItem: React.FC<SidebarItemProps> = ({ 
+  icon, title, active, href, onClick 
+}) => {
+  return (
+    <Link
+      to={href}
+      className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+        active 
+          ? "bg-primary text-primary-foreground font-medium" 
+          : "hover:bg-secondary"
+      }`}
+      onClick={onClick}
+    >
+      {icon}
+      <span>{title}</span>
+    </Link>
+  );
+};
 
 interface AdminLayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
-
-interface NavItem {
-  icon: React.ReactNode;
-  label: string;
-  path: string;
-  badge?: number;
-}
-
-const navItems: NavItem[] = [
-  { 
-    icon: <Layers className="h-5 w-5" />, 
-    label: "Dashboard", 
-    path: "/admin" 
-  },
-  { 
-    icon: <FileText className="h-5 w-5" />, 
-    label: "Content Manager", 
-    path: "/admin/content" 
-  },
-  { 
-    icon: <Home className="h-5 w-5" />, 
-    label: "Hero Settings", 
-    path: "/admin/hero-settings" 
-  },
-  { 
-    icon: <Info className="h-5 w-5" />, 
-    label: "About Settings", 
-    path: "/admin/about-settings" 
-  },
-  { 
-    icon: <Package className="h-5 w-5" />, 
-    label: "Services", 
-    path: "/admin/services-settings" 
-  },
-  { 
-    icon: <Globe className="h-5 w-5" />, 
-    label: "Header & Navigation", 
-    path: "/admin/header-settings" 
-  },
-  { 
-    icon: <Mail className="h-5 w-5" />, 
-    label: "Contact Requests", 
-    path: "/admin/contacts",
-    badge: 3
-  },
-  { 
-    icon: <Users className="h-5 w-5" />, 
-    label: "User Management", 
-    path: "/admin/users" 
-  },
-  { 
-    icon: <Settings className="h-5 w-5" />, 
-    label: "Site Settings", 
-    path: "/admin/settings" 
-  }
-];
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useLanguage();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+  const { toast } = useToast();
+  const [open, setOpen] = useState(false);
+  
+  const handleLogout = () => {
+    // In a real app, this would handle the logout logic
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
+      variant: "default",
+    });
+    
+    // Navigate to login page
+    setTimeout(() => {
+      navigate("/admin/login");
+    }, 1000);
   };
-
+  
+  const navigationItems = [
+    { 
+      title: "Dashboard", 
+      icon: <LayoutDashboard className="w-4 h-4" />, 
+      href: "/admin/dashboard" 
+    },
+    { 
+      title: "Content Management", 
+      icon: <FileText className="w-4 h-4" />, 
+      href: "/admin/content" 
+    },
+    { 
+      title: "Header Management", 
+      icon: <MonitorSmartphone className="w-4 h-4" />, 
+      href: "/admin/header" 
+    },
+    { 
+      title: "Hero Management", 
+      icon: <Shield className="w-4 h-4" />, 
+      href: "/admin/hero" 
+    },
+    { 
+      title: "About Management", 
+      icon: <Info className="w-4 h-4" />, 
+      href: "/admin/about-settings" 
+    },
+    { 
+      title: "Services Management", 
+      icon: <Palette className="w-4 h-4" />, 
+      href: "/admin/services-settings" 
+    },
+    { 
+      title: "Contact Requests", 
+      icon: <MessageSquare className="w-4 h-4" />, 
+      href: "/admin/contacts" 
+    },
+    { 
+      title: "User Management", 
+      icon: <Users className="w-4 h-4" />, 
+      href: "/admin/users" 
+    },
+    { 
+      title: "Settings", 
+      icon: <Settings className="w-4 h-4" />, 
+      href: "/admin/settings" 
+    },
+  ];
+  
   const closeSidebar = () => {
-    setIsSidebarOpen(false);
+    setOpen(false);
   };
-
+  
   return (
-    <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-secondary border-r border-r-border transition-transform duration-300 transform ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } lg:translate-x-0 z-50`}
-      >
-        <div className="flex items-center justify-between p-4">
-          <Link to="/" className="font-bold text-xl">
-            Admin Panel
-          </Link>
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={toggleSidebar}>
-            {isSidebarOpen ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-6 w-6"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-6 w-6"
-              >
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            )}
-          </Button>
+    <div className="min-h-screen bg-background flex">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex flex-col w-64 border-r border-border bg-card">
+        <div className="p-4 border-b border-border flex items-center gap-2">
+          <Shield className="w-5 h-5 text-primary" />
+          <h1 className="font-display font-bold">Admin Panel</h1>
         </div>
-        <Separator />
-        <nav className="p-4">
-          <ul>
-            {navItems.map((item) => (
-              <li key={item.label} className="mb-2">
-                <Link
-                  to={item.path}
-                  className={cn(
-                    'flex items-center p-2 rounded-md hover:bg-secondary/50 transition-colors duration-200',
-                    location.pathname === item.path ? 'bg-secondary/50 font-medium' : ''
-                  )}
-                  onClick={closeSidebar}
-                >
-                  {item.icon}
-                  <span className="ml-3">{item.label}</span>
-                  {item.badge && (
-                    <span className="ml-auto px-2 py-0.5 bg-primary text-primary-foreground rounded-full text-xs font-medium">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        
+        <div className="flex flex-col p-3 gap-1 flex-grow">
+          {navigationItems.map((item) => (
+            <SidebarItem
+              key={item.title}
+              {...item}
+              active={location.pathname === item.href}
+            />
+          ))}
+        </div>
+        
+        <div className="mt-auto p-3 border-t border-border">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Log Out</span>
+          </button>
+        </div>
       </aside>
-
+      
       {/* Main Content */}
-      <div className="flex flex-col flex-1 overflow-x-hidden">
-        {/* Header */}
-        <header className="bg-background border-b border-b-border h-16 flex items-center justify-between px-4 lg:px-6">
-          <div className="flex items-center sm:space-x-4">
-            <Button variant="ghost" size="icon" className="mr-2 lg:hidden" onClick={toggleSidebar}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-6 w-6"
-              >
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            </Button>
-            <h1 className="text-xl font-semibold">{t('admin.dashboard')}</h1>
+      <div className="flex-grow flex flex-col">
+        {/* Top Bar */}
+        <header className="h-14 border-b border-border flex items-center justify-between px-4">
+          <div className="flex items-center md:hidden">
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0">
+                <div className="p-4 border-b border-border flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-primary" />
+                    <h1 className="font-display font-bold">Admin Panel</h1>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => setOpen(false)}>
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+                
+                <div className="flex flex-col p-3 gap-1">
+                  {navigationItems.map((item) => (
+                    <SidebarItem
+                      key={item.title}
+                      {...item}
+                      active={location.pathname === item.href}
+                      onClick={closeSidebar}
+                    />
+                  ))}
+                </div>
+                
+                <div className="mt-auto p-3 border-t border-border">
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      closeSidebar();
+                    }}
+                    className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Log Out</span>
+                  </button>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
-          <div className="flex items-center space-x-4">
-            <Avatar>
-              <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-            <Button variant="outline" size="sm" onClick={() => navigate('/admin/login')}>
-              Logout
-            </Button>
+          
+          <div className="md:hidden flex items-center gap-2">
+            <Shield className="w-5 h-5 text-primary" />
+            <span className="font-display font-bold">Admin</span>
+          </div>
+          
+          <div className="flex items-center ml-auto gap-2">
+            <ThemeToggle />
+            
+            <div className="relative">
+              <Button variant="ghost" className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
+                  <span className="text-xs font-medium">A</span>
+                </div>
+                <span className="hidden md:inline-block">Admin User</span>
+                <ChevronDown className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </header>
-
-        {/* Content */}
-        <main className="flex-1 p-4 lg:p-6 overflow-y-auto">
+        
+        {/* Page Content */}
+        <main className="flex-grow bg-background">
           {children}
         </main>
       </div>

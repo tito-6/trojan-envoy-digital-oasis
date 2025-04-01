@@ -1,11 +1,12 @@
 
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Code, Smartphone, Paintbrush2, BarChart } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { storageService } from "@/lib/storage";
 import { ServiceItem, ServicesSettings } from "@/lib/types";
+import { getIconComponentByName } from "@/lib/iconUtils";
 
 interface ServicesCardProps {
   title: string;
@@ -58,24 +59,6 @@ const ServicesCard: React.FC<ServicesCardProps> = ({
   );
 };
 
-// Helper function to get icon component
-const getServiceIcon = (iconName: string) => {
-  switch (iconName) {
-    case "Code":
-      return <Code />;
-    case "Smartphone":
-      return <Smartphone />;
-    case "Paintbrush":
-    case "Paintbrush2":
-      return <Paintbrush2 />;
-    case "BarChart":
-      return <BarChart />;
-    default:
-      // Fallback icon
-      return <Code />;
-  }
-};
-
 const defaultServices: ServiceItem[] = [
   {
     id: 1,
@@ -101,7 +84,7 @@ const defaultServices: ServiceItem[] = [
     id: 3,
     title: "UI/UX Design",
     description: "User-centered design that enhances the user experience and increases conversion rates.",
-    iconName: "Paintbrush2",
+    iconName: "Paintbrush",
     link: "/services/ui-ux-design",
     order: 3,
     color: "text-purple-600",
@@ -173,13 +156,13 @@ const Services: React.FC = () => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {sortedServices.map((service, index) => {
-            const serviceIcon = getServiceIcon(service.iconName);
+            const IconComponent = getIconComponentByName(service.iconName);
             return (
               <ServicesCard
                 key={service.id}
                 title={service.title}
                 description={service.description}
-                icon={serviceIcon}
+                icon={IconComponent ? <IconComponent /> : null}
                 link={service.link}
                 className={`animate-slide-up delay-${index * 100}`}
                 iconBgColor={service.bgColor || "bg-secondary"}
