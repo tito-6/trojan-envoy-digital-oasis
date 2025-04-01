@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
@@ -13,8 +13,8 @@ const ServiceDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [service, setService] = React.useState<ContentItem | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const [service, setService] = useState<ContentItem | null>(null);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     if (slug) {
@@ -35,7 +35,9 @@ const ServiceDetailPage: React.FC = () => {
             title: foundService.title,
             type: "Service",
             description: foundService.description,
+            content: foundService.content,
             formattedContent: foundService.formattedDescription,
+            htmlContent: foundService.htmlContent,
             seoTitle: foundService.seoTitle,
             seoDescription: foundService.seoDescription,
             seoKeywords: foundService.seoKeywords,
@@ -45,7 +47,9 @@ const ServiceDetailPage: React.FC = () => {
             documents: foundService.documents,
             published: true,
             lastUpdated: new Date().toISOString(),
-            iconName: foundService.iconName
+            iconName: foundService.iconName,
+            color: foundService.color,
+            bgColor: foundService.bgColor
           };
           
           setService(contentItem);

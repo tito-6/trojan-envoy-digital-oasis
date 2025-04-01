@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ExternalLink, FileText, Download } from "lucide-react";
@@ -93,6 +94,22 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
   const images = Array.isArray(service.images) ? service.images.filter(img => img && typeof img === 'string') : [];
   
   const renderContent = () => {
+    // Check if the content starts with <!DOCTYPE html> or <html, indicating complete HTML
+    if (service.content && (service.content.trim().startsWith('<!DOCTYPE html>') || service.content.trim().startsWith('<html'))) {
+      // Create iframe with HTML content
+      const htmlContent = service.content;
+      return (
+        <div className="w-full">
+          <iframe
+            srcDoc={htmlContent}
+            title={service.title}
+            className="w-full min-h-[600px] border-0 rounded-lg"
+            sandbox="allow-same-origin allow-scripts"
+          />
+        </div>
+      );
+    }
+    
     // If there's formatted content, render it as HTML
     if (service.formattedContent) {
       try {
@@ -107,13 +124,11 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service }) => {
       }
     }
     
-    // Check for HTML content and display as plain text, not rendered HTML
+    // Check for HTML content and render it properly
     if (service.htmlContent) {
       return (
         <div className="prose prose-lg max-w-none">
-          <pre className="whitespace-pre-wrap bg-muted p-4 rounded-md overflow-x-auto text-sm">
-            {service.htmlContent}
-          </pre>
+          <div dangerouslySetInnerHTML={{ __html: service.htmlContent }} />
         </div>
       );
     }
