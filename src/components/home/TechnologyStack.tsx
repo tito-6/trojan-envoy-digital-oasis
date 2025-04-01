@@ -10,6 +10,7 @@ import { SiTypescript, SiJavascript, SiFirebase, SiMongodb, SiGraphql,
 const TechnologyStack: React.FC = () => {
   const [techStackContent, setTechStackContent] = useState<ContentItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const fetchTechStack = () => {
@@ -32,6 +33,26 @@ const TechnologyStack: React.FC = () => {
     
     return () => {
       unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const techSection = document.getElementById('tech-stack-section');
+      if (techSection) {
+        const rect = techSection.getBoundingClientRect();
+        const isInView = rect.top <= window.innerHeight * 0.75 && rect.bottom >= 0;
+        if (isInView) {
+          setIsVisible(true);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check on initial load
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
@@ -98,6 +119,7 @@ const TechnologyStack: React.FC = () => {
 
   return (
     <div 
+      id="tech-stack-section"
       className="w-full py-20 bg-gradient-to-b from-background via-background/90 to-background relative overflow-hidden"
     >
       <div className="container mx-auto px-4">
@@ -120,7 +142,7 @@ const TechnologyStack: React.FC = () => {
             return (
               <div 
                 key={`${tech.name}-${index}`}
-                className="tech-icon flex flex-col items-center justify-center opacity-0 transform translate-y-8"
+                className={`tech-icon flex flex-col items-center justify-center ${isVisible ? 'opacity-100 transform-none' : 'opacity-0 transform translate-y-8'}`}
                 style={{ 
                   transitionDelay: `${index * 50}ms`,
                   transition: 'all 0.5s ease'
