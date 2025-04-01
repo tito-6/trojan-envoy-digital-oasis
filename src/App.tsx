@@ -21,6 +21,7 @@ import AdminContent from "./pages/admin/AdminContent";
 import AdminContacts from "./pages/admin/AdminContacts";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminHeader from "./pages/admin/AdminHeader";
+import AdminHero from "./pages/admin/AdminHero";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -127,6 +128,7 @@ const App = () => {
             <Route path="/admin/contacts" element={<AdminContacts />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/header" element={<AdminHeader />} />
+            <Route path="/admin/hero" element={<AdminHero />} />
             
             {/* Keep this catch-all route at the end */}
             <Route path="*" element={<NotFound />} />

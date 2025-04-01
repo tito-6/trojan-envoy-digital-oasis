@@ -101,3 +101,42 @@ export interface HeaderSettings {
   mobileMenuLabel: string;
   lastUpdated: string;
 }
+
+export interface PartnerLogo {
+  id: number;
+  name: string;
+  iconName: string;
+  color: string;
+  bgColor: string;
+  order: number;
+}
+
+export interface TechIcon {
+  id: number;
+  name: string;
+  iconName: string;
+  color: string;
+  animation: string;
+  order: number;
+}
+
+export interface HeroSettings {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  primaryButtonText: string;
+  primaryButtonUrl: string;
+  secondaryButtonText: string;
+  secondaryButtonUrl: string;
+  showPartnerLogos: boolean;
+  partnerSectionTitle: string;
+  partnerCertifiedText: string;
+  showTechStack: boolean;
+  techStackTitle: string;
+  techStackSubtitle: string;
+  techStackDescription: string;
+  partnerLogos: PartnerLogo[];
+  techIcons: TechIcon[];
+  lastUpdated: string;
+}

@@ -12,7 +12,8 @@ import {
   ChevronDown,
   Users,
   Shield,
-  MonitorSmartphone
+  MonitorSmartphone,
+  LucideIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -85,6 +86,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       title: "Header Management", 
       icon: <MonitorSmartphone className="w-4 h-4" />, 
       href: "/admin/header" 
+    },
+    { 
+      title: "Hero Management", 
+      icon: <Shield className="w-4 h-4" />, 
+      href: "/admin/hero" 
     },
     { 
       title: "Contact Requests", 

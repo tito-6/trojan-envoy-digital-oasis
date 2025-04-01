@@ -1,4 +1,4 @@
-import { ContentItem, ContactRequest, User, NavigationItem, HeaderSettings } from './types';
+import { ContentItem, ContactRequest, User, NavigationItem, HeaderSettings, HeroSettings, PartnerLogo, TechIcon } from './types';
 
 // Initial sample data for content - we'll keep this minimal
 const initialContent: ContentItem[] = [];
@@ -35,12 +35,64 @@ const initialHeaderSettings: HeaderSettings = {
   lastUpdated: "2023-11-15"
 };
 
+// Initial hero settings
+const initialHeroSettings: HeroSettings = {
+  id: 1,
+  title: "Transform Your Digital Presence",
+  subtitle: "Expert digital solutions",
+  description: "We deliver cutting-edge web and mobile solutions that help businesses thrive in the digital landscape. Our team of experts is dedicated to creating exceptional digital experiences.",
+  primaryButtonText: "Get Started",
+  primaryButtonUrl: "/contact",
+  secondaryButtonText: "Explore Services",
+  secondaryButtonUrl: "/services",
+  showPartnerLogos: true,
+  partnerSectionTitle: "Trusted By Industry Leaders",
+  partnerCertifiedText: "Certified",
+  showTechStack: true,
+  techStackTitle: "Built With Modern Technologies",
+  techStackSubtitle: "Tech Stack",
+  techStackDescription: "We leverage cutting-edge technology to build modern, scalable solutions",
+  partnerLogos: [
+    { id: 1, name: "Google", iconName: "FaGoogle", color: "#4285F4", bgColor: "bg-blue-100", order: 1 },
+    { id: 2, name: "Meta", iconName: "FaFacebook", color: "#1877F2", bgColor: "bg-blue-100", order: 2 },
+    { id: 3, name: "SEMrush", iconName: "SiSemrush", color: "#5FB246", bgColor: "bg-green-100", order: 3 },
+    { id: 4, name: "AWS", iconName: "FaAws", color: "#FF9900", bgColor: "bg-orange-100", order: 4 },
+    { id: 5, name: "Magento", iconName: "FaShopify", color: "#7AB55C", bgColor: "bg-purple-100", order: 5 },
+    { id: 6, name: "WordPress", iconName: "FaWordpress", color: "#21759B", bgColor: "bg-blue-100", order: 6 },
+    { id: 7, name: "Industry Leaders", iconName: "FaAward", color: "#FFD700", bgColor: "bg-yellow-100", order: 7 }
+  ],
+  techIcons: [
+    { id: 1, name: "React", iconName: "FaReact", color: "#61DAFB", animation: "animate-float", order: 1 },
+    { id: 2, name: "TypeScript", iconName: "SiTypescript", color: "#3178C6", animation: "animate-pulse-soft", order: 2 },
+    { id: 3, name: "Vue.js", iconName: "FaVuejs", color: "#4FC08D", animation: "animate-float", order: 3 },
+    { id: 4, name: "Angular", iconName: "FaAngular", color: "#DD0031", animation: "animate-pulse-soft", order: 4 },
+    { id: 5, name: "JavaScript", iconName: "SiJavascript", color: "#F7DF1E", animation: "animate-float", order: 5 },
+    { id: 6, name: "Node.js", iconName: "FaNode", color: "#339933", animation: "animate-pulse-soft", order: 6 },
+    { id: 7, name: "Python", iconName: "FaPython", color: "#3776AB", animation: "animate-float", order: 7 },
+    { id: 8, name: "Java", iconName: "FaJava", color: "#007396", animation: "animate-pulse-soft", order: 8 },
+    { id: 9, name: "PHP", iconName: "FaPhp", color: "#777BB4", animation: "animate-float", order: 9 },
+    { id: 10, name: "Kotlin", iconName: "SiKotlin", color: "#7F52FF", animation: "animate-pulse-soft", order: 10 },
+    { id: 11, name: "Swift", iconName: "FaSwift", color: "#FA7343", animation: "animate-float", order: 11 },
+    { id: 12, name: "Flutter", iconName: "SiFlutter", color: "#02569B", animation: "animate-pulse-soft", order: 12 },
+    { id: 13, name: "Firebase", iconName: "SiFirebase", color: "#FFCA28", animation: "animate-float", order: 13 },
+    { id: 14, name: "MongoDB", iconName: "SiMongodb", color: "#47A248", animation: "animate-pulse-soft", order: 14 },
+    { id: 15, name: "SQL", iconName: "FaDatabase", color: "#4479A1", animation: "animate-float", order: 15 },
+    { id: 16, name: "GraphQL", iconName: "SiGraphql", color: "#E10098", animation: "animate-pulse-soft", order: 16 },
+    { id: 17, name: "Tailwind", iconName: "SiTailwindcss", color: "#06B6D4", animation: "animate-float", order: 17 },
+    { id: 18, name: "Docker", iconName: "FaDocker", color: "#2496ED", animation: "animate-pulse-soft", order: 18 },
+    { id: 19, name: "AWS", iconName: "FaAws", color: "#FF9900", animation: "animate-float", order: 19 },
+    { id: 20, name: "GitHub", iconName: "FaGithub", color: "#181717", animation: "animate-pulse-soft", order: 20 }
+  ],
+  lastUpdated: "2023-11-15"
+};
+
 class StorageService {
   private contentKey = 'trojan-envoy-content';
   private usersKey = 'trojan-envoy-users';
   private contactsKey = 'trojan-envoy-contacts';
   private navigationKey = 'trojan-envoy-navigation';
   private headerSettingsKey = 'trojan-envoy-header-settings';
+  private heroSettingsKey = 'trojan-envoy-hero-settings';
   private eventListeners: Record<string, Function[]> = {};
 
   constructor() {
@@ -66,6 +118,10 @@ class StorageService {
     
     if (!localStorage.getItem(this.headerSettingsKey)) {
       localStorage.setItem(this.headerSettingsKey, JSON.stringify(initialHeaderSettings));
+    }
+    
+    if (!localStorage.getItem(this.heroSettingsKey)) {
+      localStorage.setItem(this.heroSettingsKey, JSON.stringify(initialHeroSettings));
     }
   }
 
@@ -426,6 +482,140 @@ class StorageService {
     this.dispatchEvent('header-settings-updated', updatedSettings);
     
     return updatedSettings;
+  }
+
+  getHeroSettings(): HeroSettings {
+    const settings = localStorage.getItem(this.heroSettingsKey);
+    return settings ? JSON.parse(settings) : initialHeroSettings;
+  }
+
+  updateHeroSettings(settings: Partial<HeroSettings>): HeroSettings {
+    const currentSettings = this.getHeroSettings();
+    const updatedSettings: HeroSettings = {
+      ...currentSettings,
+      ...settings,
+      lastUpdated: new Date().toISOString().split('T')[0]
+    };
+    
+    localStorage.setItem(this.heroSettingsKey, JSON.stringify(updatedSettings));
+    
+    this.dispatchEvent('hero-settings-updated', updatedSettings);
+    
+    return updatedSettings;
+  }
+
+  addPartnerLogo(logo: Omit<PartnerLogo, 'id'>): PartnerLogo {
+    const settings = this.getHeroSettings();
+    const newId = settings.partnerLogos.length > 0 ? 
+      Math.max(...settings.partnerLogos.map(logo => logo.id)) + 1 : 1;
+    
+    const newLogo: PartnerLogo = { ...logo, id: newId };
+    
+    settings.partnerLogos.push(newLogo);
+    this.updateHeroSettings(settings);
+    
+    return newLogo;
+  }
+
+  updatePartnerLogo(id: number, logo: Partial<PartnerLogo>): PartnerLogo | null {
+    const settings = this.getHeroSettings();
+    const index = settings.partnerLogos.findIndex(item => item.id === id);
+    
+    if (index === -1) return null;
+    
+    const updatedLogo = { ...settings.partnerLogos[index], ...logo };
+    settings.partnerLogos[index] = updatedLogo;
+    
+    this.updateHeroSettings(settings);
+    
+    return updatedLogo;
+  }
+
+  deletePartnerLogo(id: number): boolean {
+    const settings = this.getHeroSettings();
+    const filteredLogos = settings.partnerLogos.filter(logo => logo.id !== id);
+    
+    if (filteredLogos.length === settings.partnerLogos.length) return false;
+    
+    settings.partnerLogos = filteredLogos;
+    this.updateHeroSettings(settings);
+    
+    return true;
+  }
+
+  reorderPartnerLogos(items: { id: number, order: number }[]): PartnerLogo[] {
+    const settings = this.getHeroSettings();
+    
+    items.forEach(item => {
+      const index = settings.partnerLogos.findIndex(i => i.id === item.id);
+      if (index !== -1) {
+        settings.partnerLogos[index].order = item.order;
+      }
+    });
+    
+    // Sort by order
+    settings.partnerLogos.sort((a, b) => a.order - b.order);
+    
+    this.updateHeroSettings(settings);
+    
+    return settings.partnerLogos;
+  }
+
+  addTechIcon(icon: Omit<TechIcon, 'id'>): TechIcon {
+    const settings = this.getHeroSettings();
+    const newId = settings.techIcons.length > 0 ? 
+      Math.max(...settings.techIcons.map(icon => icon.id)) + 1 : 1;
+    
+    const newIcon: TechIcon = { ...icon, id: newId };
+    
+    settings.techIcons.push(newIcon);
+    this.updateHeroSettings(settings);
+    
+    return newIcon;
+  }
+
+  updateTechIcon(id: number, icon: Partial<TechIcon>): TechIcon | null {
+    const settings = this.getHeroSettings();
+    const index = settings.techIcons.findIndex(item => item.id === id);
+    
+    if (index === -1) return null;
+    
+    const updatedIcon = { ...settings.techIcons[index], ...icon };
+    settings.techIcons[index] = updatedIcon;
+    
+    this.updateHeroSettings(settings);
+    
+    return updatedIcon;
+  }
+
+  deleteTechIcon(id: number): boolean {
+    const settings = this.getHeroSettings();
+    const filteredIcons = settings.techIcons.filter(icon => icon.id !== id);
+    
+    if (filteredIcons.length === settings.techIcons.length) return false;
+    
+    settings.techIcons = filteredIcons;
+    this.updateHeroSettings(settings);
+    
+    return true;
+  }
+
+  reorderTechIcons(items: { id: number, order: number }[]): TechIcon[] {
+    const settings = this.getHeroSettings();
+    
+    items.forEach(item => {
+      const index = settings.techIcons.findIndex(i => i.id === item.id);
+      if (index !== -1) {
+        settings.techIcons[index].order = item.order;
+      }
+    });
+    
+    // Sort by order
+    settings.techIcons.sort((a, b) => a.order - b.order);
+    
+    this.updateHeroSettings(settings);
+    
+    return settings.techIcons;
   }
 }
 
