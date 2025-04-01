@@ -201,6 +201,8 @@ export interface AboutSettings {
   learnMoreUrl: string;
   stats: StatItem[];
   lastUpdated: string;
+  mediaEnabled?: boolean;
+  mediaItems?: MediaItem[];
 }
 
 export interface KeyPoint {
@@ -214,5 +216,20 @@ export interface StatItem {
   value: string;
   label: string;
   start: string;
+  order: number;
+  isActive?: boolean;
+  icon?: string;
+  color?: string;
+  suffix?: string;
+  description?: string;
+}
+
+export interface MediaItem {
+  id: number;
+  type: "image" | "video" | "document";
+  url: string;
+  title?: string;
+  description?: string;
+  thumbnailUrl?: string;
   order: number;
 }

@@ -32,6 +32,9 @@ const About: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Filter active stats
+  const activeStats = aboutSettings.stats.filter(stat => stat.isActive !== false);
+
   return (
     <section className="section-padding bg-secondary/30">
       <div className="container mx-auto">
@@ -79,19 +82,24 @@ const About: React.FC = () => {
           
           <div className="relative" ref={statsRef}>
             <div className="grid grid-cols-2 gap-6">
-              {aboutSettings.stats.map((stat) => (
+              {activeStats.map((stat) => (
                 <div 
                   key={stat.id} 
                   className="card-hover stats-card bg-background p-6 rounded-xl border border-border h-full flex flex-col items-center justify-center text-center"
+                  style={{ borderColor: stat.color ? `${stat.color}40` : undefined }}
                 >
                   <div 
                     className="counter text-3xl md:text-4xl font-bold mb-2"
                     data-start={stat.start}
                     data-end={stat.value}
+                    style={{ color: stat.color || 'inherit' }}
                   >
-                    {stat.value}
+                    {stat.value}{stat.suffix || ''}
                   </div>
                   <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  {stat.description && (
+                    <div className="text-xs text-muted-foreground mt-2">{stat.description}</div>
+                  )}
                 </div>
               ))}
             </div>

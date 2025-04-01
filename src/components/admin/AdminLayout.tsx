@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
@@ -14,7 +13,8 @@ import {
   Shield,
   MonitorSmartphone,
   LucideIcon,
-  Palette
+  Palette,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -92,6 +92,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       title: "Hero Management", 
       icon: <Shield className="w-4 h-4" />, 
       href: "/admin/hero" 
+    },
+    { 
+      title: "About Management", 
+      icon: <Info className="w-4 h-4" />, 
+      href: "/admin/about-settings" 
     },
     { 
       title: "Services Management", 
