@@ -210,16 +210,88 @@ export const renderIcon = (icon: string | React.ComponentType<any>): React.Compo
 };
 
 /**
+ * Get a catalog of available icons by library
+ * @returns A map of library prefixes to arrays of icon names
+ */
+export const getIconCatalog = (): Record<string, string[]> => {
+  try {
+    const catalog: Record<string, string[]> = {};
+    
+    // Define the libraries to catalog
+    const libraryPrefixes = [
+      'Fa', 'Si', 'Ai', 'Bs', 'Fi', 'Gr', 'Hi', 'Im', 'Md', 'Ti', 
+      'Vsc', 'Di', 'Bi', 'Fc', 'Io', 'Io5', 'Ri', 'Wi', 'Ci', 'Gi', 
+      'Cg', 'Lu', 'Pi', 'Tb', 'Sl', 'Rx', 'Go'
+    ];
+    
+    // Import each library and extract icon names
+    libraryPrefixes.forEach(prefix => {
+      try {
+        const lowercasePrefix = prefix.toLowerCase();
+        const library = require(`react-icons/${lowercasePrefix}`);
+        
+        // Filter to include only component exports
+        const iconNames = Object.keys(library).filter(key => 
+          key !== 'default' && typeof library[key] === 'object'
+        );
+        
+        if (iconNames.length > 0) {
+          catalog[prefix] = iconNames.map(name => `${prefix}${name}`);
+        }
+      } catch (error) {
+        console.warn(`Failed to load icon library: ${prefix}`, error);
+      }
+    });
+    
+    return catalog;
+  } catch (error) {
+    console.error('Error creating icon catalog:', error);
+    return {};
+  }
+};
+
+/**
  * Search for icons by name in real-time from all available libraries
  * @param query The search query
  * @param limit Maximum number of results to return
  * @returns Array of matching icon objects
  */
 export const searchIcons = (query: string, limit = 100): { name: string; library: string }[] => {
-  if (!query || query.length < 2) return [];
+  if (!query || query.length < 1) return [];
   
   const results: { name: string; library: string; score: number }[] = [];
   const lowerQuery = query.toLowerCase();
+  
+  // Map of library prefixes to friendly names
+  const libraryNames: Record<string, string> = {
+    "Fa": "Font Awesome",
+    "Si": "Simple Icons",
+    "Ai": "Ant Design Icons",
+    "Bs": "Bootstrap Icons",
+    "Fi": "Feather Icons",
+    "Gr": "Grommet Icons",
+    "Hi": "Heroicons",
+    "Im": "IcoMoon",
+    "Md": "Material Design Icons",
+    "Ti": "Typicons",
+    "Vsc": "VS Code Icons",
+    "Di": "Devicons",
+    "Bi": "Box Icons",
+    "Fc": "Flat Color Icons",
+    "Io": "Ionicons 4",
+    "Io5": "Ionicons 5",
+    "Ri": "Remix Icons",
+    "Wi": "Weather Icons",
+    "Ci": "Circle Icons",
+    "Gi": "Game Icons",
+    "Cg": "CSS.gg",
+    "Lu": "Lucide Icons",
+    "Pi": "Phosphor Icons",
+    "Tb": "Tabler Icons",
+    "Sl": "Simple Line Icons",
+    "Rx": "Radix Icons",
+    "Go": "Github Octicons"
+  };
   
   // Search through icon libraries
   const iconLibraries = [
@@ -231,60 +303,67 @@ export const searchIcons = (query: string, limit = 100): { name: string; library
     { prefix: "Gr", name: "Grommet Icons" },
     { prefix: "Hi", name: "Heroicons" },
     { prefix: "Md", name: "Material Design Icons" },
-    // ... add other libraries as needed
+    { prefix: "Lu", name: "Lucide Icons" },
+    { prefix: "Io", name: "Ionicons" },
+    { prefix: "Ri", name: "Remix Icons" },
   ];
-  
-  // We'd need to have a complete list of icon names for each library
-  // This is a simplified approach - in a real app, you might use a pre-built index
   
   // For each library, find matching icons
   iconLibraries.forEach(lib => {
-    // Get all icon names from this library
-    const libraryModule = require(`react-icons/${lib.prefix.toLowerCase()}`);
-    
-    Object.keys(libraryModule).forEach(iconName => {
-      // Skip non-icon exports like "default"
-      if (iconName === 'default' || typeof libraryModule[iconName] !== 'object') {
-        return;
-      }
+    try {
+      // Get all icon names from this library
+      const libraryModule = require(`react-icons/${lib.prefix.toLowerCase()}`);
       
-      const fullName = `${lib.prefix}${iconName}`;
-      const lowerName = fullName.toLowerCase();
-      
-      // Calculate a relevance score
-      let score = 0;
-      
-      // Exact match gets highest score
-      if (lowerName === lowerQuery) {
-        score = 100;
-      }
-      // Starting with the query gets high score
-      else if (lowerName.startsWith(lowerQuery)) {
-        score = 80;
-      }
-      // Contains the query gets medium score
-      else if (lowerName.includes(lowerQuery)) {
-        score = 60;
-      }
-      // Match individual words in the name
-      else {
-        const words = lowerName.split(/[^a-z0-9]/);
-        for (const word of words) {
-          if (word.startsWith(lowerQuery)) {
-            score = 40;
-            break;
+      Object.keys(libraryModule).forEach(iconName => {
+        // Skip non-icon exports like "default"
+        if (iconName === 'default' || typeof libraryModule[iconName] !== 'object') {
+          return;
+        }
+        
+        const fullName = `${lib.prefix}${iconName}`;
+        const lowerName = fullName.toLowerCase();
+        
+        // Calculate a relevance score
+        let score = 0;
+        
+        // Exact match gets highest score
+        if (lowerName === lowerQuery) {
+          score = 100;
+        }
+        // Starting with the query gets high score
+        else if (lowerName.startsWith(lowerQuery)) {
+          score = 80;
+        }
+        // Contains the query gets medium score
+        else if (lowerName.includes(lowerQuery)) {
+          score = 60;
+        }
+        // Check if individual parts of the name match
+        else {
+          // Convert camelCase to words
+          const words = iconName.replace(/([A-Z])/g, ' $1').toLowerCase().split(/\s+/);
+          for (const word of words) {
+            if (word.startsWith(lowerQuery)) {
+              score = 40;
+              break;
+            } else if (word.includes(lowerQuery)) {
+              score = 30;
+              break;
+            }
           }
         }
-      }
-      
-      if (score > 0) {
-        results.push({
-          name: fullName,
-          library: lib.name,
-          score
-        });
-      }
-    });
+        
+        if (score > 0) {
+          results.push({
+            name: fullName,
+            library: lib.name,
+            score
+          });
+        }
+      });
+    } catch (error) {
+      console.warn(`Error searching icons in ${lib.name}:`, error);
+    }
   });
   
   // Sort by relevance score

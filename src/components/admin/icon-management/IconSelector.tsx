@@ -2,191 +2,84 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Upload, Link as LinkIcon } from "lucide-react";
-import * as Fa from "react-icons/fa";
-import * as Si from "react-icons/si";
-import * as Ai from "react-icons/ai";
-import * as Bs from "react-icons/bs";
-import * as Fi from "react-icons/fi";
-import * as Gr from "react-icons/gr";
-import * as Hi from "react-icons/hi";
-import * as Im from "react-icons/im";
-import * as Md from "react-icons/md";
-import * as Ti from "react-icons/ti";
-import * as Vsc from "react-icons/vsc";
-import * as Di from "react-icons/di";
-import * as Bi from "react-icons/bi";
-import * as Fc from "react-icons/fc";
-import * as Io from "react-icons/io";
-import * as Io5 from "react-icons/io5";
-import * as Ri from "react-icons/ri";
-import * as Wi from "react-icons/wi";
-import * as Ci from "react-icons/ci";
-import * as Gi from "react-icons/gi";
-import * as Cg from "react-icons/cg";
-import * as Lu from "react-icons/lu";
-import * as Pi from "react-icons/pi";
-import * as Tb from "react-icons/tb";
-import * as Sl from "react-icons/sl";
-import * as Rx from "react-icons/rx";
-import * as Go from "react-icons/go";
-import { svgToDataUrl, loadSvgFromUrl, searchIcons } from "@/lib/iconUtils";
+import { Search, Upload, Link as LinkIcon, Code } from "lucide-react";
+import { svgToDataUrl, loadSvgFromUrl, searchIcons, getIconComponentByName } from "@/lib/iconUtils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 
 interface IconSelectorProps {
   selectedIcon: string;
   onSelectIcon: (iconName: string) => void;
 }
 
-// Group icons by their library
-const iconLibraries = [
-  { prefix: "Fa", icons: Fa, name: "Font Awesome" },
-  { prefix: "Si", icons: Si, name: "Simple Icons" },
-  { prefix: "Ai", icons: Ai, name: "Ant Design Icons" },
-  { prefix: "Bs", icons: Bs, name: "Bootstrap Icons" },
-  { prefix: "Fi", icons: Fi, name: "Feather Icons" },
-  { prefix: "Gr", icons: Gr, name: "Grommet Icons" },
-  { prefix: "Hi", icons: Hi, name: "Heroicons" },
-  { prefix: "Im", icons: Im, name: "IcoMoon" },
-  { prefix: "Md", icons: Md, name: "Material Design Icons" },
-  { prefix: "Ti", icons: Ti, name: "Typicons" },
-  { prefix: "Vsc", icons: Vsc, name: "VS Code Icons" },
-  { prefix: "Di", icons: Di, name: "Devicons" },
-  { prefix: "Bi", icons: Bi, name: "Box Icons" },
-  { prefix: "Fc", icons: Fc, name: "Flat Color Icons" },
-  { prefix: "Io", icons: Io, name: "Ionicons 4" },
-  { prefix: "Io5", icons: Io5, name: "Ionicons 5" },
-  { prefix: "Ri", icons: Ri, name: "Remix Icons" },
-  { prefix: "Wi", icons: Wi, name: "Weather Icons" },
-  { prefix: "Ci", icons: Ci, name: "Circle Icons" },
-  { prefix: "Gi", icons: Gi, name: "Game Icons" },
-  { prefix: "Cg", icons: Cg, name: "CSS.gg" },
-  { prefix: "Lu", icons: Lu, name: "Lucide Icons" },
-  { prefix: "Pi", icons: Pi, name: "Phosphor Icons" },
-  { prefix: "Tb", icons: Tb, name: "Tabler Icons" },
-  { prefix: "Sl", icons: Sl, name: "Simple Line Icons" },
-  { prefix: "Rx", icons: Rx, name: "Radix Icons" },
-  { prefix: "Go", icons: Go, name: "Github Octicons" },
-];
-
-// Get all icon components from a library
-const getAllIconsFromLibrary = (library: any, prefix: string) => {
-  return Object.entries(library)
-    .filter(([key]) => key !== 'default' && typeof library[key] === 'object')
-    .map(([name, component]) => ({
-      name: `${prefix}${name}`,
-      component: component as React.ComponentType<any>,
-      library: prefix
-    }));
-};
-
-// Function to get all icon names
-const getAllIconNames = () => {
-  const iconNames: { name: string; component: React.ComponentType<any>; library: string }[] = [];
-  
-  iconLibraries.forEach(lib => {
-    const libIcons = getAllIconsFromLibrary(lib.icons, lib.prefix);
-    iconNames.push(...libIcons);
-  });
-  
-  return iconNames;
-};
-
 const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon }) => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLibrary, setSelectedLibrary] = useState<string>("all");
-  const [allIcons, setAllIcons] = useState<{ name: string; component: React.ComponentType<any>; library: string }[]>([]);
   const [filteredIcons, setFilteredIcons] = useState<{ name: string; component: React.ComponentType<any>; library: string }[]>([]);
   const [customIconUrl, setCustomIconUrl] = useState("");
+  const [customJsonInput, setCustomJsonInput] = useState("");
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const [activeTab, setActiveTab] = useState("library");
+  const [isSearching, setIsSearching] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isJsonValid, setIsJsonValid] = useState(true);
+  const [jsonErrorMessage, setJsonErrorMessage] = useState("");
 
-  // Load all icons on component mount
-  useEffect(() => {
-    const loadIcons = async () => {
-      setIsLoading(true);
-      // Get all icons
-      const icons = getAllIconNames();
-      setAllIcons(icons);
-      setFilteredIcons(icons.slice(0, 100)); // Initially show a limited set
-      setIsLoading(false);
-    };
-    
-    loadIcons();
-    
-    // Focus the search input when component mounts
-    if (searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, []);
-  
-  // Update filtered icons when search term or selected library changes
-  useEffect(() => {
-    const updateFilteredIcons = () => {
-      let filtered = allIcons;
-      
-      // Filter by library if not "all"
-      if (selectedLibrary !== "all") {
-        const libPrefix = iconLibraries.find(lib => lib.name === selectedLibrary)?.prefix || "";
-        filtered = filtered.filter(icon => icon.name.startsWith(libPrefix));
-      }
-      
-      // Filter by search term if present
-      if (searchTerm.trim()) {
-        const term = searchTerm.toLowerCase();
-        filtered = filtered.filter(icon => {
-          const iconNameLower = icon.name.toLowerCase();
-          return iconNameLower.includes(term);
-        });
-        
-        // Sort results by relevance - exact matches first, then prefix matches, then includes
-        filtered.sort((a, b) => {
-          const aName = a.name.toLowerCase();
-          const bName = b.name.toLowerCase();
-          
-          // Exact match gets highest priority
-          if (aName === term && bName !== term) return -1;
-          if (bName === term && aName !== term) return 1;
-          
-          // Starts with gets second priority
-          if (aName.startsWith(term) && !bName.startsWith(term)) return -1;
-          if (bName.startsWith(term) && !aName.startsWith(term)) return 1;
-          
-          // Default to alphabetical
-          return aName.localeCompare(bName);
-        });
-      }
-      
-      // Limit results for performance
-      setFilteredIcons(filtered.slice(0, 300));
-    };
-    
-    updateFilteredIcons();
-  }, [searchTerm, selectedLibrary, allIcons]);
-  
-  // Debounce function for search input
-  const debounce = useCallback((func: Function, delay: number) => {
-    let timeoutId: NodeJS.Timeout;
-    return (...args: any[]) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func(...args), delay);
-    };
-  }, []);
-  
   // Handle search input changes with debounce for real-time suggestions
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
+    setIsSearching(true);
+    
+    // Perform the search using the utility function
+    try {
+      const results = searchIcons(value, 300);
+      
+      // Convert search results to the format expected by the component
+      const formattedResults = results.map(({ name, library }) => ({
+        name,
+        component: getIconComponentByName(name) || (() => null),
+        library
+      })).filter(icon => icon.component);
+      
+      setFilteredIcons(formattedResults);
+    } catch (error) {
+      console.error("Error searching icons:", error);
+      setFilteredIcons([]);
+    } finally {
+      setIsSearching(false);
+    }
   };
   
   const debouncedSearchChange = useCallback(
-    debounce(handleSearchChange, 150),
+    (callback: Function, delay: number) => {
+      let timeoutId: NodeJS.Timeout;
+      return (...args: any[]) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => callback(...args), delay);
+      };
+    },
     []
-  );
+  )(handleSearchChange, 300);
+
+  // Focus the search input when tab changes to library
+  useEffect(() => {
+    if (activeTab === "library" && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [activeTab]);
+
+  // Initial search to show some icons
+  useEffect(() => {
+    if (activeTab === "library" && searchTerm === "") {
+      debouncedSearchChange("a");
+    }
+  }, [activeTab]);
 
   // Handle file upload for custom icons
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -206,6 +99,11 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
           
           // Pass the data URL to the parent component
           onSelectIcon(result);
+          
+          toast({
+            title: "Icon uploaded successfully",
+            description: `${file.name} has been added to your selection`,
+          });
         }
       };
       
@@ -216,6 +114,11 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
       }
     } catch (error) {
       console.error("Error uploading file:", error);
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your file",
+        variant: "destructive",
+      });
     }
     
     // Reset the file input
@@ -247,13 +150,96 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
           onSelectIcon(dataUrl);
         }
         
+        toast({
+          title: "Icon imported successfully",
+          description: "The icon has been added to your selection",
+        });
+        
         // Clear the URL input
         setCustomIconUrl("");
       }
     } catch (error) {
       console.error("Error importing icon from URL:", error);
+      toast({
+        title: "Import failed",
+        description: "There was an error importing the icon from the URL",
+        variant: "destructive",
+      });
     } finally {
       setIsLoadingUrl(false);
+    }
+  };
+
+  // Handle JSON import for custom icons
+  const handleJsonImport = () => {
+    if (!customJsonInput.trim()) return;
+    
+    try {
+      // Try to parse the JSON
+      const jsonData = JSON.parse(customJsonInput);
+      
+      // Check if it's a valid icon configuration
+      if (typeof jsonData === 'object') {
+        // If it's a valid icon name
+        if (typeof jsonData.iconName === 'string' && jsonData.iconName) {
+          const icon = getIconComponentByName(jsonData.iconName);
+          if (icon) {
+            onSelectIcon(jsonData.iconName);
+            
+            toast({
+              title: "Icon imported successfully",
+              description: `${jsonData.iconName} has been added to your selection`,
+            });
+            
+            // Clear the JSON input
+            setCustomJsonInput("");
+            setIsJsonValid(true);
+            setJsonErrorMessage("");
+            return;
+          }
+        }
+        
+        // If it's a valid SVG string
+        if (typeof jsonData.svg === 'string' && jsonData.svg) {
+          const dataUrl = svgToDataUrl(jsonData.svg);
+          onSelectIcon(dataUrl);
+          
+          toast({
+            title: "Icon imported successfully",
+            description: "The custom SVG icon has been added to your selection",
+          });
+          
+          // Clear the JSON input
+          setCustomJsonInput("");
+          setIsJsonValid(true);
+          setJsonErrorMessage("");
+          return;
+        }
+        
+        // If it's a valid data URL
+        if (typeof jsonData.dataUrl === 'string' && jsonData.dataUrl.startsWith('data:')) {
+          onSelectIcon(jsonData.dataUrl);
+          
+          toast({
+            title: "Icon imported successfully",
+            description: "The icon has been added to your selection",
+          });
+          
+          // Clear the JSON input
+          setCustomJsonInput("");
+          setIsJsonValid(true);
+          setJsonErrorMessage("");
+          return;
+        }
+      }
+      
+      // If we reached here, the JSON is valid but not a valid icon configuration
+      setIsJsonValid(false);
+      setJsonErrorMessage("Valid JSON but invalid icon configuration. Use { \"iconName\": \"FaReact\" } or { \"svg\": \"<svg>...</svg>\" } or { \"dataUrl\": \"data:...\" }");
+    } catch (error) {
+      // JSON is invalid
+      setIsJsonValid(false);
+      setJsonErrorMessage("Invalid JSON format. Please check your syntax.");
     }
   };
 
@@ -271,10 +257,11 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
   return (
     <div className="space-y-4">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 w-full">
+        <TabsList className="grid grid-cols-4 w-full">
           <TabsTrigger value="library">Icon Library</TabsTrigger>
           <TabsTrigger value="upload">Upload Icon</TabsTrigger>
           <TabsTrigger value="url">Import URL</TabsTrigger>
+          <TabsTrigger value="json">JSON Import</TabsTrigger>
         </TabsList>
         
         <TabsContent value="library" className="space-y-4">
@@ -296,13 +283,18 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
               onChange={(e) => setSelectedLibrary(e.target.value)}
             >
               <option value="all">All Libraries</option>
-              {iconLibraries.map(lib => (
-                <option key={lib.prefix} value={lib.name}>{lib.name}</option>
-              ))}
+              <option value="Font Awesome">Font Awesome</option>
+              <option value="Simple Icons">Simple Icons</option>
+              <option value="Ant Design Icons">Ant Design</option>
+              <option value="Bootstrap Icons">Bootstrap</option>
+              <option value="Feather Icons">Feather</option>
+              <option value="Material Design Icons">Material Design</option>
+              <option value="Heroicons">Heroicons</option>
+              <option value="Lucide Icons">Lucide</option>
             </select>
           </div>
           
-          {isLoading ? (
+          {isSearching ? (
             <div className="border rounded-md p-8 text-center">
               <div className="animate-pulse flex flex-col items-center">
                 <div className="h-12 w-12 bg-gray-200 rounded-full mb-4"></div>
@@ -353,10 +345,10 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
             </div>
           )}
           
-          {filteredIcons.length > 0 && allIcons.length > filteredIcons.length && (
+          {filteredIcons.length > 0 && (
             <p className="text-xs text-muted-foreground text-center">
-              Showing {filteredIcons.length} of {allIcons.length} icons. 
-              {searchTerm ? " Refine your search to see more specific icons." : " Type to search for specific icons."}
+              Showing {filteredIcons.length} icons. 
+              {searchTerm ? " Refine your search to see different icons." : " Type to search for specific icons."}
             </p>
           )}
         </TabsContent>
@@ -417,6 +409,59 @@ const IconSelector: React.FC<IconSelectorProps> = ({ selectedIcon, onSelectIcon 
             </div>
             <p className="text-xs text-muted-foreground">
               Enter the URL of an SVG, PNG, or JPG icon to import
+            </p>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="json" className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="json-import" className="text-sm font-medium">
+              Import Icon via JSON
+            </label>
+            <div className="space-y-4">
+              <Textarea
+                id="json-import"
+                value={customJsonInput}
+                onChange={(e) => {
+                  setCustomJsonInput(e.target.value);
+                  setIsJsonValid(true);
+                  setJsonErrorMessage("");
+                }}
+                placeholder={`{
+  "iconName": "FaReact"
+}
+
+or
+
+{
+  "svg": "<svg>...</svg>"
+}
+
+or
+
+{
+  "dataUrl": "data:image/svg+xml;..."
+}`}
+                className={`h-36 font-mono text-sm ${!isJsonValid ? 'border-red-500' : ''}`}
+              />
+              
+              {!isJsonValid && (
+                <Alert variant="destructive" className="text-red-500 bg-red-50">
+                  <AlertDescription>{jsonErrorMessage}</AlertDescription>
+                </Alert>
+              )}
+              
+              <Button
+                type="button"
+                onClick={handleJsonImport}
+                disabled={!customJsonInput.trim()}
+                className="bg-primary text-primary-foreground"
+              >
+                <Code className="w-4 h-4 mr-2" /> Import from JSON
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Paste JSON configuration for an icon. You can use an iconName from React Icons, custom SVG content, or a data URL.
             </p>
           </div>
         </TabsContent>
