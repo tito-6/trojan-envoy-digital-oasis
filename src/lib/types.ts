@@ -19,9 +19,9 @@ export interface ContentItem {
   seoKeywords?: string[];
   content?: string;
   slug?: string;
-  images?: string[];
+  images?: string[];  // These will be URLs/paths after processing
   videos?: string[];
-  documents?: string[];
+  documents?: string[];  // These will be URLs/paths after processing
   lastUpdated: string;
   publishDate?: string;
   published: boolean;

@@ -17,6 +17,12 @@ interface ContentFormProps {
   isEditing?: boolean;
 }
 
+// Helper type for files during form editing (before upload)
+interface FormFileData {
+  images: (File | string)[];
+  documents: (File | string)[];
+}
+
 const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCancel, isEditing = false }) => {
   const { toast } = useToast();
   const [keywords, setKeywords] = useState<string[]>(initialValues?.seoKeywords || []);
@@ -165,6 +171,30 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
     return !newErrors.slug;
   };
 
+  // Process files before saving
+  const processFilesForSaving = (): { imageUrls: string[], documentUrls: string[] } => {
+    // In a real implementation, we would upload files to a server and get URLs back
+    // For this demo, we'll simulate the process by converting Files to fake URLs
+    
+    const imageUrls: string[] = images.map((image, index) => {
+      if (typeof image === 'string') {
+        return image; // Already a URL/path
+      }
+      // Simulate a URL for File objects - in a real app, this would be the result of file upload
+      return `/uploads/images/${image.name}`;
+    });
+    
+    const documentUrls: string[] = documents.map((doc, index) => {
+      if (typeof doc === 'string') {
+        return doc; // Already a URL/path
+      }
+      // Simulate a URL for File objects
+      return `/uploads/documents/${doc.name}`;
+    });
+    
+    return { imageUrls, documentUrls };
+  };
+
   const onSubmit = (values: ContentFormValues) => {
     if (!validateBeforeSubmit()) {
       toast({
@@ -182,6 +212,9 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
         variant: "default",
       });
     }
+    
+    // Process files to get URLs
+    const { imageUrls, documentUrls } = processFilesForSaving();
     
     // Parse string inputs into arrays
     const parsedTechnologies = technologiesInput
@@ -213,8 +246,8 @@ const ContentForm: React.FC<ContentFormProps> = ({ initialValues, onSave, onCanc
       ...values,
       slug: slugInput,
       seoKeywords,
-      images,
-      documents,
+      images: imageUrls,
+      documents: documentUrls,
       videos,
       rating,
       technologies: parsedTechnologies,

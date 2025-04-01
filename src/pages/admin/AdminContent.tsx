@@ -120,7 +120,7 @@ const AdminContent: React.FC = () => {
 
   const handleSaveContent = (values: ContentItem) => {
     if (isEditing && initialFormValues) {
-      const updatedContent = storageService.updateContent(initialFormValues.id, values);
+      const updatedContent = storageService.updateContent(initialFormValues.id!, values);
       if (updatedContent) {
         setContentList(prev =>
           prev.map(item => (item.id === initialFormValues.id ? updatedContent : item))
