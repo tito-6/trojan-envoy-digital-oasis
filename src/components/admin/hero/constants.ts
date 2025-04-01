@@ -8,7 +8,7 @@ export const AVAILABLE_ICONS = [
   'SiNextdotjs', 'SiExpress', 'SiDjango', 'SiSpring', 'SiLaravel', 'SiRuby', 
   'SiDotnet', 'SiGo', 'SiRust', 'SiElixir', 'SiPostgresql', 'SiMysql', 'SiRedis', 
   'SiElasticsearch', 'SiKubernetes', 'SiTerraform', 'SiAmazon', 'SiGooglecloud', 
-  'SiMicrosoft', 'SiVercel', 'SiNetlify', 'SiHeroku', 'SiDigitalocean'
+  'SiAzure', 'SiVercel', 'SiNetlify', 'SiHeroku', 'SiDigitalocean'
 ];
 
 export const ANIMATION_OPTIONS = [
