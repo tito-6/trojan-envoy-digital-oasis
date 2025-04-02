@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Eye, Clock, Tag, FileText, Download } from "lucide-react";
@@ -30,19 +29,6 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service: serviceProp, cla
       fetchService();
     }
   }, [slug, serviceProp]);
-
-  if (!service) {
-    return (
-      <div className="container py-12">
-        <div className="text-center">
-          <h2 className="text-3xl font-bold mb-4">Service Not Found</h2>
-          <p className="text-muted-foreground">
-            Sorry, the service you are looking for could not be found.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   const renderSeoHeadingStructure = (seoHeadingStructure: any) => {
     if (!seoHeadingStructure) return null;
@@ -87,6 +73,19 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service: serviceProp, cla
       </div>
     );
   };
+
+  if (!service) {
+    return (
+      <div className="container py-12">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold mb-4">Service Not Found</h2>
+          <p className="text-muted-foreground">
+            Sorry, the service you are looking for could not be found.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-12">

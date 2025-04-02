@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Header } from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
-import ServiceDetail from "@/components/services/ServiceDetail"; // Changed from named import to default import
+import ServiceDetail from "@/components/services/ServiceDetail"; // Using default import
 import ServicesCTA from "@/components/services/ServicesCTA";
 import { storageService } from "@/lib/storage";
 import { ContentItem } from "@/lib/types";
@@ -216,7 +216,7 @@ const ServiceDetailPage: React.FC = () => {
       <Header isDarkTheme={isDarkTheme} toggleTheme={toggleTheme} />
       
       <main>
-        <ServiceDetailComponent service={service} />
+        <ServiceDetail service={service} />
         <ServicesCTA />
       </main>
       

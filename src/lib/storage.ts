@@ -1,7 +1,6 @@
-
 // src/lib/storage.ts
 
-import { ContentItem, ContactRequest, NavigationItem, FooterLink, FooterSection, FooterSettings, SocialLink, HeaderSettings, HeroSettings, ContactInfoItem, ContactFormField, ContactSettings, ServiceItem, ServicesSettings, AboutSettings, KeyPoint, StatItem, FAQItem, FAQSettings, ClientLogo, ReferencesSettings, User } from './types';
+import { ContentItem, ContactRequest, NavigationItem, FooterLink, FooterSection, FooterSettings, SocialLink, HeaderSettings, HeroSettings, ContactInfoItem, ContactFormField, ContactSettings, ServiceItem, ServicesSettings, AboutSettings, KeyPoint, StatItem, FAQItem, FAQSettings, ClientLogo, ReferencesSettings, User, PartnerLogo, TechIcon } from './types';
 
 const DB_VERSION = '1';
 const DB_NAME = 'trojanEnvoyDB';
@@ -204,13 +203,13 @@ class StorageService {
     });
   };
 
-  getContentByType = (type: string): ContentItem[] => {
+  getContentByType = async (type: string): Promise<ContentItem[]> => {
     // For now, return mock data or empty array
     // This should be adapted to actually fetch from the database
     return [];
   };
 
-  getAllContent = (): ContentItem[] => {
+  getAllContent = async (): Promise<ContentItem[]> => {
     // For now, return mock data or empty array
     return [];
   };
@@ -440,7 +439,7 @@ class StorageService {
     });
   };
 
-  getAllNavigationItems = (): NavigationItem[] => {
+  getAllNavigationItems = async (): Promise<NavigationItem[]> => {
     // For now, return mock data
     return [
       { id: 1, label: 'Home', path: '/', order: 1 },
@@ -465,35 +464,21 @@ class StorageService {
   };
 
   // --- Footer Settings Operations ---
-  saveFooterSettings = (footerSettings: FooterSettings): Promise<FooterSettings> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-
-      const transaction = this.db.transaction(['footerSettings'], 'readwrite');
-      const store = transaction.objectStore('footerSettings');
-      const request = store.put(footerSettings, 1); // Use a fixed key (1) to store settings
-
-      request.onsuccess = () => {
-        resolve(footerSettings);
-
-        // Dispatch a custom event to notify components about the update
-        this.dispatchEvent('footer-settings-updated', footerSettings);
-      };
-
-      request.onerror = (evt: any) => {
-        console.error("Error saving footer settings: ", evt.target.error);
-        reject(evt.target.error);
-      };
-    });
+  saveFooterSettings = async (footerSettings: Partial<FooterSettings>): Promise<FooterSettings> => {
+    const current = await this.getFooterSettings();
+    const updated = { ...current, ...footerSettings };
+    
+    // Mock implementation
+    console.log("Saving footer settings:", updated);
+    this.dispatchEvent('footer-settings-updated', updated);
+    
+    return updated;
   };
 
   // Alias for saveFooterSettings for compatibility
   updateFooterSettings = this.saveFooterSettings;
 
-  getFooterSettings = (): FooterSettings => {
+  getFooterSettings = async (): Promise<FooterSettings> => {
     const defaultSettings = this.getDefaultFooterSettings();
     // Return default settings directly - we'll replace with actual data fetching later
     return defaultSettings;
@@ -523,25 +508,23 @@ class StorageService {
   };
 
   // --- Header Settings Operations ---
-  saveHeaderSettings = (headerSettings: Partial<HeaderSettings>): Promise<HeaderSettings> => {
-    return new Promise((resolve) => {
-      const currentSettings = this.getHeaderSettings();
-      const updatedSettings = { ...currentSettings, ...headerSettings };
-      
-      // For now, just store in localStorage
-      localStorage.setItem('headerSettings', JSON.stringify(updatedSettings));
-      
-      // Dispatch update event
-      this.dispatchEvent('header-settings-updated', updatedSettings);
-      
-      resolve(updatedSettings);
-    });
+  saveHeaderSettings = async (headerSettings: Partial<HeaderSettings>): Promise<HeaderSettings> => {
+    const currentSettings = await this.getHeaderSettings();
+    const updatedSettings = { ...currentSettings, ...headerSettings };
+    
+    // For now, just store in localStorage
+    localStorage.setItem('headerSettings', JSON.stringify(updatedSettings));
+    
+    // Dispatch update event
+    this.dispatchEvent('header-settings-updated', updatedSettings);
+    
+    return updatedSettings;
   };
 
   // Alias for saveHeaderSettings for compatibility
   updateHeaderSettings = this.saveHeaderSettings;
 
-  getHeaderSettings = (): HeaderSettings => {
+  getHeaderSettings = async (): Promise<HeaderSettings> => {
     const defaultHeaderSettings: HeaderSettings = {
       id: 1,
       siteTitle: "Trojan Envoy",
@@ -571,25 +554,23 @@ class StorageService {
   };
 
   // --- Hero Settings Operations ---
-  saveHeroSettings = (heroSettings: Partial<HeroSettings>): Promise<HeroSettings> => {
-    return new Promise((resolve) => {
-      const currentSettings = this.getHeroSettings();
-      const updatedSettings = { ...currentSettings, ...heroSettings };
-      
-      // For now, just store in localStorage
-      localStorage.setItem('heroSettings', JSON.stringify(updatedSettings));
-      
-      // Dispatch update event
-      this.dispatchEvent('hero-settings-updated', updatedSettings);
-      
-      resolve(updatedSettings);
-    });
+  saveHeroSettings = async (heroSettings: Partial<HeroSettings>): Promise<HeroSettings> => {
+    const currentSettings = await this.getHeroSettings();
+    const updatedSettings = { ...currentSettings, ...heroSettings };
+    
+    // For now, just store in localStorage
+    localStorage.setItem('heroSettings', JSON.stringify(updatedSettings));
+    
+    // Dispatch update event
+    this.dispatchEvent('hero-settings-updated', updatedSettings);
+    
+    return updatedSettings;
   };
 
   // Alias for saveHeroSettings for compatibility
   updateHeroSettings = this.saveHeroSettings;
 
-  getHeroSettings = (): HeroSettings => {
+  getHeroSettings = async (): Promise<HeroSettings> => {
     const defaultHeroSettings: HeroSettings = {
       id: 1,
       title: "We are Trojan Envoy",
@@ -630,75 +611,79 @@ class StorageService {
     const settings = this.getHeroSettings();
     const newLogo: PartnerLogo = {
       id: Date.now(),
-      order: settings.partnerLogos.length + 1,
+      order: settings.then(s => s.partnerLogos.length + 1),
       ...logo
     };
     
-    settings.partnerLogos.push(newLogo);
-    localStorage.setItem('heroSettings', JSON.stringify(settings));
-    
-    // Dispatch update event
-    this.dispatchEvent('hero-settings-updated', settings);
+    settings.then(s => {
+      s.partnerLogos.push(newLogo);
+      localStorage.setItem('heroSettings', JSON.stringify(s));
+      
+      // Dispatch update event
+      this.dispatchEvent('hero-settings-updated', s);
+    });
     
     return newLogo;
   };
 
-  updatePartnerLogo = (id: number, updates: Partial<PartnerLogo>): PartnerLogo | null => {
-    const settings = this.getHeroSettings();
-    const index = settings.partnerLogos.findIndex(logo => logo.id === id);
-    
-    if (index === -1) return null;
-    
-    const updatedLogo = { ...settings.partnerLogos[index], ...updates };
-    settings.partnerLogos[index] = updatedLogo;
-    localStorage.setItem('heroSettings', JSON.stringify(settings));
-    
-    // Dispatch update event
-    this.dispatchEvent('hero-settings-updated', settings);
-    
-    return updatedLogo;
+  updatePartnerLogo = (id: number, updates: Partial<PartnerLogo>): Promise<PartnerLogo | null> => {
+    return this.getHeroSettings().then(settings => {
+      const index = settings.partnerLogos.findIndex(logo => logo.id === id);
+      
+      if (index === -1) return null;
+      
+      const updatedLogo = { ...settings.partnerLogos[index], ...updates };
+      settings.partnerLogos[index] = updatedLogo;
+      localStorage.setItem('heroSettings', JSON.stringify(settings));
+      
+      // Dispatch update event
+      this.dispatchEvent('hero-settings-updated', settings);
+      
+      return updatedLogo;
+    });
   };
 
-  deletePartnerLogo = (id: number): boolean => {
-    const settings = this.getHeroSettings();
-    const index = settings.partnerLogos.findIndex(logo => logo.id === id);
-    
-    if (index === -1) return false;
-    
-    settings.partnerLogos.splice(index, 1);
-    
-    // Update order values
-    settings.partnerLogos.forEach((logo, idx) => {
-      logo.order = idx + 1;
+  deletePartnerLogo = (id: number): Promise<boolean> => {
+    return this.getHeroSettings().then(settings => {
+      const index = settings.partnerLogos.findIndex(logo => logo.id === id);
+      
+      if (index === -1) return false;
+      
+      settings.partnerLogos.splice(index, 1);
+      
+      // Update order values
+      settings.partnerLogos.forEach((logo, idx) => {
+        logo.order = idx + 1;
+      });
+      
+      localStorage.setItem('heroSettings', JSON.stringify(settings));
+      
+      // Dispatch update event
+      this.dispatchEvent('hero-settings-updated', settings);
+      
+      return true;
     });
-    
-    localStorage.setItem('heroSettings', JSON.stringify(settings));
-    
-    // Dispatch update event
-    this.dispatchEvent('hero-settings-updated', settings);
-    
-    return true;
   };
 
-  reorderPartnerLogos = (items: Array<{ id: number; order: number }>): boolean => {
-    const settings = this.getHeroSettings();
-    
-    items.forEach(item => {
-      const logo = settings.partnerLogos.find(l => l.id === item.id);
-      if (logo) {
-        logo.order = item.order;
-      }
+  reorderPartnerLogos = (items: Array<{ id: number; order: number }>): Promise<boolean> => {
+    return this.getHeroSettings().then(settings => {
+      items.forEach(item => {
+        const logo = settings.partnerLogos.find(l => l.id === item.id);
+        if (logo) {
+          logo.order = item.order;
+        }
+      });
+      
+      // Sort by order
+      settings.partnerLogos.sort((a, b) => a.order - b.order);
+      
+      localStorage.setItem('heroSettings', JSON.stringify(settings));
+      
+      // Dispatch update event
+      this.dispatchEvent('hero-settings-updated', settings);
+      
+      return true;
     });
-    
-    // Sort by order
-    settings.partnerLogos.sort((a, b) => a.order - b.order);
-    
-    localStorage.setItem('heroSettings', JSON.stringify(settings));
-    
-    // Dispatch update event
-    this.dispatchEvent('hero-settings-updated', settings);
-    
-    return true;
   };
 
   // Tech Icon methods
@@ -706,97 +691,99 @@ class StorageService {
     const settings = this.getHeroSettings();
     const newIcon: TechIcon = {
       id: Date.now(),
-      order: settings.techIcons.length + 1,
+      order: settings.then(s => s.techIcons.length + 1),
       ...icon
     };
     
-    settings.techIcons.push(newIcon);
-    localStorage.setItem('heroSettings', JSON.stringify(settings));
-    
-    // Dispatch update event
-    this.dispatchEvent('hero-settings-updated', settings);
+    settings.then(s => {
+      s.techIcons.push(newIcon);
+      localStorage.setItem('heroSettings', JSON.stringify(s));
+      
+      // Dispatch update event
+      this.dispatchEvent('hero-settings-updated', s);
+    });
     
     return newIcon;
   };
 
-  updateTechIcon = (id: number, updates: Partial<TechIcon>): TechIcon | null => {
-    const settings = this.getHeroSettings();
-    const index = settings.techIcons.findIndex(icon => icon.id === id);
-    
-    if (index === -1) return null;
-    
-    const updatedIcon = { ...settings.techIcons[index], ...updates };
-    settings.techIcons[index] = updatedIcon;
-    localStorage.setItem('heroSettings', JSON.stringify(settings));
-    
-    // Dispatch update event
-    this.dispatchEvent('hero-settings-updated', settings);
-    
-    return updatedIcon;
+  updateTechIcon = (id: number, updates: Partial<TechIcon>): Promise<TechIcon | null> => {
+    return this.getHeroSettings().then(settings => {
+      const index = settings.techIcons.findIndex(icon => icon.id === id);
+      
+      if (index === -1) return null;
+      
+      const updatedIcon = { ...settings.techIcons[index], ...updates };
+      settings.techIcons[index] = updatedIcon;
+      localStorage.setItem('heroSettings', JSON.stringify(settings));
+      
+      // Dispatch update event
+      this.dispatchEvent('hero-settings-updated', settings);
+      
+      return updatedIcon;
+    });
   };
 
-  deleteTechIcon = (id: number): boolean => {
-    const settings = this.getHeroSettings();
-    const index = settings.techIcons.findIndex(icon => icon.id === id);
-    
-    if (index === -1) return false;
-    
-    settings.techIcons.splice(index, 1);
-    
-    // Update order values
-    settings.techIcons.forEach((icon, idx) => {
-      icon.order = idx + 1;
+  deleteTechIcon = (id: number): Promise<boolean> => {
+    return this.getHeroSettings().then(settings => {
+      const index = settings.techIcons.findIndex(icon => icon.id === id);
+      
+      if (index === -1) return false;
+      
+      settings.techIcons.splice(index, 1);
+      
+      // Update order values
+      settings.techIcons.forEach((icon, idx) => {
+        icon.order = idx + 1;
+      });
+      
+      localStorage.setItem('heroSettings', JSON.stringify(settings));
+      
+      // Dispatch update event
+      this.dispatchEvent('hero-settings-updated', settings);
+      
+      return true;
     });
-    
-    localStorage.setItem('heroSettings', JSON.stringify(settings));
-    
-    // Dispatch update event
-    this.dispatchEvent('hero-settings-updated', settings);
-    
-    return true;
   };
 
-  reorderTechIcons = (items: Array<{ id: number; order: number }>): boolean => {
-    const settings = this.getHeroSettings();
-    
-    items.forEach(item => {
-      const icon = settings.techIcons.find(i => i.id === item.id);
-      if (icon) {
-        icon.order = item.order;
-      }
+  reorderTechIcons = (items: Array<{ id: number; order: number }>): Promise<boolean> => {
+    return this.getHeroSettings().then(settings => {
+      items.forEach(item => {
+        const icon = settings.techIcons.find(i => i.id === item.id);
+        if (icon) {
+          icon.order = item.order;
+        }
+      });
+      
+      // Sort by order
+      settings.techIcons.sort((a, b) => a.order - b.order);
+      
+      localStorage.setItem('heroSettings', JSON.stringify(settings));
+      
+      // Dispatch update event
+      this.dispatchEvent('hero-settings-updated', settings);
+      
+      return true;
     });
-    
-    // Sort by order
-    settings.techIcons.sort((a, b) => a.order - b.order);
-    
-    localStorage.setItem('heroSettings', JSON.stringify(settings));
-    
-    // Dispatch update event
-    this.dispatchEvent('hero-settings-updated', settings);
-    
-    return true;
   };
 
   // --- Contact Settings Operations ---
-  saveContactSettings = (contactSettings: Partial<ContactSettings>): Promise<ContactSettings> => {
-    return new Promise((resolve) => {
-      const currentSettings = this.getContactSettings();
-      const updatedSettings = { ...currentSettings, ...contactSettings };
-      
-      // For now, just store in localStorage
-      localStorage.setItem('contactSettings', JSON.stringify(updatedSettings));
-      
-      // Dispatch update event
-      this.dispatchEvent('contact-settings-updated', updatedSettings);
-      
-      resolve(updatedSettings);
-    });
+  saveContactSettings = async (contactSettings: Partial<ContactSettings>): Promise<ContactSettings> => {
+    const currentSettings = await this.getContactSettings();
+    const updatedSettings = { ...currentSettings, ...contactSettings };
+    
+    // For now, just store in localStorage
+    localStorage.setItem('contactSettings', JSON.stringify(updatedSettings));
+    
+    // Dispatch update event
+    this.dispatchEvent('contact-settings-updated', updatedSettings);
+    
+    return updatedSettings;
   };
 
   // Alias for saveContactSettings for compatibility
   updateContactSettings = this.saveContactSettings;
 
-  getContactSettings = (): ContactSettings => {
+  getContactSettings = async (): Promise<ContactSettings> => {
     const defaultContactSettings: ContactSettings = {
       id: 1,
       title: "Contact Us",
@@ -833,6 +820,11 @@ class StorageService {
     }
 
     return defaultContactSettings;
+  };
+
+  // Added for compatibility
+  getContactSettingsFromSupabase = async (): Promise<ContactSettings> => {
+    return this.getContactSettings();
   };
 
   // --- Services Settings Operations ---
@@ -881,22 +873,20 @@ class StorageService {
   };
 
   // --- About Settings Operations ---
-  saveAboutSettings = (aboutSettings: Partial<AboutSettings>): Promise<AboutSettings> => {
-    return new Promise((resolve) => {
-      const currentSettings = this.getAboutSettings();
-      const updatedSettings = { ...currentSettings, ...aboutSettings };
-      
-      // For now, just store in localStorage
-      localStorage.setItem('aboutSettings', JSON.stringify(updatedSettings));
-      
-      // Dispatch update event
-      this.dispatchEvent('about-settings-updated', updatedSettings);
-      
-      resolve(updatedSettings);
-    });
+  saveAboutSettings = async (aboutSettings: Partial<AboutSettings>): Promise<AboutSettings> => {
+    const currentSettings = await this.getAboutSettings();
+    const updatedSettings = { ...currentSettings, ...aboutSettings };
+    
+    // For now, just store in localStorage
+    localStorage.setItem('aboutSettings', JSON.stringify(updatedSettings));
+    
+    // Dispatch update event
+    this.dispatchEvent('about-settings-updated', updatedSettings);
+    
+    return updatedSettings;
   };
 
-  getAboutSettings = (): AboutSettings => {
+  getAboutSettings = async (): Promise<AboutSettings> => {
     const defaultAboutSettings: AboutSettings = {
       id: 1,
       title: "About Us",
@@ -932,32 +922,28 @@ class StorageService {
     return defaultAboutSettings;
   };
 
-  saveKeyPoints = (keyPoints: KeyPoint[]): Promise<KeyPoint[]> => {
-    return new Promise((resolve) => {
-      const settings = this.getAboutSettings();
-      settings.keyPoints = keyPoints;
-      
-      localStorage.setItem('aboutSettings', JSON.stringify(settings));
-      
-      // Dispatch update event
-      this.dispatchEvent('about-settings-updated', settings);
-      
-      resolve(keyPoints);
-    });
+  saveKeyPoints = async (keyPoints: KeyPoint[]): Promise<KeyPoint[]> => {
+    const settings = await this.getAboutSettings();
+    settings.keyPoints = keyPoints;
+    
+    localStorage.setItem('aboutSettings', JSON.stringify(settings));
+    
+    // Dispatch update event
+    this.dispatchEvent('about-settings-updated', settings);
+    
+    return keyPoints;
   };
 
-  saveStats = (stats: StatItem[]): Promise<StatItem[]> => {
-    return new Promise((resolve) => {
-      const settings = this.getAboutSettings();
-      settings.stats = stats;
-      
-      localStorage.setItem('aboutSettings', JSON.stringify(settings));
-      
-      // Dispatch update event
-      this.dispatchEvent('about-settings-updated', settings);
-      
-      resolve(stats);
-    });
+  saveStats = async (stats: StatItem[]): Promise<StatItem[]> => {
+    const settings = await this.getAboutSettings();
+    settings.stats = stats;
+    
+    localStorage.setItem('aboutSettings', JSON.stringify(settings));
+    
+    // Dispatch update event
+    this.dispatchEvent('about-settings-updated', settings);
+    
+    return stats;
   };
 
   // --- FAQ Settings Operations ---
@@ -983,133 +969,6 @@ class StorageService {
       subtitle: "Have questions? We've got answers!",
       description: "Find answers to common questions about our services and company.",
       faqItems: [],
-      enableSearch: true,
-      enableCategories: true,
+      enableSearch: boolean;
+      enableCategories: boolean;
       lastUpdated: new Date().toISOString(),
-    };
-
-    // Retrieve settings from localStorage
-    const storedSettings = localStorage.getItem('faqSettings');
-    if (storedSettings) {
-      try {
-        return JSON.parse(storedSettings) as FAQSettings;
-      } catch (error) {
-        console.error("Error parsing faq settings from localStorage: ", error);
-        return defaultFAQSettings;
-      }
-    }
-
-    return defaultFAQSettings;
-  };
-
-  // --- References Settings Operations ---
-  saveReferencesSettings = (referencesSettings: ReferencesSettings): Promise<ReferencesSettings> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-
-      const transaction = this.db.transaction(['referencesSettings'], 'readwrite');
-      const store = transaction.objectStore('referencesSettings');
-      const request = store.put(referencesSettings, 1); // Use a fixed key (1) to store settings
-
-      request.onsuccess = () => {
-        resolve(referencesSettings);
-
-        // Dispatch a custom event to notify components about the update
-        this.dispatchEvent('references-settings-updated', referencesSettings);
-      };
-
-      request.onerror = (event: any) => {
-        console.error("Error saving references settings: ", event.target.error);
-        reject(event.target.error);
-      };
-    });
-  };
-
-  getReferencesSettings = (): ReferencesSettings => {
-    const defaultReferencesSettings: ReferencesSettings = {
-      id: 1,
-      title: "Our Clients",
-      subtitle: "We work with amazing companies",
-      description: "These are some of the companies we have worked with in the past",
-      clientLogos: [],
-      testimonialsSectionTitle: "What Our Clients Say",
-      testimonialsSectionSubtitle: "Testimonials from our clients",
-      lastUpdated: new Date().toISOString(),
-    };
-
-    // Retrieve settings from localStorage
-    const storedSettings = localStorage.getItem('referencesSettings');
-    if (storedSettings) {
-      try {
-        return JSON.parse(storedSettings) as ReferencesSettings;
-      } catch (error) {
-        console.error("Error parsing references settings from localStorage: ", error);
-        return defaultReferencesSettings;
-      }
-    }
-
-    return defaultReferencesSettings;
-  };
-  
-  // Add client logo
-  addClientLogo = (logo: Omit<ClientLogo, "id" | "order">): Promise<ClientLogo> => {
-    return new Promise((resolve, reject) => {
-      try {
-        const settings = this.getReferencesSettings();
-        const newLogo: ClientLogo = {
-          id: Date.now(),
-          order: settings.clientLogos.length + 1,
-          ...logo
-        };
-        
-        settings.clientLogos.push(newLogo);
-        localStorage.setItem('referencesSettings', JSON.stringify(settings));
-        
-        resolve(newLogo);
-      } catch (error) {
-        console.error("Error adding client logo: ", error);
-        reject(error);
-      }
-    });
-  };
-
-  // Add FAQ item
-  addFAQItem = (item: Omit<FAQItem, "id" | "order">): Promise<FAQItem> => {
-    return new Promise((resolve, reject) => {
-      try {
-        const settings = this.getFAQSettings();
-        const newItem: FAQItem = {
-          id: Date.now(),
-          order: settings.faqItems.length + 1,
-          ...item
-        };
-        
-        settings.faqItems.push(newItem);
-        localStorage.setItem('faqSettings', JSON.stringify(settings));
-        
-        resolve(newItem);
-      } catch (error) {
-        console.error("Error adding FAQ item: ", error);
-        reject(error);
-      }
-    });
-  };
-
-  // Update FAQ settings
-  updateFAQSettings = (settings: FAQSettings): Promise<FAQSettings> => {
-    return new Promise((resolve, reject) => {
-      try {
-        localStorage.setItem('faqSettings', JSON.stringify(settings));
-        resolve(settings);
-      } catch (error) {
-        console.error("Error updating FAQ settings: ", error);
-        reject(error);
-      }
-    });
-  };
-}
-
-export const storageService = new StorageService();
