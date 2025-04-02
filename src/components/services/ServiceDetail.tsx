@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Eye, Clock, Tag, FileText, Download } from "lucide-react";
@@ -10,19 +11,25 @@ import { ContentItem } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
 interface ServiceDetailProps {
+  service?: ContentItem; // Allow passing service directly
   className?: string;
 }
 
-const ServiceDetail: React.FC<ServiceDetailProps> = ({ className }) => {
+const ServiceDetail: React.FC<ServiceDetailProps> = ({ service: serviceProp, className }) => {
   const { slug } = useParams<{ slug: string }>();
-  const [service, setService] = useState<ContentItem | null>(null);
+  const [service, setService] = useState<ContentItem | null>(serviceProp || null);
 
   useEffect(() => {
-    if (slug) {
-      const storedService = storageService.getContentByType("Service").find((item) => item.slug === slug);
-      setService(storedService || null);
+    if (!serviceProp && slug) {
+      const fetchService = async () => {
+        const services = await storageService.getContentByType("Service");
+        const foundService = services.find((item) => item.slug === slug);
+        setService(foundService || null);
+      };
+      
+      fetchService();
     }
-  }, [slug]);
+  }, [slug, serviceProp]);
 
   if (!service) {
     return (
