@@ -33,6 +33,8 @@ import AdminServicesSettings from "./pages/admin/AdminServicesSettings";
 import AdminAboutSettings from "./pages/admin/AdminAboutSettings";
 import AdminReferencesSettings from "./pages/admin/AdminReferencesSettings";
 import AdminFAQSettings from "./pages/admin/AdminFAQSettings";
+import ContactSettings from "./pages/admin/ContactSettings";
+import FooterSettings from "./pages/admin/FooterSettings";
 import { LanguageCode, availableLanguages } from "./lib/i18n";
 
 const queryClient = new QueryClient();
@@ -137,6 +139,8 @@ function App() {
             <Route path="/admin/faq-settings" element={<AdminFAQSettings />} />
             <Route path="/admin/contacts" element={<AdminContacts />} />
             <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/contact-settings" element={<ContactSettings />} />
+            <Route path="/admin/footer-settings" element={<FooterSettings />} />
             
             {/* Not Found Route */}
             <Route path="*" element={<NotFound />} />

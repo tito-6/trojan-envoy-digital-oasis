@@ -1,1215 +1,215 @@
-import { ContentItem, ContactRequest, User, NavigationItem, HeaderSettings, HeroSettings, PartnerLogo, TechIcon, ServicesSettings, ServiceItem, AboutSettings, KeyPoint, StatItem, ReferencesSettings, FAQSettings, ClientLogo, FAQItem, FooterSettings, SocialLink, FooterSection, FooterLink, ContactSettings, ContactInfoItem, ContactFormField } from './types';
-
-const initialContent: ContentItem[] = [];
-
-const initialNavigation: NavigationItem[] = [
-  { id: 1, label: "Home", path: "/", order: 1 },
-  { id: 2, label: "Services", path: "/services", order: 2 },
-  { id: 3, label: "About", path: "/about", order: 3 },
-  { id: 4, label: "Portfolio", path: "/portfolio", order: 4 },
-  { id: 5, label: "Blog", path: "/blog", order: 5 },
-  { id: 6, label: "Contact", path: "/contact", order: 6 },
-];
-
-const initialUsers: User[] = [
-  { id: 1, name: "Admin User", email: "admin@trojan-envoy.com", role: "Admin", lastLogin: "2023-11-15" },
-];
-
-const initialContacts: ContactRequest[] = [];
-
-const initialHeaderSettings: HeaderSettings = {
-  id: 1,
-  siteTitle: "Trojan Envoy",
-  contactButtonText: "Contact Us",
-  contactButtonPath: "/contact",
-  showLanguageSelector: true,
-  showThemeToggle: true,
-  enabledLanguages: ["en", "fr", "es", "de", "tr", "ar", "zh"],
-  defaultLanguage: "en",
-  mobileMenuLabel: "Menu",
-  lastUpdated: "2023-11-15"
-};
-
-const initialHeroSettings: HeroSettings = {
-  id: 1,
-  title: "Transform Your Digital Presence",
-  subtitle: "Expert digital solutions",
-  description: "We deliver cutting-edge web and mobile solutions that help businesses thrive in the digital landscape. Our team of experts is dedicated to creating exceptional digital experiences.",
-  primaryButtonText: "Get Started",
-  primaryButtonUrl: "/contact",
-  secondaryButtonText: "Explore Services",
-  secondaryButtonUrl: "/services",
-  showPartnerLogos: true,
-  partnerSectionTitle: "Trusted By Industry Leaders",
-  partnerCertifiedText: "Certified",
-  showTechStack: true,
-  techStackTitle: "Built With Modern Technologies",
-  techStackSubtitle: "Tech Stack",
-  techStackDescription: "We leverage cutting-edge technology to build modern, scalable solutions",
-  partnerLogos: [
-    { id: 1, name: "Google", iconName: "FaGoogle", color: "#4285F4", bgColor: "bg-blue-100", order: 1 },
-    { id: 2, name: "Meta", iconName: "FaFacebook", color: "#1877F2", bgColor: "bg-blue-100", order: 2 },
-    { id: 3, name: "SEMrush", iconName: "SiSemrush", color: "#5FB246", bgColor: "bg-green-100", order: 3 },
-    { id: 4, name: "AWS", iconName: "FaAws", color: "#FF9900", bgColor: "bg-orange-100", order: 4 },
-    { id: 5, name: "Magento", iconName: "FaShopify", color: "#7AB55C", bgColor: "bg-purple-100", order: 5 },
-    { id: 6, name: "WordPress", iconName: "FaWordpress", color: "#21759B", bgColor: "bg-blue-100", order: 6 },
-    { id: 7, name: "Industry Leaders", iconName: "FaAward", color: "#FFD700", bgColor: "bg-yellow-100", order: 7 }
-  ],
-  techIcons: [
-    { id: 1, name: "React", iconName: "FaReact", color: "#61DAFB", animation: "animate-float", order: 1 },
-    { id: 2, name: "TypeScript", iconName: "SiTypescript", color: "#3178C6", animation: "animate-pulse-soft", order: 2 },
-    { id: 3, name: "Vue.js", iconName: "FaVuejs", color: "#4FC08D", animation: "animate-float", order: 3 },
-    { id: 4, name: "Angular", iconName: "FaAngular", color: "#DD0031", animation: "animate-pulse-soft", order: 4 },
-    { id: 5, name: "JavaScript", iconName: "SiJavascript", color: "#F7DF1E", animation: "animate-float", order: 5 },
-    { id: 6, name: "Node.js", iconName: "FaNode", color: "#339933", animation: "animate-pulse-soft", order: 6 },
-    { id: 7, name: "Python", iconName: "FaPython", color: "#3776AB", animation: "animate-float", order: 7 },
-    { id: 8, name: "Java", iconName: "FaJava", color: "#007396", animation: "animate-pulse-soft", order: 8 },
-    { id: 9, name: "PHP", iconName: "FaPhp", color: "#777BB4", animation: "animate-float", order: 9 },
-    { id: 10, name: "Kotlin", iconName: "SiKotlin", color: "#7F52FF", animation: "animate-pulse-soft", order: 10 },
-    { id: 11, name: "Swift", iconName: "FaSwift", color: "#FA7343", animation: "animate-float", order: 11 },
-    { id: 12, name: "Flutter", iconName: "SiFlutter", color: "#02569B", animation: "animate-pulse-soft", order: 12 },
-    { id: 13, name: "Firebase", iconName: "SiFirebase", color: "#FFCA28", animation: "animate-float", order: 13 },
-    { id: 14, name: "MongoDB", iconName: "SiMongodb", color: "#47A248", animation: "animate-pulse-soft", order: 14 },
-    { id: 15, name: "SQL", iconName: "FaDatabase", color: "#4479A1", animation: "animate-float", order: 15 },
-    { id: 16, name: "GraphQL", iconName: "SiGraphql", color: "#E10098", animation: "animate-pulse-soft", order: 16 },
-    { id: 17, name: "Tailwind", iconName: "SiTailwindcss", color: "#06B6D4", animation: "animate-float", order: 17 },
-    { id: 18, name: "Docker", iconName: "FaDocker", color: "#2496ED", animation: "animate-pulse-soft", order: 18 },
-    { id: 19, name: "AWS", iconName: "FaAws", color: "#FF9900", animation: "animate-float", order: 19 },
-    { id: 20, name: "GitHub", iconName: "FaGithub", color: "#181717", animation: "animate-pulse-soft", order: 20 }
-  ],
-  lastUpdated: "2023-11-15"
-};
-
-const initialAboutSettings: AboutSettings = {
-  id: 1,
-  title: "Empowering Businesses",
-  subtitle: "With Innovative Digital Solutions",
-  description: "We empower businesses with innovative digital solutions that drive growth, enhance customer engagement, and create competitive advantages in today's rapidly evolving digital landscape.",
-  missionTitle: "Our Mission",
-  missionDescription: "At Trojan Envoy, we are committed to delivering exceptional digital experiences that transform businesses and drive meaningful results. We combine technical expertise with strategic thinking to address your unique challenges and help you achieve your goals.",
-  learnMoreText: "Learn more about us",
-  learnMoreUrl: "/about",
-  keyPoints: [
-    { id: 1, text: "Industry-leading expertise", order: 1 },
-    { id: 2, text: "Results-driven approach", order: 2 },
-    { id: 3, text: "Innovative technologies", order: 3 },
-    { id: 4, text: "Dedicated support", order: 4 },
-    { id: 5, text: "Transparent communication", order: 5 },
-    { id: 6, text: "Agile methodology", order: 6 }
-  ],
-  stats: [
-    { id: 1, value: "10+", label: "Years Experience", start: "0", order: 1 },
-    { id: 2, value: "200+", label: "Projects Completed", start: "0", order: 2 },
-    { id: 3, value: "50+", label: "Team Members", start: "0", order: 3 },
-    { id: 4, value: "98%", label: "Client Satisfaction", start: "0", order: 4 }
-  ],
-  lastUpdated: "2023-11-15"
-};
-
-const initialReferencesSettings: ReferencesSettings = {
-  id: 1,
-  title: "Trusted By Industry Leaders",
-  subtitle: "We're proud to partner with these remarkable organizations",
-  viewCaseStudiesText: "View Our Case Studies",
-  viewCaseStudiesUrl: "/case-studies",
-  clientLogos: [
-    { id: 1, name: "Microsoft", logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg", scale: "w-32", order: 1 },
-    { id: 2, name: "Google", logo: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg", scale: "w-28", order: 2 },
-    { id: 3, name: "Amazon", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg", scale: "w-32", order: 3 },
-    { id: 4, name: "IBM", logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg", scale: "w-24", order: 4 },
-    { id: 5, name: "Samsung", logo: "https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg", scale: "w-32", order: 5 },
-    { id: 6, name: "Coca-Cola", logo: "https://upload.wikimedia.org/wikipedia/commons/c/ce/Coca-Cola_logo.svg", scale: "w-32", order: 6 },
-    { id: 7, name: "Toyota", logo: "https://upload.wikimedia.org/wikipedia/commons/9/9d/Toyota_logo.svg", scale: "w-20", order: 7 },
-    { id: 8, name: "Nike", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg", scale: "w-20", order: 8 },
-  ],
-  lastUpdated: "2023-11-15"
-};
-
-const initialFAQSettings: FAQSettings = {
-  id: 1,
-  title: "Frequently Asked Questions",
-  subtitle: "Find answers to common questions about our services",
-  viewAllText: "View all FAQs",
-  viewAllUrl: "/faq",
-  faqItems: [
-    {
-      id: 1,
-      question: "What services does Trojan Envoy offer?",
-      answer: "We offer comprehensive digital solutions including web development, mobile app development, UI/UX design, and digital marketing services tailored to your business needs.",
-      order: 1
-    },
-    {
-      id: 2,
-      question: "How long does it take to complete a website project?",
-      answer: "Project timelines vary based on complexity. Simple websites typically take 2-4 weeks, while larger projects may take 2-6 months. We'll provide a specific timeline after understanding your requirements.",
-      order: 2
-    },
-    {
-      id: 3,
-      question: "Do you provide ongoing support after project completion?",
-      answer: "Yes! We offer various maintenance and support packages to keep your digital products secure, up-to-date, and performing optimally.",
-      order: 3
-    },
-    {
-      id: 4,
-      question: "What is your approach to project management?",
-      answer: "We follow agile methodologies with regular client communication and iterative development cycles to ensure transparency and alignment throughout the project.",
-      order: 4
-    }
-  ],
-  lastUpdated: "2023-11-15"
-};
-
-const initialFooterSettings: FooterSettings = {
-  id: 1,
-  companyInfo: {
-    description: "Premium software development and digital marketing agency delivering excellence and driving results for businesses worldwide.",
-    address: "1234 Tech Avenue, Innovation District, New York, NY 10001",
-    phone: "+1 (555) 123-4567",
-    email: "contact@trojanenvoy.com"
-  },
-  socialLinks: [
-    { id: 1, platform: "LinkedIn", icon: "linkedin", url: "#", order: 0 },
-    { id: 2, platform: "Twitter", icon: "twitter", url: "#", order: 1 },
-    { id: 3, platform: "Facebook", icon: "facebook", url: "#", order: 2 },
-    { id: 4, platform: "Instagram", icon: "instagram", url: "#", order: 3 }
-  ],
-  footerSections: [
-    {
-      id: 1,
-      title: "Company",
-      order: 0,
-      links: [
-        { id: 1, label: "About Us", path: "/about", order: 0, isExternal: false },
-        { id: 2, label: "Services", path: "/services", order: 1, isExternal: false },
-        { id: 3, label: "Portfolio", path: "/portfolio", order: 2, isExternal: false },
-        { id: 4, label: "Careers", path: "/careers", order: 3, isExternal: false },
-        { id: 5, label: "Contact", path: "/contact", order: 4, isExternal: false }
-      ]
-    },
-    {
-      id: 2,
-      title: "Services",
-      order: 1,
-      links: [
-        { id: 6, label: "Web Development", path: "/services/web-development", order: 0, isExternal: false },
-        { id: 7, label: "Mobile Development", path: "/services/mobile-development", order: 1, isExternal: false },
-        { id: 8, label: "UI/UX Design", path: "/services/ui-ux-design", order: 2, isExternal: false },
-        { id: 9, label: "Digital Marketing", path: "/services/digital-marketing", order: 3, isExternal: false },
-        { id: 10, label: "SEO Optimization", path: "/services/seo", order: 4, isExternal: false }
-      ]
-    },
-    {
-      id: 3,
-      title: "Resources",
-      order: 2,
-      links: [
-        { id: 11, label: "Blog", path: "/blog", order: 0, isExternal: false },
-        { id: 12, label: "Case Studies", path: "/case-studies", order: 1, isExternal: false },
-        { id: 13, label: "FAQ", path: "/faq", order: 2, isExternal: false },
-        { id: 14, label: "Privacy Policy", path: "/privacy-policy", order: 3, isExternal: false },
-        { id: 15, label: "Terms of Service", path: "/terms-of-service", order: 4, isExternal: false }
-      ]
-    }
-  ],
-  copyrightText: "© {year} Trojan Envoy. All rights reserved.",
-  privacyPolicyLink: "/privacy-policy",
-  termsOfServiceLink: "/terms-of-service",
-  lastUpdated: "2023-11-15"
-};
-
-const initialContactSettings: ContactSettings = {
-  id: 1,
-  title: "Get in Touch",
-  subtitle: "We'd love to hear from you",
-  description: {
-    blocks: [
-      {
-        key: "description",
-        text: "Have a project in mind? Let's talk about how we can help your business grow through innovative digital solutions.",
-        type: "unstyled",
-        depth: 0,
-        inlineStyleRanges: [],
-        entityRanges: [],
-        data: {}
-      }
-    ],
-    entityMap: {}
-  },
-  submitButtonText: "Send Message",
-  contactInfoItems: [
-    { 
-      id: 1, 
-      title: "Office Address", 
-      content: "1234 Tech Avenue, Innovation District\nNew York, NY 10001, USA", 
-      icon: "MapPin", 
-      order: 0 
-    },
-    { 
-      id: 2, 
-      title: "Contact Information", 
-      content: "Email: contact@trojanenvoy.com\nPhone: +1 (555) 123-4567", 
-      icon: "Phone", 
-      order: 1 
-    },
-    { 
-      id: 3, 
-      title: "Working Hours", 
-      content: "Monday - Friday: 9:00 AM - 6:00 PM\nSaturday & Sunday: Closed", 
-      icon: "Clock", 
-      order: 2 
-    }
-  ],
-  formFields: [
-    { 
-      id: 1, 
-      name: "name", 
-      label: "Full Name", 
-      type: "text", 
-      required: true, 
-      placeholder: "John Doe", 
-      order: 0 
-    },
-    { 
-      id: 2, 
-      name: "email", 
-      label: "Email Address", 
-      type: "email", 
-      required: true, 
-      placeholder: "john@example.com", 
-      order: 1 
-    },
-    { 
-      id: 3, 
-      name: "phone", 
-      label: "Phone Number", 
-      type: "phone", 
-      required: false, 
-      placeholder: "(555) 123-4567", 
-      order: 2 
-    },
-    { 
-      id: 4, 
-      name: "subject", 
-      label: "Subject", 
-      type: "text", 
-      required: true, 
-      placeholder: "Project Inquiry", 
-      order: 3 
-    },
-    { 
-      id: 5, 
-      name: "message", 
-      label: "Your Message", 
-      type: "textarea", 
-      required: true, 
-      placeholder: "Tell us about your project...", 
-      order: 4 
-    }
-  ],
-  enableRecaptcha: false,
-  enableFingerprinting: false,
-  enableEmailNotifications: false,
-  enableAppointmentScheduling: false,
-  lastUpdated: "2023-11-15"
-};
-
 class StorageService {
-  private contentKey = 'trojan-envoy-content';
-  private usersKey = 'trojan-envoy-users';
-  private contactsKey = 'trojan-envoy-contacts';
-  private navigationKey = 'trojan-envoy-navigation';
-  private headerSettingsKey = 'trojan-envoy-header-settings';
-  private heroSettingsKey = 'trojan-envoy-hero-settings';
-  private aboutSettingsKey = 'trojan-envoy-about-settings';
-  private referencesSettingsKey = 'trojan-envoy-references-settings';
-  private faqSettingsKey = 'trojan-envoy-faq-settings';
-  private footerSettingsKey = 'trojan-envoy-footer-settings';
-  private contactSettingsKey = 'trojan-envoy-contact-settings';
-  private eventListeners: Record<string, Function[]> = {};
+  private listeners: { [key: string]: ((event: CustomEvent) => void)[] } = {};
 
-  constructor() {
-    this.initializeStorage();
-  }
+  addEventListener(event: string, callback: (event: CustomEvent) => void): () => void {
+    if (!this.listeners[event]) {
+      this.listeners[event] = [];
+    }
+    this.listeners[event].push(callback);
 
-  private initializeStorage() {
-    if (!localStorage.getItem(this.contentKey)) {
-      localStorage.setItem(this.contentKey, JSON.stringify(initialContent));
-    }
-    
-    if (!localStorage.getItem(this.usersKey)) {
-      localStorage.setItem(this.usersKey, JSON.stringify(initialUsers));
-    }
-    
-    if (!localStorage.getItem(this.contactsKey)) {
-      localStorage.setItem(this.contactsKey, JSON.stringify(initialContacts));
-    }
-    
-    if (!localStorage.getItem(this.navigationKey)) {
-      localStorage.setItem(this.navigationKey, JSON.stringify(initialNavigation));
-    }
-    
-    if (!localStorage.getItem(this.headerSettingsKey)) {
-      localStorage.setItem(this.headerSettingsKey, JSON.stringify(initialHeaderSettings));
-    }
-    
-    if (!localStorage.getItem(this.heroSettingsKey)) {
-      localStorage.setItem(this.heroSettingsKey, JSON.stringify(initialHeroSettings));
-    }
-    
-    if (!localStorage.getItem(this.aboutSettingsKey)) {
-      localStorage.setItem(this.aboutSettingsKey, JSON.stringify(initialAboutSettings));
-    }
-    
-    if (!localStorage.getItem(this.referencesSettingsKey)) {
-      localStorage.setItem(this.referencesSettingsKey, JSON.stringify(initialReferencesSettings));
-    }
-    
-    if (!localStorage.getItem(this.faqSettingsKey)) {
-      localStorage.setItem(this.faqSettingsKey, JSON.stringify(initialFAQSettings));
-    }
-
-    if (!localStorage.getItem(this.footerSettingsKey)) {
-      localStorage.setItem(this.footerSettingsKey, JSON.stringify(initialFooterSettings));
-    }
-
-    if (!localStorage.getItem(this.contactSettingsKey)) {
-      localStorage.setItem(this.contactSettingsKey, JSON.stringify(initialContactSettings));
-    }
-  }
-
-  addEventListener(event: string, callback: Function) {
-    if (!this.eventListeners[event]) {
-      this.eventListeners[event] = [];
-    }
-    this.eventListeners[event].push(callback);
-    return () => this.removeEventListener(event, callback);
-  }
-
-  removeEventListener(event: string, callback: Function) {
-    if (this.eventListeners[event]) {
-      this.eventListeners[event] = this.eventListeners[event].filter(cb => cb !== callback);
-    }
-  }
-
-  dispatchEvent(event: string, data: any) {
-    if (this.eventListeners[event]) {
-      this.eventListeners[event].forEach(callback => callback(data));
-    }
-  }
-
-  getAllContent(): ContentItem[] {
-    const content = localStorage.getItem(this.contentKey);
-    return content ? JSON.parse(content) : [];
-  }
-
-  getContentById(id: number): ContentItem | undefined {
-    return this.getAllContent().find(item => item.id === id);
-  }
-
-  getContentByType(type: string): ContentItem[] {
-    return this.getAllContent().filter(item => item.type === type);
-  }
-
-  getContentBySlug(slug: string): ContentItem | undefined {
-    return this.getAllContent().find(item => item.slug === slug);
-  }
-
-  addContent(content: Omit<ContentItem, 'id' | 'lastUpdated'>): ContentItem {
-    const allContent = this.getAllContent();
-    const newId = allContent.length > 0 ? Math.max(...allContent.map(item => item.id)) + 1 : 1;
-    
-    const normalizedContent: ContentItem = {
-      ...content,
-      id: newId,
-      lastUpdated: new Date().toISOString().split('T')[0],
-      published: content.published ?? false,
-      seoKeywords: content.seoKeywords || [],
-      slug: content.slug 
-        ? content.slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '') 
-        : content.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, ''),
-      publishDate: content.type === 'Blog Post' ? 
-        (content.publishDate || new Date().toISOString().split('T')[0]) : 
-        content.publishDate,
-      responsibilities: content.responsibilities || [],
-      requirements: content.requirements || [],
-      benefits: content.benefits || [],
-      technologies: content.technologies || []
+    return () => {
+      this.removeEventListener(event, callback);
     };
-    
-    allContent.push(normalizedContent);
-    localStorage.setItem(this.contentKey, JSON.stringify(allContent));
-    
-    if (content.type === 'Page' && content.showInNavigation && normalizedContent.slug) {
-      this.addNavigationItem({
-        label: content.title,
-        path: `/${normalizedContent.slug}`,
-        order: this.getAllNavigationItems().length + 1
-      });
+  }
+
+  removeEventListener(event: string, callback: (event: CustomEvent) => void): void {
+    if (this.listeners[event]) {
+      this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
     }
-    
-    this.dispatchEvent('content-added', normalizedContent);
-    
-    return normalizedContent;
   }
 
-  updateContent(id: number, content: Partial<ContentItem>): ContentItem | null {
-    const allContent = this.getAllContent();
-    const index = allContent.findIndex(item => item.id === id);
-    
-    if (index === -1) return null;
-    
-    const originalContent = allContent[index];
-    
-    let updatedSlug = originalContent.slug;
-    if (content.slug !== undefined) {
-      updatedSlug = content.slug
-        ? content.slug.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '')
-        : originalContent.slug;
-    } else if (content.title && !originalContent.slug) {
-      updatedSlug = content.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
-    }
-    
-    const updatedContent: ContentItem = {
-      ...originalContent,
-      ...content,
-      lastUpdated: new Date().toISOString().split('T')[0],
-      seoKeywords: content.seoKeywords || originalContent.seoKeywords || [],
-      slug: updatedSlug,
-      responsibilities: content.responsibilities || originalContent.responsibilities || [],
-      requirements: content.requirements || originalContent.requirements || [],
-      benefits: content.benefits || originalContent.benefits || [],
-      technologies: content.technologies || originalContent.technologies || []
+  // Get header settings
+  getHeaderSettings(): any {
+    const settings = localStorage.getItem('headerSettings');
+    return settings ? JSON.parse(settings) : {
+      id: 1,
+      siteTitle: "Trojan Envoy",
+      logoPath: "/logo.svg",
+      contactButtonText: "Contact Us",
+      contactButtonPath: "/contact",
+      showLanguageSelector: true,
+      showThemeToggle: true,
+      enabledLanguages: ['en', 'de', 'es'],
+      defaultLanguage: 'en',
+      mobileMenuLabel: 'Menu',
+      lastUpdated: new Date().toISOString()
     };
-    
-    allContent[index] = updatedContent;
-    localStorage.setItem(this.contentKey, JSON.stringify(allContent));
-    
-    if (updatedContent.type === 'Page') {
-      const navItem = this.getNavigationItemByPath(`/${originalContent.slug || ''}`);
-      
-      if (updatedContent.showInNavigation && !navItem && updatedContent.slug) {
-        this.addNavigationItem({
-          label: updatedContent.title,
-          path: `/${updatedContent.slug}`,
-          order: this.getAllNavigationItems().length + 1
-        });
-      } 
-      else if (navItem) {
-        if (!updatedContent.showInNavigation) {
-          this.deleteNavigationItem(navItem.id);
-        } else if (originalContent.title !== updatedContent.title || originalContent.slug !== updatedContent.slug) {
-          this.updateNavigationItem(navItem.id, {
-            label: updatedContent.title,
-            path: `/${updatedContent.slug}`
-          });
-        }
-      }
-    }
-    
-    this.dispatchEvent('content-updated', updatedContent);
-    
-    return updatedContent;
   }
 
-  deleteContent(id: number): boolean {
-    const allContent = this.getAllContent();
-    const contentToDelete = allContent.find(item => item.id === id);
-    const filteredContent = allContent.filter(item => item.id !== id);
-    
-    if (filteredContent.length === allContent.length) return false;
-    
-    localStorage.setItem(this.contentKey, JSON.stringify(filteredContent));
-    
-    if (contentToDelete?.type === 'Page' && contentToDelete.showInNavigation && contentToDelete.slug) {
-      const navItem = this.getNavigationItemByPath(`/${contentToDelete.slug}`);
-      if (navItem) {
-        this.deleteNavigationItem(navItem.id);
-      }
-    }
-    
-    this.dispatchEvent('content-deleted', id);
-    
-    return true;
+  // Update header settings
+  updateHeaderSettings(settings: any): void {
+    localStorage.setItem('headerSettings', JSON.stringify(settings));
+    window.dispatchEvent(new CustomEvent('header-settings-updated'));
   }
 
-  getAllNavigationItems(): NavigationItem[] {
-    const navItems = localStorage.getItem(this.navigationKey);
-    return navItems ? JSON.parse(navItems) : [];
-  }
-
-  getNavigationItemById(id: number): NavigationItem | undefined {
-    return this.getAllNavigationItems().find(item => item.id === id);
-  }
-
-  getNavigationItemByPath(path: string): NavigationItem | undefined {
-    return this.getAllNavigationItems().find(item => item.path === path);
-  }
-
-  addNavigationItem(item: Omit<NavigationItem, 'id'>): NavigationItem {
-    const allItems = this.getAllNavigationItems();
-    const newId = allItems.length > 0 ? Math.max(...allItems.map(i => i.id)) + 1 : 1;
-    
-    const newItem: NavigationItem = { ...item, id: newId };
-    allItems.push(newItem);
-    localStorage.setItem(this.navigationKey, JSON.stringify(allItems));
-    
-    this.dispatchEvent('navigation-updated', this.getAllNavigationItems());
-    
-    return newItem;
-  }
-
-  updateNavigationItem(id: number, item: Partial<NavigationItem>): NavigationItem | null {
-    const allItems = this.getAllNavigationItems();
-    const index = allItems.findIndex(i => i.id === id);
-    
-    if (index === -1) return null;
-    
-    const updatedItem = { ...allItems[index], ...item };
-    allItems[index] = updatedItem;
-    localStorage.setItem(this.navigationKey, JSON.stringify(allItems));
-    
-    this.dispatchEvent('navigation-updated', this.getAllNavigationItems());
-    
-    return updatedItem;
-  }
-
-  deleteNavigationItem(id: number): boolean {
-    const allItems = this.getAllNavigationItems();
-    const filteredItems = allItems.filter(item => item.id !== id);
-    
-    if (filteredItems.length === allItems.length) return false;
-    
-    localStorage.setItem(this.navigationKey, JSON.stringify(filteredItems));
-    
-    this.dispatchEvent('navigation-updated', filteredItems);
-    
-    return true;
-  }
-
-  reorderNavigationItems(items: { id: number, order: number }[]): NavigationItem[] {
-    const allItems = this.getAllNavigationItems();
-    
-    items.forEach(item => {
-      const index = allItems.findIndex(i => i.id === item.id);
-      if (index !== -1) {
-        allItems[index].order = item.order;
-      }
-    });
-    
-    // Sort by order
-    const sortedItems = [...allItems].sort((a, b) => a.order - b.order);
-    
-    localStorage.setItem(this.navigationKey, JSON.stringify(sortedItems));
-    
-    this.dispatchEvent('navigation-updated', sortedItems);
-    
-    return sortedItems;
-  }
-
-  getAllUsers(): User[] {
-    const users = localStorage.getItem(this.usersKey);
-    return users ? JSON.parse(users) : [];
-  }
-
-  getUserById(id: number): User | undefined {
-    return this.getAllUsers().find(user => user.id === id);
-  }
-
-  getUserByEmail(email: string): User | undefined {
-    return this.getAllUsers().find(user => user.email === email);
-  }
-
-  addUser(user: Omit<User, 'id'>): User {
-    const allUsers = this.getAllUsers();
-    const newId = allUsers.length > 0 ? Math.max(...allUsers.map(u => u.id)) + 1 : 1;
-    
-    const newUser = { ...user, id: newId };
-    allUsers.push(newUser);
-    localStorage.setItem(this.usersKey, JSON.stringify(allUsers));
-    
-    this.dispatchEvent('user-added', newUser);
-    
-    return newUser;
-  }
-
-  updateUser(id: number, user: Partial<User>): User | null {
-    const allUsers = this.getAllUsers();
-    const index = allUsers.findIndex(u => u.id === id);
-    
-    if (index === -1) return null;
-    
-    const updatedUser = { ...allUsers[index], ...user };
-    allUsers[index] = updatedUser;
-    localStorage.setItem(this.usersKey, JSON.stringify(allUsers));
-    
-    this.dispatchEvent('user-updated', updatedUser);
-    
-    return updatedUser;
-  }
-
-  deleteUser(id: number): boolean {
-    const allUsers = this.getAllUsers();
-    const filteredUsers = allUsers.filter(user => user.id !== id);
-    
-    if (filteredUsers.length === allUsers.length) return false;
-    
-    localStorage.setItem(this.usersKey, JSON.stringify(filteredUsers));
-    
-    this.dispatchEvent('user-deleted', id);
-    
-    return true;
-  }
-
-  getAllContactRequests(): ContactRequest[] {
-    const contacts = localStorage.getItem(this.contactsKey);
-    return contacts ? JSON.parse(contacts) : [];
-  }
-
-  getContactRequestById(id: number): ContactRequest | undefined {
-    return this.getAllContactRequests().find(contact => contact.id === id);
-  }
-
-  addContactRequest(contact: Omit<ContactRequest, 'id' | 'dateSubmitted' | 'status'>): ContactRequest {
-    const allContacts = this.getAllContactRequests();
-    const newId = allContacts.length > 0 ? Math.max(...allContacts.map(c => c.id)) + 1 : 1;
-    
-    const newContact: ContactRequest = {
-      ...contact,
-      id: newId,
-      dateSubmitted: new Date().toISOString().split('T')[0],
-      status: 'New'
+  // Get hero settings
+  getHeroSettings(): any {
+    const settings = localStorage.getItem('heroSettings');
+    return settings ? JSON.parse(settings) : {
+      id: 1,
+      title: "We are a digital agency that helps businesses grow",
+      subtitle: "We help you to grow your business by providing the best digital solutions",
+      description: "We are a team of experienced professionals who are passionate about helping businesses grow. We offer a wide range of digital solutions to help you achieve your goals.",
+      primaryButtonText: "Get Started",
+      primaryButtonUrl: "/contact",
+      secondaryButtonText: "Learn More",
+      secondaryButtonUrl: "/about",
+      showPartnerLogos: true,
+      partnerSectionTitle: "Trusted by the best",
+      partnerCertifiedText: "Certified Partner",
+      showTechStack: true,
+      techStackTitle: "Our Tech Stack",
+      techStackSubtitle: "We use the latest technologies to build your dream",
+      techStackDescription: "We are always learning and experimenting with new technologies to provide you with the best possible solutions.",
+      partnerLogos: [],
+      techIcons: [],
+      lastUpdated: new Date().toISOString()
     };
-    
-    allContacts.push(newContact);
-    localStorage.setItem(this.contactsKey, JSON.stringify(allContacts));
-    
-    this.dispatchEvent('contact-added', newContact);
-    
-    return newContact;
   }
 
-  updateContactRequest(id: number, contact: Partial<ContactRequest>): ContactRequest | null {
-    const allContacts = this.getAllContactRequests();
-    const index = allContacts.findIndex(c => c.id === id);
-    
-    if (index === -1) return null;
-    
-    const updatedContact = { ...allContacts[index], ...contact };
-    allContacts[index] = updatedContact;
-    localStorage.setItem(this.contactsKey, JSON.stringify(allContacts));
-    
-    this.dispatchEvent('contact-updated', updatedContact);
-    
-    return updatedContact;
+  // Update hero settings
+  updateHeroSettings(settings: any): void {
+    localStorage.setItem('heroSettings', JSON.stringify(settings));
+    window.dispatchEvent(new CustomEvent('hero-settings-updated'));
   }
 
-  deleteContactRequest(id: number): boolean {
-    const allContacts = this.getAllContactRequests();
-    const filteredContacts = allContacts.filter(contact => contact.id !== id);
-    
-    if (filteredContacts.length === allContacts.length) return false;
-    
-    localStorage.setItem(this.contactsKey, JSON.stringify(filteredContacts));
-    
-    this.dispatchEvent('contact-deleted', id);
-    
-    return true;
-  }
-
-  getHeaderSettings(): HeaderSettings {
-    const settings = localStorage.getItem(this.headerSettingsKey);
-    return settings ? JSON.parse(settings) : initialHeaderSettings;
-  }
-
-  updateHeaderSettings(settings: Partial<HeaderSettings>): HeaderSettings {
-    const currentSettings = this.getHeaderSettings();
-    const updatedSettings: HeaderSettings = {
-      ...currentSettings,
-      ...settings,
-      lastUpdated: new Date().toISOString().split('T')[0]
+  // Get about settings
+  getAboutSettings(): any {
+    const settings = localStorage.getItem('aboutSettings');
+    return settings ? JSON.parse(settings) : {
+      id: 1,
+      title: "About Us",
+      subtitle: "We are a digital agency that helps businesses grow",
+      description: "We are a team of experienced professionals who are passionate about helping businesses grow. We offer a wide range of digital solutions to help you achieve your goals.",
+      missionTitle: "Our Mission",
+      missionDescription: "To help businesses grow by providing the best digital solutions.",
+      keyPoints: [],
+      learnMoreText: "Learn More",
+      learnMoreUrl: "/about",
+      stats: [],
+      lastUpdated: new Date().toISOString()
     };
-    
-    localStorage.setItem(this.headerSettingsKey, JSON.stringify(updatedSettings));
-    
-    this.dispatchEvent('header-settings-updated', updatedSettings);
-    
-    return updatedSettings;
   }
 
-  getHeroSettings(): HeroSettings {
-    const settings = localStorage.getItem(this.heroSettingsKey);
-    return settings ? JSON.parse(settings) : initialHeroSettings;
+  // Update about settings
+  updateAboutSettings(settings: any): void {
+    localStorage.setItem('aboutSettings', JSON.stringify(settings));
+    window.dispatchEvent(new CustomEvent('about-settings-updated'));
   }
 
-  updateHeroSettings(settings: Partial<HeroSettings>): HeroSettings {
-    const currentSettings = this.getHeroSettings();
-    const updatedSettings: HeroSettings = {
-      ...currentSettings,
-      ...settings,
-      lastUpdated: new Date().toISOString().split('T')[0]
+  // Get services settings
+  getServicesSettings(): any {
+    const settings = localStorage.getItem('servicesSettings');
+    return settings ? JSON.parse(settings) : {
+      id: 1,
+      title: "Our Services",
+      subtitle: "We offer a wide range of digital solutions to help you achieve your goals.",
+      description: "We are a team of experienced professionals who are passionate about helping businesses grow. We offer a wide range of digital solutions to help you achieve your goals.",
+      viewAllText: "View All Services",
+      viewAllUrl: "/services",
+      services: [],
+      lastUpdated: new Date().toISOString()
     };
-    
-    localStorage.setItem(this.heroSettingsKey, JSON.stringify(updatedSettings));
-    
-    this.dispatchEvent('hero-settings-updated', updatedSettings);
-    
-    return updatedSettings;
   }
 
-  addPartnerLogo(logo: Omit<PartnerLogo, 'id'>): PartnerLogo {
-    const settings = this.getHeroSettings();
-    const newId = settings.partnerLogos.length > 0 ? 
-      Math.max(...settings.partnerLogos.map(logo => logo.id)) + 1 : 1;
-    
-    const newLogo: PartnerLogo = { ...logo, id: newId };
-    
-    settings.partnerLogos.push(newLogo);
-    this.updateHeroSettings(settings);
-    
-    return newLogo;
+  // Update services settings
+  updateServicesSettings(settings: any): void {
+    localStorage.setItem('servicesSettings', JSON.stringify(settings));
+    window.dispatchEvent(new CustomEvent('services-settings-updated'));
   }
 
-  updatePartnerLogo(id: number, logo: Partial<PartnerLogo>): PartnerLogo | null {
-    const settings = this.getHeroSettings();
-    const index = settings.partnerLogos.findIndex(item => item.id === id);
-    
-    if (index === -1) return null;
-    
-    const updatedLogo = { ...settings.partnerLogos[index], ...logo };
-    settings.partnerLogos[index] = updatedLogo;
-    
-    this.updateHeroSettings(settings);
-    
-    return updatedLogo;
-  }
-
-  deletePartnerLogo(id: number): boolean {
-    const settings = this.getHeroSettings();
-    const filteredLogos = settings.partnerLogos.filter(logo => logo.id !== id);
-    
-    if (filteredLogos.length === settings.partnerLogos.length) return false;
-    
-    settings.partnerLogos = filteredLogos;
-    this.updateHeroSettings(settings);
-    
-    return true;
-  }
-
-  reorderPartnerLogos(items: { id: number, order: number }[]): PartnerLogo[] {
-    const settings = this.getHeroSettings();
-    
-    items.forEach(item => {
-      const index = settings.partnerLogos.findIndex(i => i.id === item.id);
-      if (index !== -1) {
-        settings.partnerLogos[index].order = item.order;
-      }
-    });
-    
-    // Sort by order
-    settings.partnerLogos.sort((a, b) => a.order - b.order);
-    
-    this.updateHeroSettings(settings);
-    
-    return settings.partnerLogos;
-  }
-
-  addTechIcon(icon: Omit<TechIcon, 'id'>): TechIcon {
-    const settings = this.getHeroSettings();
-    const newId = settings.techIcons.length > 0 ? 
-      Math.max(...settings.techIcons.map(icon => icon.id)) + 1 : 1;
-    
-    const newIcon: TechIcon = { ...icon, id: newId };
-    
-    settings.techIcons.push(newIcon);
-    this.updateHeroSettings(settings);
-    
-    return newIcon;
-  }
-
-  updateTechIcon(id: number, icon: Partial<TechIcon>): TechIcon | null {
-    const settings = this.getHeroSettings();
-    const index = settings.techIcons.findIndex(item => item.id === id);
-    
-    if (index === -1) return null;
-    
-    const updatedIcon = { ...settings.techIcons[index], ...icon };
-    settings.techIcons[index] = updatedIcon;
-    
-    this.updateHeroSettings(settings);
-    
-    return updatedIcon;
-  }
-
-  deleteTechIcon(id: number): boolean {
-    const settings = this.getHeroSettings();
-    const filteredIcons = settings.techIcons.filter(icon => icon.id !== id);
-    
-    if (filteredIcons.length === settings.techIcons.length) return false;
-    
-    settings.techIcons = filteredIcons;
-    this.updateHeroSettings(settings);
-    
-    return true;
-  }
-
-  reorderTechIcons(items: { id: number, order: number }[]): TechIcon[] {
-    const settings = this.getHeroSettings();
-    
-    items.forEach(item => {
-      const index = settings.techIcons.findIndex(i => i.id === item.id);
-      if (index !== -1) {
-        settings.techIcons[index].order = item.order;
-      }
-    });
-    
-    settings.techIcons.sort((a, b) => a.order - b.order);
-    
-    this.updateHeroSettings(settings);
-    
-    return settings.techIcons;
-  }
-
-  getServicesSettings(): ServicesSettings | null {
-    const settings = localStorage.getItem('services-settings');
-    return settings ? JSON.parse(settings) : null;
-  }
-
-  updateServicesSettings(settings: ServicesSettings): ServicesSettings {
-    const updatedSettings: ServicesSettings = {
-      ...settings,
-      lastUpdated: new Date().toISOString().split('T')[0]
+  getReferencesSettings(): any {
+    const settings = localStorage.getItem('referencesSettings');
+    return settings ? JSON.parse(settings) : {
+      id: 1,
+      title: "Our Clients",
+      subtitle: "We have worked with some of the best companies in the world",
+      viewCaseStudiesText: "View Case Studies",
+      viewCaseStudiesUrl: "/case-studies",
+      clientLogos: [],
+      lastUpdated: new Date().toISOString()
     };
-    
-    localStorage.setItem('services-settings', JSON.stringify(updatedSettings));
-    
-    this.dispatchEvent('services-settings-updated', updatedSettings);
-    
-    return updatedSettings;
   }
 
-  getAboutSettings(): AboutSettings {
-    const settings = localStorage.getItem(this.aboutSettingsKey);
-    return settings ? JSON.parse(settings) : initialAboutSettings;
+  updateReferencesSettings(settings: any): void {
+    localStorage.setItem('referencesSettings', JSON.stringify(settings));
+    window.dispatchEvent(new CustomEvent('references-settings-updated'));
   }
 
-  updateAboutSettings(settings: Partial<AboutSettings>): AboutSettings {
-    const currentSettings = this.getAboutSettings();
-    const updatedSettings: AboutSettings = {
-      ...currentSettings,
-      ...settings,
-      lastUpdated: new Date().toISOString().split('T')[0]
+  getFAQSettings(): any {
+    const settings = localStorage.getItem('faqSettings');
+    return settings ? JSON.parse(settings) : {
+      id: 1,
+      title: "Frequently Asked Questions",
+      subtitle: "Here are some of the most frequently asked questions about our company",
+      viewAllText: "View All FAQs",
+      viewAllUrl: "/faq",
+      faqItems: [],
+      lastUpdated: new Date().toISOString()
     };
-    
-    localStorage.setItem(this.aboutSettingsKey, JSON.stringify(updatedSettings));
-    
-    this.dispatchEvent('about-settings-updated', updatedSettings);
-    
-    return updatedSettings;
   }
 
-  addKeyPoint(keyPoint: Omit<KeyPoint, 'id'>): KeyPoint {
-    const settings = this.getAboutSettings();
-    const newId = settings.keyPoints.length > 0 ? 
-      Math.max(...settings.keyPoints.map(point => point.id)) + 1 : 1;
-    
-    const newKeyPoint: KeyPoint = { ...keyPoint, id: newId };
-    
-    settings.keyPoints.push(newKeyPoint);
-    this.updateAboutSettings(settings);
-    
-    return newKeyPoint;
+  updateFAQSettings(settings: any): void {
+    localStorage.setItem('faqSettings', JSON.stringify(settings));
+    window.dispatchEvent(new CustomEvent('faq-settings-updated'));
   }
 
-  updateKeyPoint(id: number, keyPoint: Partial<KeyPoint>): KeyPoint | null {
-    const settings = this.getAboutSettings();
-    const index = settings.keyPoints.findIndex(point => point.id === id);
-    
-    if (index === -1) return null;
-    
-    const updatedKeyPoint = { ...settings.keyPoints[index], ...keyPoint };
-    settings.keyPoints[index] = updatedKeyPoint;
-    
-    this.updateAboutSettings(settings);
-    
-    return updatedKeyPoint;
-  }
-
-  deleteKeyPoint(id: number): boolean {
-    const settings = this.getAboutSettings();
-    const filteredKeyPoints = settings.keyPoints.filter(point => point.id !== id);
-    
-    if (filteredKeyPoints.length === settings.keyPoints.length) return false;
-    
-    settings.keyPoints = filteredKeyPoints;
-    this.updateAboutSettings(settings);
-    
-    return true;
-  }
-
-  reorderKeyPoints(items: { id: number, order: number }[]): KeyPoint[] {
-    const settings = this.getAboutSettings();
-    
-    items.forEach(item => {
-      const index = settings.keyPoints.findIndex(point => point.id === item.id);
-      if (index !== -1) {
-        settings.keyPoints[index].order = item.order;
-      }
-    });
-    
-    settings.keyPoints.sort((a, b) => a.order - b.order);
-    
-    this.updateAboutSettings(settings);
-    
-    return settings.keyPoints;
-  }
-
-  addStatItem(statItem: Omit<StatItem, 'id'>): StatItem {
-    const settings = this.getAboutSettings();
-    const newId = settings.stats.length > 0 ? 
-      Math.max(...settings.stats.map(stat => stat.id)) + 1 : 1;
-    
-    const newStatItem: StatItem = { ...statItem, id: newId };
-    
-    settings.stats.push(newStatItem);
-    this.updateAboutSettings(settings);
-    
-    return newStatItem;
-  }
-
-  updateStatItem(id: number, statItem: Partial<StatItem>): StatItem | null {
-    const settings = this.getAboutSettings();
-    const index = settings.stats.findIndex(stat => stat.id === id);
-    
-    if (index === -1) return null;
-    
-    const updatedStatItem = { ...settings.stats[index], ...statItem };
-    settings.stats[index] = updatedStatItem;
-    
-    this.updateAboutSettings(settings);
-    
-    return updatedStatItem;
-  }
-
-  deleteStatItem(id: number): boolean {
-    const settings = this.getAboutSettings();
-    const filteredStats = settings.stats.filter(stat => stat.id !== id);
-    
-    if (filteredStats.length === settings.stats.length) return false;
-    
-    settings.stats = filteredStats;
-    this.updateAboutSettings(settings);
-    
-    return true;
-  }
-
-  reorderStatItems(items: { id: number, order: number }[]): StatItem[] {
-    const settings = this.getAboutSettings();
-    
-    items.forEach(item => {
-      const index = settings.stats.findIndex(stat => stat.id === item.id);
-      if (index !== -1) {
-        settings.stats[index].order = item.order;
-      }
-    });
-    
-    settings.stats.sort((a, b) => a.order - b.order);
-    
-    this.updateAboutSettings(settings);
-    
-    return settings.stats;
-  }
-
-  getReferencesSettings(): ReferencesSettings {
-    const settings = localStorage.getItem(this.referencesSettingsKey);
-    return settings ? JSON.parse(settings) : initialReferencesSettings;
-  }
-
-  updateReferencesSettings(settings: Partial<ReferencesSettings>): ReferencesSettings {
-    const currentSettings = this.getReferencesSettings();
-    const updatedSettings: ReferencesSettings = {
-      ...currentSettings,
-      ...settings,
-      lastUpdated: new Date().toISOString().split('T')[0]
+  getContactSettings(): any {
+    const settings = localStorage.getItem('contactSettings');
+    return settings ? JSON.parse(settings) : {
+      id: 1,
+      title: "Contact Us",
+      subtitle: "We would love to hear from you",
+      description: "If you have any questions or would like to learn more about our services, please contact us.",
+      submitButtonText: "Send Message",
+      contactInfoItems: [],
+      formFields: [],
+      enableRecaptcha: false,
+      recaptchaSiteKey: "",
+      recaptchaSecretKey: "",
+      enableFingerprinting: false,
+      enableEmailNotifications: false,
+      emailSender: "",
+      emailRecipient: "",
+      emailSubject: "New Contact Form Submission",
+      enableAppointmentScheduling: false,
+      appointmentLabel: "Schedule an Appointment",
+      availableDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      workingHoursStart: "09:00",
+      workingHoursEnd: "17:00",
+      lastUpdated: new Date().toISOString()
     };
-    
-    localStorage.setItem(this.referencesSettingsKey, JSON.stringify(updatedSettings));
-    
-    this.dispatchEvent('references-settings-updated', updatedSettings);
-    
-    return updatedSettings;
   }
 
-  addClientLogo(logo: Omit<ClientLogo, 'id'>): ClientLogo {
-    const settings = this.getReferencesSettings();
-    const newId = settings.clientLogos.length > 0 ? 
-      Math.max(...settings.clientLogos.map(logo => logo.id)) + 1 : 1;
-    
-    const newLogo: ClientLogo = { ...logo, id: newId };
-    
-    settings.clientLogos.push(newLogo);
-    this.updateReferencesSettings(settings);
-    
-    return newLogo;
-  }
-
-  updateClientLogo(id: number, logo: Partial<ClientLogo>): ClientLogo | null {
-    const settings = this.getReferencesSettings();
-    const index = settings.clientLogos.findIndex(item => item.id === id);
-    
-    if (index === -1) return null;
-    
-    const updatedLogo = { ...settings.clientLogos[index], ...logo };
-    settings.clientLogos[index] = updatedLogo;
-    
-    this.updateReferencesSettings(settings);
-    
-    return updatedLogo;
-  }
-
-  deleteClientLogo(id: number): boolean {
-    const settings = this.getReferencesSettings();
-    const filteredLogos = settings.clientLogos.filter(logo => logo.id !== id);
-    
-    if (filteredLogos.length === settings.clientLogos.length) return false;
-    
-    settings.clientLogos = filteredLogos;
-    this.updateReferencesSettings(settings);
-    
-    return true;
-  }
-
-  reorderClientLogos(items: { id: number, order: number }[]): ClientLogo[] {
-    const settings = this.getReferencesSettings();
-    
-    items.forEach(item => {
-      const index = settings.clientLogos.findIndex(i => i.id === item.id);
-      if (index !== -1) {
-        settings.clientLogos[index].order = item.order;
-      }
-    });
-    
-    settings.clientLogos.sort((a, b) => a.order - b.order);
-    
-    this.updateReferencesSettings(settings);
-    
-    return settings.clientLogos;
-  }
-
-  getFAQSettings(): FAQSettings {
-    const settings = localStorage.getItem(this.faqSettingsKey);
-    return settings ? JSON.parse(settings) : initialFAQSettings;
-  }
-
-  updateFAQSettings(settings: Partial<FAQSettings>): FAQSettings {
-    const currentSettings = this.getFAQSettings();
-    const updatedSettings: FAQSettings = {
-      ...currentSettings,
-      ...settings,
-      lastUpdated: new Date().toISOString().split('T')[0]
+  getFooterSettings(): any {
+    const settings = localStorage.getItem('footerSettings');
+    return settings ? JSON.parse(settings) : {
+      id: 1,
+      companyInfo: {
+        description: "We are a digital agency that helps businesses grow",
+        address: "123 Main Street, Anytown, CA 12345",
+        phone: "123-456-7890",
+        email: "info@example.com"
+      },
+      socialLinks: [],
+      footerSections: [],
+      copyrightText: "© {year} Trojan Envoy. All rights reserved.",
+      privacyPolicyLink: "/privacy-policy",
+      termsOfServiceLink: "/terms-of-service",
+      lastUpdated: new Date().toISOString()
     };
-    
-    localStorage.setItem(this.faqSettingsKey, JSON.stringify(updatedSettings));
-    
-    this.dispatchEvent('faq-settings-updated', updatedSettings);
-    
-    return updatedSettings;
   }
 
-  addFAQItem(item: Omit<FAQItem, 'id'>): FAQItem {
-    const settings = this.getFAQSettings();
-    const newId = settings.faqItems.length > 0 ? 
-      Math.max(...settings.faqItems.map(item => item.id)) + 1 : 1;
-    
-    const newItem: FAQItem = { ...item, id: newId };
-    
-    settings.faqItems.push(newItem);
-    this.updateFAQSettings(settings);
-    
-    return newItem;
+  // Update footer settings
+  updateFooterSettings(settings: any): void {
+    localStorage.setItem('footerSettings', JSON.stringify(settings));
+    window.dispatchEvent(new CustomEvent('footer-settings-updated'));
   }
 
-  updateFAQItem(id: number, item: Partial<FAQItem>): FAQItem | null {
-    const settings = this.getFAQSettings();
-    const index = settings.faqItems.findIndex(i => i.id === id);
-    
-    if (index === -1) return null;
-    
-    const updatedItem = { ...settings.faqItems[index], ...item };
-    settings.faqItems[index] = updatedItem;
-    
-    this.updateFAQSettings(settings);
-    
-    return updatedItem;
-  }
-
-  deleteFAQItem(id: number): boolean {
-    const settings = this.getFAQSettings();
-    const filteredItems = settings.faqItems.filter(item => item.id !== id);
-    
-    if (filteredItems.length === settings.faqItems.length) return false;
-    
-    settings.faqItems = filteredItems;
-    this.updateFAQSettings(settings);
-    
-    return true;
-  }
-
-  reorderFAQItems(items: { id: number, order: number }[]): FAQItem[] {
-    const settings = this.getFAQSettings();
-    
-    items.forEach(item => {
-      const index = settings.faqItems.findIndex(i => i.id === item.id);
-      if (index !== -1) {
-        settings.faqItems[index].order = item.order;
-      }
-    });
-    
-    settings.faqItems.sort((a, b) => a.order - b.order);
-    
-    this.updateFAQSettings(settings);
-    
-    return settings.faqItems;
-  }
-
-  getFooterSettings(): FooterSettings {
-    const settings = localStorage.getItem(this.footerSettingsKey);
-    return settings ? JSON.parse(settings) : initialFooterSettings;
-  }
-
-  updateFooterSettings(settings: Partial<FooterSettings>): FooterSettings {
-    const currentSettings = this.getFooterSettings();
-    const updatedSettings: FooterSettings = {
-      ...currentSettings,
-      ...settings,
-      lastUpdated: new Date().toISOString().split('T')[0]
-    };
-    
-    localStorage.setItem(this.footerSettingsKey, JSON.stringify(updatedSettings));
-    
-    this.dispatchEvent('footer-settings-updated', updatedSettings);
-    
-    return updatedSettings;
-  }
-
-  getContactSettings(): ContactSettings {
-    const settings = localStorage.getItem(this.contactSettingsKey);
-    return settings ? JSON.parse(settings) : initialContactSettings;
-  }
-
-  updateContactSettings(settings: Partial<ContactSettings>): ContactSettings {
-    const currentSettings = this.getContactSettings();
-    const updatedSettings: ContactSettings = {
-      ...currentSettings,
-      ...settings,
-      lastUpdated: new Date().toISOString().split('T')[0]
-    };
-    
-    localStorage.setItem(this.contactSettingsKey, JSON.stringify(updatedSettings));
-    
-    this.dispatchEvent('contact-settings-updated', updatedSettings);
-    
-    return updatedSettings;
+  // Update contact settings
+  updateContactSettings(settings: any): void {
+    localStorage.setItem('contactSettings', JSON.stringify(settings));
+    window.dispatchEvent(new CustomEvent('contact-settings-updated'));
   }
 }
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,11 +13,33 @@ import { Separator } from "@/components/ui/separator";
 import { Plus, X } from "lucide-react";
 import { ContactSettings, ContactInfoItem, ContactFormField } from "@/lib/types";
 import RichTextEditor from "@/components/admin/richtext/RichTextEditor";
+import { supabase, checkSupabaseConnection } from "@/lib/supabase";
 
-const AdminContactSettings: React.FC = () => {
+const ContactSettings: React.FC = () => {
   const { toast } = useToast();
   const [settings, setSettings] = useState<ContactSettings>(() => storageService.getContactSettings());
   const [isUpdating, setIsUpdating] = useState(false);
+  const [databaseConnected, setDatabaseConnected] = useState(false);
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      const isConnected = await checkSupabaseConnection();
+      setDatabaseConnected(isConnected);
+      
+      if (isConnected) {
+        const supabaseSettings = await storageService.getContactSettingsFromSupabase();
+        if (supabaseSettings) {
+          setSettings(supabaseSettings);
+          toast({
+            title: "Settings loaded from database",
+            description: "Contact settings have been loaded from Supabase."
+          });
+        }
+      }
+    };
+    
+    checkConnection();
+  }, []);
 
   const handleBasicInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -166,7 +187,7 @@ const AdminContactSettings: React.FC = () => {
       storageService.updateContactSettings(settings);
       toast({
         title: "Settings saved",
-        description: "Contact section settings have been updated successfully."
+        description: `Contact section settings have been updated successfully${databaseConnected ? ' and synced to database' : ''}.`
       });
     } catch (error) {
       toast({
@@ -184,7 +205,15 @@ const AdminContactSettings: React.FC = () => {
     <AdminLayout>
       <div className="container py-6 space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Contact Section Settings</h1>
+          <div>
+            <h1 className="text-3xl font-bold">Contact Section Settings</h1>
+            {databaseConnected && (
+              <p className="text-sm text-green-500 flex items-center mt-1">
+                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                Connected to database
+              </p>
+            )}
+          </div>
           <Button onClick={saveSettings} disabled={isUpdating}>
             {isUpdating ? "Saving..." : "Save Changes"}
           </Button>
@@ -617,4 +646,4 @@ const AdminContactSettings: React.FC = () => {
   );
 };
 
-export default AdminContactSettings;
+export default ContactSettings;
