@@ -1,3 +1,4 @@
+
 // src/lib/storage.ts
 
 import { ContentItem, ContactRequest, NavigationItem, FooterLink, FooterSection, FooterSettings, SocialLink, HeaderSettings, HeroSettings, ContactInfoItem, ContactFormField, ContactSettings, ServiceItem, ServicesSettings, AboutSettings, KeyPoint, StatItem, FAQItem, FAQSettings, ClientLogo, ReferencesSettings, User } from './types';
@@ -980,4 +981,135 @@ class StorageService {
       id: 1,
       title: "Frequently Asked Questions",
       subtitle: "Have questions? We've got answers!",
-      description: "Find answers to common questions
+      description: "Find answers to common questions about our services and company.",
+      faqItems: [],
+      enableSearch: true,
+      enableCategories: true,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    // Retrieve settings from localStorage
+    const storedSettings = localStorage.getItem('faqSettings');
+    if (storedSettings) {
+      try {
+        return JSON.parse(storedSettings) as FAQSettings;
+      } catch (error) {
+        console.error("Error parsing faq settings from localStorage: ", error);
+        return defaultFAQSettings;
+      }
+    }
+
+    return defaultFAQSettings;
+  };
+
+  // --- References Settings Operations ---
+  saveReferencesSettings = (referencesSettings: ReferencesSettings): Promise<ReferencesSettings> => {
+    return new Promise((resolve, reject) => {
+      if (!this.db) {
+        reject("Database not initialized");
+        return;
+      }
+
+      const transaction = this.db.transaction(['referencesSettings'], 'readwrite');
+      const store = transaction.objectStore('referencesSettings');
+      const request = store.put(referencesSettings, 1); // Use a fixed key (1) to store settings
+
+      request.onsuccess = () => {
+        resolve(referencesSettings);
+
+        // Dispatch a custom event to notify components about the update
+        this.dispatchEvent('references-settings-updated', referencesSettings);
+      };
+
+      request.onerror = (event: any) => {
+        console.error("Error saving references settings: ", event.target.error);
+        reject(event.target.error);
+      };
+    });
+  };
+
+  getReferencesSettings = (): ReferencesSettings => {
+    const defaultReferencesSettings: ReferencesSettings = {
+      id: 1,
+      title: "Our Clients",
+      subtitle: "We work with amazing companies",
+      description: "These are some of the companies we have worked with in the past",
+      clientLogos: [],
+      testimonialsSectionTitle: "What Our Clients Say",
+      testimonialsSectionSubtitle: "Testimonials from our clients",
+      lastUpdated: new Date().toISOString(),
+    };
+
+    // Retrieve settings from localStorage
+    const storedSettings = localStorage.getItem('referencesSettings');
+    if (storedSettings) {
+      try {
+        return JSON.parse(storedSettings) as ReferencesSettings;
+      } catch (error) {
+        console.error("Error parsing references settings from localStorage: ", error);
+        return defaultReferencesSettings;
+      }
+    }
+
+    return defaultReferencesSettings;
+  };
+  
+  // Add client logo
+  addClientLogo = (logo: Omit<ClientLogo, "id" | "order">): Promise<ClientLogo> => {
+    return new Promise((resolve, reject) => {
+      try {
+        const settings = this.getReferencesSettings();
+        const newLogo: ClientLogo = {
+          id: Date.now(),
+          order: settings.clientLogos.length + 1,
+          ...logo
+        };
+        
+        settings.clientLogos.push(newLogo);
+        localStorage.setItem('referencesSettings', JSON.stringify(settings));
+        
+        resolve(newLogo);
+      } catch (error) {
+        console.error("Error adding client logo: ", error);
+        reject(error);
+      }
+    });
+  };
+
+  // Add FAQ item
+  addFAQItem = (item: Omit<FAQItem, "id" | "order">): Promise<FAQItem> => {
+    return new Promise((resolve, reject) => {
+      try {
+        const settings = this.getFAQSettings();
+        const newItem: FAQItem = {
+          id: Date.now(),
+          order: settings.faqItems.length + 1,
+          ...item
+        };
+        
+        settings.faqItems.push(newItem);
+        localStorage.setItem('faqSettings', JSON.stringify(settings));
+        
+        resolve(newItem);
+      } catch (error) {
+        console.error("Error adding FAQ item: ", error);
+        reject(error);
+      }
+    });
+  };
+
+  // Update FAQ settings
+  updateFAQSettings = (settings: FAQSettings): Promise<FAQSettings> => {
+    return new Promise((resolve, reject) => {
+      try {
+        localStorage.setItem('faqSettings', JSON.stringify(settings));
+        resolve(settings);
+      } catch (error) {
+        console.error("Error updating FAQ settings: ", error);
+        reject(error);
+      }
+    });
+  };
+}
+
+export const storageService = new StorageService();
