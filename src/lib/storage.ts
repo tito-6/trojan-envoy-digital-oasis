@@ -969,6 +969,21 @@ class StorageService {
       subtitle: "Have questions? We've got answers!",
       description: "Find answers to common questions about our services and company.",
       faqItems: [],
-      enableSearch: boolean;
-      enableCategories: boolean;
+      enableSearch: boolean,
+      enableCategories: boolean,
       lastUpdated: new Date().toISOString(),
+    };
+
+    // Retrieve settings from localStorage
+    const storedSettings = localStorage.getItem('faqSettings');
+    if (storedSettings) {
+      try {
+        return JSON.parse(storedSettings) as FAQSettings;
+      } catch (error) {
+        console.error("Error parsing FAQ settings from localStorage: ", error);
+        return defaultFAQSettings;
+      }
+    }
+
+    return defaultFAQSettings;
+  };
