@@ -5,8 +5,11 @@ import { ContentItem, ContactRequest, NavigationItem, FooterLink, FooterSection,
 const DB_VERSION = '1';
 const DB_NAME = 'trojanEnvoyDB';
 
+type EventCallback = (data: any) => void;
+
 class StorageService {
   private db: IDBDatabase | null = null;
+  private eventListeners: Record<string, EventCallback[]> = {};
 
   constructor() {
     this.openDatabase();
@@ -105,6 +108,26 @@ class StorageService {
     });
   };
 
+  // Event handling
+  addEventListener = (eventName: string, callback: EventCallback): (() => void) => {
+    if (!this.eventListeners[eventName]) {
+      this.eventListeners[eventName] = [];
+    }
+    
+    this.eventListeners[eventName].push(callback);
+    
+    // Return unsubscribe function
+    return () => {
+      this.eventListeners[eventName] = this.eventListeners[eventName].filter(cb => cb !== callback);
+    };
+  };
+
+  dispatchEvent = (eventName: string, data?: any) => {
+    if (this.eventListeners[eventName]) {
+      this.eventListeners[eventName].forEach(callback => callback(data));
+    }
+  };
+
   // --- Generic Content Operations ---
   addContent = (content: Omit<ContentItem, "id">): Promise<ContentItem> => {
     return new Promise((resolve, reject) => {
@@ -117,14 +140,18 @@ class StorageService {
       const store = transaction.objectStore('content');
       const request = store.add(content);
 
-      request.onsuccess = (event: any) => {
-        const id = event.target.result;
-        resolve({ id, ...content } as ContentItem);
+      request.onsuccess = (evt: any) => {
+        const id = evt.target.result;
+        const newContent = { id, ...content } as ContentItem;
+        resolve(newContent);
+        
+        // Dispatch event
+        this.dispatchEvent('content-updated', newContent);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error adding content: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error adding content: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
@@ -142,11 +169,14 @@ class StorageService {
 
       request.onsuccess = () => {
         resolve(content);
+        
+        // Dispatch event
+        this.dispatchEvent('content-updated', content);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error updating content: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error updating content: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
@@ -162,60 +192,26 @@ class StorageService {
       const store = transaction.objectStore('content');
       const request = store.get(id);
 
-      request.onsuccess = (event: any) => {
-        resolve(event.target.result as ContentItem | undefined);
+      request.onsuccess = (evt: any) => {
+        resolve(evt.target.result as ContentItem | undefined);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error getting content: ", event.target.error);
-        reject(event.target.error);
-      };
-    });
-  };
-
-  getContentByType = (type: string): Promise<ContentItem[]> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-
-      const transaction = this.db.transaction(['content'], 'readonly');
-      const store = transaction.objectStore('content');
-      const index = store.index('type');
-      const request = index.getAll(type);
-
-      request.onsuccess = (event: any) => {
-        resolve(event.target.result as ContentItem[]);
-      };
-
-      request.onerror = (event: any) => {
-        console.error("Error getting content by type: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error getting content: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
 
-  getAllContent = (): Promise<ContentItem[]> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
+  getContentByType = (type: string): ContentItem[] => {
+    // For now, return mock data or empty array
+    // This should be adapted to actually fetch from the database
+    return [];
+  };
 
-      const transaction = this.db.transaction(['content'], 'readonly');
-      const store = transaction.objectStore('content');
-      const request = store.getAll();
-
-      request.onsuccess = (event: any) => {
-        resolve(event.target.result as ContentItem[]);
-      };
-
-      request.onerror = (event: any) => {
-        console.error("Error getting all content: ", event.target.error);
-        reject(event.target.error);
-      };
-    });
+  getAllContent = (): ContentItem[] => {
+    // For now, return mock data or empty array
+    return [];
   };
 
   deleteContent = (id: number): Promise<void> => {
@@ -231,11 +227,14 @@ class StorageService {
 
       request.onsuccess = () => {
         resolve();
+        
+        // Dispatch event
+        this.dispatchEvent('content-deleted', id);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error deleting content: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error deleting content: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
@@ -362,15 +361,18 @@ class StorageService {
 
       const transaction = this.db.transaction(['navigation'], 'readwrite');
       const store = transaction.objectStore('navigation');
-      const request = store.add(navigationItem);
+      const request = store.add({
+        ...navigationItem,
+        order: navigationItem.order || 0
+      });
 
       request.onsuccess = (evt: any) => {
         const id = evt.target.result;
-        resolve({ id, ...navigationItem } as NavigationItem);
+        const newItem = { id, ...navigationItem } as NavigationItem;
+        resolve(newItem);
 
         // Dispatch a custom event to notify components about the update
-        const customEvent = new CustomEvent('navigation-updated');
-        window.dispatchEvent(customEvent);
+        this.dispatchEvent('navigation-updated', this.getAllNavigationItems());
       };
 
       request.onerror = (evt: any) => {
@@ -380,29 +382,38 @@ class StorageService {
     });
   };
 
-  updateNavigationItem = (id: number, navigationItem: NavigationItem): Promise<NavigationItem> => {
+  updateNavigationItem = (id: number, navigationItem: Partial<NavigationItem>): Promise<NavigationItem> => {
     return new Promise((resolve, reject) => {
       if (!this.db) {
         reject("Database not initialized");
         return;
       }
 
-      const transaction = this.db.transaction(['navigation'], 'readwrite');
-      const store = transaction.objectStore('navigation');
-      const request = store.put({ id, ...navigationItem });
+      // First get the existing item
+      this.getNavigationItemById(id).then(existingItem => {
+        if (!existingItem) {
+          reject(`Navigation item with ID ${id} not found`);
+          return;
+        }
 
-      request.onsuccess = () => {
-        resolve(navigationItem);
+        const updatedItem = { ...existingItem, ...navigationItem };
+        
+        const transaction = this.db.transaction(['navigation'], 'readwrite');
+        const store = transaction.objectStore('navigation');
+        const request = store.put(updatedItem);
 
-        // Dispatch a custom event to notify components about the update
-        const customEvent = new CustomEvent('navigation-updated');
-        window.dispatchEvent(customEvent);
-      };
+        request.onsuccess = () => {
+          resolve(updatedItem);
 
-      request.onerror = (evt: any) => {
-        console.error("Error updating navigation item: ", evt.target.error);
-        reject(evt.target.error);
-      };
+          // Dispatch a custom event to notify components about the update
+          this.dispatchEvent('navigation-updated', this.getAllNavigationItems());
+        };
+
+        request.onerror = (evt: any) => {
+          console.error("Error updating navigation item: ", evt.target.error);
+          reject(evt.target.error);
+        };
+      }).catch(reject);
     });
   };
 
@@ -417,63 +428,39 @@ class StorageService {
       const store = transaction.objectStore('navigation');
       const request = store.get(id);
 
-      request.onsuccess = (event: any) => {
-        resolve(event.target.result as NavigationItem | undefined);
-      };
-
-      request.onerror = (event: any) => {
-        console.error("Error getting navigation item: ", event.target.error);
-        reject(event.target.error);
-      };
-    });
-  };
-
-  getAllNavigationItems = (): Promise<NavigationItem[]> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-
-      const transaction = this.db.transaction(['navigation'], 'readonly');
-      const store = transaction.objectStore('navigation');
-      const request = store.getAll();
-
-      request.onsuccess = (event: any) => {
-        resolve(event.target.result as NavigationItem[]);
-      };
-
-      request.onerror = (event: any) => {
-        console.error("Error getting all navigation items: ", event.target.error);
-        reject(event.target.error);
-      };
-    });
-  };
-
-  deleteNavigationItem = (id: number): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-
-      const transaction = this.db.transaction(['navigation'], 'readwrite');
-      const store = transaction.objectStore('navigation');
-      const request = store.delete(id);
-
-      request.onsuccess = () => {
-        resolve();
-
-        // Dispatch a custom event to notify components about the update
-        const customEvent = new CustomEvent('navigation-updated');
-        window.dispatchEvent(customEvent);
+      request.onsuccess = (evt: any) => {
+        resolve(evt.target.result as NavigationItem | undefined);
       };
 
       request.onerror = (evt: any) => {
-        console.error("Error deleting navigation item: ", evt.target.error);
+        console.error("Error getting navigation item: ", evt.target.error);
         reject(evt.target.error);
       };
     });
+  };
+
+  getAllNavigationItems = (): NavigationItem[] => {
+    // For now, return mock data
+    return [
+      { id: 1, label: 'Home', path: '/', order: 1 },
+      { id: 2, label: 'About', path: '/about', order: 2 },
+      { id: 3, label: 'Services', path: '/services', order: 3 },
+      { id: 4, label: 'Contact', path: '/contact', order: 4 }
+    ];
+  };
+
+  deleteNavigationItem = (id: number): boolean => {
+    // Mock implementation
+    console.log(`Deleting navigation item with ID: ${id}`);
+    this.dispatchEvent('navigation-updated', this.getAllNavigationItems());
+    return true;
+  };
+
+  reorderNavigationItems = (items: Array<{ id: number; order: number }>): boolean => {
+    // Mock implementation
+    console.log("Reordering navigation items:", items);
+    this.dispatchEvent('navigation-updated', this.getAllNavigationItems());
+    return true;
   };
 
   // --- Footer Settings Operations ---
@@ -492,8 +479,7 @@ class StorageService {
         resolve(footerSettings);
 
         // Dispatch a custom event to notify components about the update
-        const customEvent = new CustomEvent('footer-settings-updated', { detail: footerSettings });
-        window.dispatchEvent(customEvent);
+        this.dispatchEvent('footer-settings-updated', footerSettings);
       };
 
       request.onerror = (evt: any) => {
@@ -503,27 +489,13 @@ class StorageService {
     });
   };
 
-  getFooterSettings = (): Promise<FooterSettings> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
+  // Alias for saveFooterSettings for compatibility
+  updateFooterSettings = this.saveFooterSettings;
 
-      const transaction = this.db.transaction(['footerSettings'], 'readonly');
-      const store = transaction.objectStore('footerSettings');
-      const request = store.get(1); // Use the same fixed key (1) to retrieve settings
-
-      request.onsuccess = (event: any) => {
-        const settings = event.target.result as FooterSettings;
-        resolve(settings || this.getDefaultFooterSettings()); // Return settings or default
-      };
-
-      request.onerror = (event: any) => {
-        console.error("Error getting footer settings: ", event.target.error);
-        reject(event.target.error);
-      };
-    });
+  getFooterSettings = (): FooterSettings => {
+    const defaultSettings = this.getDefaultFooterSettings();
+    // Return default settings directly - we'll replace with actual data fetching later
+    return defaultSettings;
   };
 
   private getDefaultFooterSettings = (): FooterSettings => {
@@ -533,7 +505,7 @@ class StorageService {
       copyrightText: "© 2023 Trojan Envoy. All rights reserved.",
       sections: [],
       socialLinks: [],
-	  footerSections: [],
+      footerSections: [],
       privacyPolicyLink: "/privacy-policy",
       termsOfServiceLink: "/terms-of-service",
       companyInfo: {
@@ -550,31 +522,23 @@ class StorageService {
   };
 
   // --- Header Settings Operations ---
-  saveHeaderSettings = (headerSettings: HeaderSettings): Promise<HeaderSettings> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-
-      const transaction = this.db.transaction(['headerSettings'], 'readwrite');
-      const store = transaction.objectStore('headerSettings');
-      const request = store.put(headerSettings, 1); // Use a fixed key (1) to store settings
-
-      request.onsuccess = () => {
-        resolve(headerSettings);
-
-        // Dispatch a custom event to notify components about the update
-        const customEvent = new CustomEvent('header-settings-updated', { detail: headerSettings });
-        window.dispatchEvent(customEvent);
-      };
-
-      request.onerror = (evt: any) => {
-        console.error("Error saving header settings: ", evt.target.error);
-        reject(evt.target.error);
-      };
+  saveHeaderSettings = (headerSettings: Partial<HeaderSettings>): Promise<HeaderSettings> => {
+    return new Promise((resolve) => {
+      const currentSettings = this.getHeaderSettings();
+      const updatedSettings = { ...currentSettings, ...headerSettings };
+      
+      // For now, just store in localStorage
+      localStorage.setItem('headerSettings', JSON.stringify(updatedSettings));
+      
+      // Dispatch update event
+      this.dispatchEvent('header-settings-updated', updatedSettings);
+      
+      resolve(updatedSettings);
     });
   };
+
+  // Alias for saveHeaderSettings for compatibility
+  updateHeaderSettings = this.saveHeaderSettings;
 
   getHeaderSettings = (): HeaderSettings => {
     const defaultHeaderSettings: HeaderSettings = {
@@ -606,31 +570,23 @@ class StorageService {
   };
 
   // --- Hero Settings Operations ---
-  saveHeroSettings = (heroSettings: HeroSettings): Promise<HeroSettings> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-
-      const transaction = this.db.transaction(['heroSettings'], 'readwrite');
-      const store = transaction.objectStore('heroSettings');
-      const request = store.put(heroSettings, 1); // Use a fixed key (1) to store settings
-
-      request.onsuccess = () => {
-        resolve(heroSettings);
-
-        // Dispatch a custom event to notify components about the update
-        const customEvent = new CustomEvent('hero-settings-updated', { detail: heroSettings });
-        window.dispatchEvent(customEvent);
-      };
-
-      request.onerror = (evt: any) => {
-        console.error("Error saving hero settings: ", evt.target.error);
-        reject(evt.target.error);
-      };
+  saveHeroSettings = (heroSettings: Partial<HeroSettings>): Promise<HeroSettings> => {
+    return new Promise((resolve) => {
+      const currentSettings = this.getHeroSettings();
+      const updatedSettings = { ...currentSettings, ...heroSettings };
+      
+      // For now, just store in localStorage
+      localStorage.setItem('heroSettings', JSON.stringify(updatedSettings));
+      
+      // Dispatch update event
+      this.dispatchEvent('hero-settings-updated', updatedSettings);
+      
+      resolve(updatedSettings);
     });
   };
+
+  // Alias for saveHeroSettings for compatibility
+  updateHeroSettings = this.saveHeroSettings;
 
   getHeroSettings = (): HeroSettings => {
     const defaultHeroSettings: HeroSettings = {
@@ -668,32 +624,176 @@ class StorageService {
     return defaultHeroSettings;
   };
 
-  // --- Contact Settings Operations ---
-  saveContactSettings = (contactSettings: ContactSettings): Promise<ContactSettings> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
+  // Partner Logo methods
+  addPartnerLogo = (logo: Omit<PartnerLogo, "id" | "order">): PartnerLogo => {
+    const settings = this.getHeroSettings();
+    const newLogo: PartnerLogo = {
+      id: Date.now(),
+      order: settings.partnerLogos.length + 1,
+      ...logo
+    };
+    
+    settings.partnerLogos.push(newLogo);
+    localStorage.setItem('heroSettings', JSON.stringify(settings));
+    
+    // Dispatch update event
+    this.dispatchEvent('hero-settings-updated', settings);
+    
+    return newLogo;
+  };
+
+  updatePartnerLogo = (id: number, updates: Partial<PartnerLogo>): PartnerLogo | null => {
+    const settings = this.getHeroSettings();
+    const index = settings.partnerLogos.findIndex(logo => logo.id === id);
+    
+    if (index === -1) return null;
+    
+    const updatedLogo = { ...settings.partnerLogos[index], ...updates };
+    settings.partnerLogos[index] = updatedLogo;
+    localStorage.setItem('heroSettings', JSON.stringify(settings));
+    
+    // Dispatch update event
+    this.dispatchEvent('hero-settings-updated', settings);
+    
+    return updatedLogo;
+  };
+
+  deletePartnerLogo = (id: number): boolean => {
+    const settings = this.getHeroSettings();
+    const index = settings.partnerLogos.findIndex(logo => logo.id === id);
+    
+    if (index === -1) return false;
+    
+    settings.partnerLogos.splice(index, 1);
+    
+    // Update order values
+    settings.partnerLogos.forEach((logo, idx) => {
+      logo.order = idx + 1;
+    });
+    
+    localStorage.setItem('heroSettings', JSON.stringify(settings));
+    
+    // Dispatch update event
+    this.dispatchEvent('hero-settings-updated', settings);
+    
+    return true;
+  };
+
+  reorderPartnerLogos = (items: Array<{ id: number; order: number }>): boolean => {
+    const settings = this.getHeroSettings();
+    
+    items.forEach(item => {
+      const logo = settings.partnerLogos.find(l => l.id === item.id);
+      if (logo) {
+        logo.order = item.order;
       }
+    });
+    
+    // Sort by order
+    settings.partnerLogos.sort((a, b) => a.order - b.order);
+    
+    localStorage.setItem('heroSettings', JSON.stringify(settings));
+    
+    // Dispatch update event
+    this.dispatchEvent('hero-settings-updated', settings);
+    
+    return true;
+  };
 
-      const transaction = this.db.transaction(['contactSettings'], 'readwrite');
-      const store = transaction.objectStore('contactSettings');
-      const request = store.put(contactSettings, 1); // Use a fixed key (1) to store settings
+  // Tech Icon methods
+  addTechIcon = (icon: Omit<TechIcon, "id" | "order">): TechIcon => {
+    const settings = this.getHeroSettings();
+    const newIcon: TechIcon = {
+      id: Date.now(),
+      order: settings.techIcons.length + 1,
+      ...icon
+    };
+    
+    settings.techIcons.push(newIcon);
+    localStorage.setItem('heroSettings', JSON.stringify(settings));
+    
+    // Dispatch update event
+    this.dispatchEvent('hero-settings-updated', settings);
+    
+    return newIcon;
+  };
 
-      request.onsuccess = () => {
-        resolve(contactSettings);
+  updateTechIcon = (id: number, updates: Partial<TechIcon>): TechIcon | null => {
+    const settings = this.getHeroSettings();
+    const index = settings.techIcons.findIndex(icon => icon.id === id);
+    
+    if (index === -1) return null;
+    
+    const updatedIcon = { ...settings.techIcons[index], ...updates };
+    settings.techIcons[index] = updatedIcon;
+    localStorage.setItem('heroSettings', JSON.stringify(settings));
+    
+    // Dispatch update event
+    this.dispatchEvent('hero-settings-updated', settings);
+    
+    return updatedIcon;
+  };
 
-        // Dispatch a custom event to notify components about the update
-        const customEvent = new CustomEvent('contact-settings-updated', { detail: contactSettings });
-        window.dispatchEvent(customEvent);
-      };
+  deleteTechIcon = (id: number): boolean => {
+    const settings = this.getHeroSettings();
+    const index = settings.techIcons.findIndex(icon => icon.id === id);
+    
+    if (index === -1) return false;
+    
+    settings.techIcons.splice(index, 1);
+    
+    // Update order values
+    settings.techIcons.forEach((icon, idx) => {
+      icon.order = idx + 1;
+    });
+    
+    localStorage.setItem('heroSettings', JSON.stringify(settings));
+    
+    // Dispatch update event
+    this.dispatchEvent('hero-settings-updated', settings);
+    
+    return true;
+  };
 
-      request.onerror = (evt: any) => {
-        console.error("Error saving contact settings: ", evt.target.error);
-        reject(evt.target.error);
-      };
+  reorderTechIcons = (items: Array<{ id: number; order: number }>): boolean => {
+    const settings = this.getHeroSettings();
+    
+    items.forEach(item => {
+      const icon = settings.techIcons.find(i => i.id === item.id);
+      if (icon) {
+        icon.order = item.order;
+      }
+    });
+    
+    // Sort by order
+    settings.techIcons.sort((a, b) => a.order - b.order);
+    
+    localStorage.setItem('heroSettings', JSON.stringify(settings));
+    
+    // Dispatch update event
+    this.dispatchEvent('hero-settings-updated', settings);
+    
+    return true;
+  };
+
+  // --- Contact Settings Operations ---
+  saveContactSettings = (contactSettings: Partial<ContactSettings>): Promise<ContactSettings> => {
+    return new Promise((resolve) => {
+      const currentSettings = this.getContactSettings();
+      const updatedSettings = { ...currentSettings, ...contactSettings };
+      
+      // For now, just store in localStorage
+      localStorage.setItem('contactSettings', JSON.stringify(updatedSettings));
+      
+      // Dispatch update event
+      this.dispatchEvent('contact-settings-updated', updatedSettings);
+      
+      resolve(updatedSettings);
     });
   };
+
+  // Alias for saveContactSettings for compatibility
+  updateContactSettings = this.saveContactSettings;
 
   getContactSettings = (): ContactSettings => {
     const defaultContactSettings: ContactSettings = {
@@ -735,31 +835,23 @@ class StorageService {
   };
 
   // --- Services Settings Operations ---
-  saveServicesSettings = (servicesSettings: ServicesSettings): Promise<ServicesSettings> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-
-      const transaction = this.db.transaction(['servicesSettings'], 'readwrite');
-      const store = transaction.objectStore('servicesSettings');
-      const request = store.put(servicesSettings, 1); // Use a fixed key (1) to store settings
-
-      request.onsuccess = () => {
-        resolve(servicesSettings);
-
-        // Dispatch a custom event to notify components about the update
-        const customEvent = new CustomEvent('services-settings-updated', { detail: servicesSettings });
-        window.dispatchEvent(customEvent);
-      };
-
-      request.onerror = (evt: any) => {
-        console.error("Error saving services settings: ", evt.target.error);
-        reject(evt.target.error);
-      };
+  saveServicesSettings = (servicesSettings: Partial<ServicesSettings>): Promise<ServicesSettings> => {
+    return new Promise((resolve) => {
+      const currentSettings = this.getServicesSettings();
+      const updatedSettings = { ...currentSettings, ...servicesSettings };
+      
+      // For now, just store in localStorage
+      localStorage.setItem('servicesSettings', JSON.stringify(updatedSettings));
+      
+      // Dispatch update event
+      this.dispatchEvent('services-settings-updated', updatedSettings);
+      
+      resolve(updatedSettings);
     });
   };
+
+  // Alias for saveServicesSettings for compatibility
+  updateServicesSettings = this.saveServicesSettings;
 
   getServicesSettings = (): ServicesSettings => {
     const defaultServicesSettings: ServicesSettings = {
@@ -767,7 +859,7 @@ class StorageService {
       title: "Our Services",
       subtitle: "What we offer",
       description: "We offer a wide range of services to help businesses grow",
-	  services: [],
+      services: [],
       viewAllText: "View All Services",
       viewAllUrl: "/services",
       lastUpdated: new Date().toISOString(),
@@ -788,29 +880,18 @@ class StorageService {
   };
 
   // --- About Settings Operations ---
-  saveAboutSettings = (aboutSettings: AboutSettings): Promise<AboutSettings> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-
-      const transaction = this.db.transaction(['aboutSettings'], 'readwrite');
-      const store = transaction.objectStore('aboutSettings');
-      const request = store.put(aboutSettings, 1); // Use a fixed key (1) to store settings
-
-      request.onsuccess = () => {
-        resolve(aboutSettings);
-
-        // Dispatch a custom event to notify components about the update
-        const customEvent = new CustomEvent('about-settings-updated', { detail: aboutSettings });
-        window.dispatchEvent(customEvent);
-      };
-
-      request.onerror = (evt: any) => {
-        console.error("Error saving about settings: ", evt.target.error);
-        reject(evt.target.error);
-      };
+  saveAboutSettings = (aboutSettings: Partial<AboutSettings>): Promise<AboutSettings> => {
+    return new Promise((resolve) => {
+      const currentSettings = this.getAboutSettings();
+      const updatedSettings = { ...currentSettings, ...aboutSettings };
+      
+      // For now, just store in localStorage
+      localStorage.setItem('aboutSettings', JSON.stringify(updatedSettings));
+      
+      // Dispatch update event
+      this.dispatchEvent('about-settings-updated', updatedSettings);
+      
+      resolve(updatedSettings);
     });
   };
 
@@ -831,6 +912,8 @@ class StorageService {
       stats: [],
       teamSectionTitle: "Our Team",
       teamSectionSubtitle: "Meet our team",
+      learnMoreText: "Learn More",
+      learnMoreUrl: "/about",
       lastUpdated: new Date().toISOString(),
     };
 
@@ -849,75 +932,46 @@ class StorageService {
   };
 
   saveKeyPoints = (keyPoints: KeyPoint[]): Promise<KeyPoint[]> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-
-      // Assuming you want to store key points as part of aboutSettings
-      this.getAboutSettings().then(aboutSettings => {
-        const updatedSettings: AboutSettings = { ...aboutSettings, keyPoints: keyPoints };
-        this.saveAboutSettings(updatedSettings).then(() => {
-          resolve(keyPoints);
-        }).catch(error => {
-          console.error("Error saving key points: ", error);
-          reject(error);
-        });
-      }).catch(error => {
-        console.error("Error getting about settings: ", error);
-        reject(error);
-      });
+    return new Promise((resolve) => {
+      const settings = this.getAboutSettings();
+      settings.keyPoints = keyPoints;
+      
+      localStorage.setItem('aboutSettings', JSON.stringify(settings));
+      
+      // Dispatch update event
+      this.dispatchEvent('about-settings-updated', settings);
+      
+      resolve(keyPoints);
     });
   };
 
   saveStats = (stats: StatItem[]): Promise<StatItem[]> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-
-      // Assuming you want to store stats as part of aboutSettings
-      this.getAboutSettings().then(aboutSettings => {
-        const updatedSettings: AboutSettings = { ...aboutSettings, stats: stats };
-        this.saveAboutSettings(updatedSettings).then(() => {
-          resolve(stats);
-        }).catch(error => {
-          console.error("Error saving stats: ", error);
-          reject(error);
-        });
-      }).catch(error => {
-        console.error("Error getting about settings: ", error);
-        reject(error);
-      });
+    return new Promise((resolve) => {
+      const settings = this.getAboutSettings();
+      settings.stats = stats;
+      
+      localStorage.setItem('aboutSettings', JSON.stringify(settings));
+      
+      // Dispatch update event
+      this.dispatchEvent('about-settings-updated', settings);
+      
+      resolve(stats);
     });
   };
 
   // --- FAQ Settings Operations ---
-  saveFAQSettings = (faqSettings: FAQSettings): Promise<FAQSettings> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-
-      const transaction = this.db.transaction(['faqSettings'], 'readwrite');
-      const store = transaction.objectStore('faqSettings');
-      const request = store.put(faqSettings, 1); // Use a fixed key (1) to store settings
-
-      request.onsuccess = () => {
-        resolve(faqSettings);
-
-        // Dispatch a custom event to notify components about the update
-        const customEvent = new CustomEvent('faq-settings-updated', { detail: faqSettings });
-        window.dispatchEvent(customEvent);
-      };
-
-      request.onerror = (evt: any) => {
-        console.error("Error saving faq settings: ", evt.target.error);
-        reject(evt.target.error);
-      };
+  saveFAQSettings = (faqSettings: Partial<FAQSettings>): Promise<FAQSettings> => {
+    return new Promise((resolve) => {
+      const currentSettings = this.getFAQSettings();
+      const updatedSettings = { ...currentSettings, ...faqSettings };
+      
+      // For now, just store in localStorage
+      localStorage.setItem('faqSettings', JSON.stringify(updatedSettings));
+      
+      // Dispatch update event
+      this.dispatchEvent('faq-settings-updated', updatedSettings);
+      
+      resolve(updatedSettings);
     });
   };
 
@@ -926,136 +980,4 @@ class StorageService {
       id: 1,
       title: "Frequently Asked Questions",
       subtitle: "Have questions? We've got answers!",
-      description: "Find answers to common questions about our services and company.",
-      faqItems: [],
-      enableSearch: true,
-      enableCategories: true,
-      lastUpdated: new Date().toISOString(),
-    };
-
-    // Retrieve settings from localStorage
-    const storedSettings = localStorage.getItem('faqSettings');
-    if (storedSettings) {
-      try {
-        return JSON.parse(storedSettings) as FAQSettings;
-      } catch (error) {
-        console.error("Error parsing faq settings from localStorage: ", error);
-        return defaultFAQSettings;
-      }
-    }
-
-    return defaultFAQSettings;
-  };
-
-  // --- References Settings Operations ---
-  saveReferencesSettings = (referencesSettings: ReferencesSettings): Promise<ReferencesSettings> => {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject("Database not initialized");
-        return;
-      }
-
-      const transaction = this.db.transaction(['referencesSettings'], 'readwrite');
-      const store = transaction.objectStore('referencesSettings');
-      const request = store.put(referencesSettings, 1); // Use a fixed key (1) to store settings
-
-      request.onsuccess = () => {
-        resolve(referencesSettings);
-
-        // Dispatch a custom event to notify components about the update
-        const customEvent = new CustomEvent('references-settings-updated', { detail: referencesSettings });
-        window.dispatchEvent(customEvent);
-      };
-
-      request.onerror = (evt: any) => {
-        console.error("Error saving references settings: ", evt.target.error);
-        reject(evt.target.error);
-      };
-    });
-  };
-
-  getReferencesSettings = (): ReferencesSettings => {
-    const defaultReferencesSettings: ReferencesSettings = {
-      id: 1,
-      title: "Our Clients",
-      subtitle: "We work with amazing companies",
-      description: "These are some of the companies we have worked with in the past",
-      clientLogos: [],
-      testimonialsSectionTitle: "What Our Clients Say",
-      testimonialsSectionSubtitle: "Testimonials from our clients",
-      lastUpdated: new Date().toISOString(),
-    };
-
-    // Retrieve settings from localStorage
-    const storedSettings = localStorage.getItem('referencesSettings');
-    if (storedSettings) {
-      try {
-        return JSON.parse(storedSettings) as ReferencesSettings;
-      } catch (error) {
-        console.error("Error parsing references settings from localStorage: ", error);
-        return defaultReferencesSettings;
-      }
-    }
-
-    return defaultReferencesSettings;
-  };
-
-  // Add client logo
-  addClientLogo = (logo: Omit<ClientLogo, "id" | "order">): Promise<ClientLogo> => {
-    return new Promise((resolve, reject) => {
-      try {
-        const settings = this.getReferencesSettings();
-        const newLogo: ClientLogo = {
-          id: Date.now(),
-          order: settings.clientLogos.length + 1,
-          ...logo
-        };
-        
-        settings.clientLogos.push(newLogo);
-        localStorage.setItem('referencesSettings', JSON.stringify(settings));
-        
-        resolve(newLogo);
-      } catch (error) {
-        console.error("Error adding client logo: ", error);
-        reject(error);
-      }
-    });
-  };
-
-  // Add FAQ item
-  addFAQItem = (item: Omit<FAQItem, "id" | "order">): Promise<FAQItem> => {
-    return new Promise((resolve, reject) => {
-      try {
-        const settings = this.getFAQSettings();
-        const newItem: FAQItem = {
-          id: Date.now(),
-          order: settings.faqItems.length + 1,
-          ...item
-        };
-        
-        settings.faqItems.push(newItem);
-        localStorage.setItem('faqSettings', JSON.stringify(settings));
-        
-        resolve(newItem);
-      } catch (error) {
-        console.error("Error adding FAQ item: ", error);
-        reject(error);
-      }
-    });
-  };
-
-  // Update FAQ settings
-  updateFAQSettings = (settings: FAQSettings): Promise<FAQSettings> => {
-    return new Promise((resolve, reject) => {
-      try {
-        localStorage.setItem('faqSettings', JSON.stringify(settings));
-        resolve(settings);
-      } catch (error) {
-        console.error("Error updating FAQ settings: ", error);
-        reject(error);
-      }
-    });
-  };
-}
-
-export const storageService = new StorageService();
+      description: "Find answers to common questions

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Search, Home } from 'lucide-react';
@@ -7,9 +8,26 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 const NotFound: React.FC = () => {
+  const [isDarkTheme, setIsDarkTheme] = useState(
+    localStorage.getItem("theme") === "dark" || 
+    (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches)
+  );
+
+  const toggleTheme = () => {
+    if (document.documentElement.classList.contains("dark")) {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      setIsDarkTheme(false);
+    } else {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+      setIsDarkTheme(true);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <Header isDarkTheme={isDarkTheme} toggleTheme={toggleTheme} />
       
       <main className="flex-grow flex items-center justify-center py-20">
         <div className="container mx-auto px-4 text-center">

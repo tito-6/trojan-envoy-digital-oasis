@@ -73,7 +73,7 @@ const HeaderSettingsForm: React.FC = () => {
   const onSubmit = (data: HeaderSettingsFormValues) => {
     try {
       // Update header settings
-      storageService.updateHeaderSettings(data as Partial<HeaderSettings>);
+      storageService.saveHeaderSettings(data as Partial<HeaderSettings>);
       
       toast({
         title: "Settings Updated",

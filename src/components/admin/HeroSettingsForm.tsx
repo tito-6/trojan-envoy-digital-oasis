@@ -61,7 +61,7 @@ const HeroSettingsForm: React.FC = () => {
       ...values
     };
     
-    storageService.updateHeroSettings(updatedSettings);
+    storageService.saveHeroSettings(updatedSettings);
     
     toast({
       title: "Settings updated",

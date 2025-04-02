@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
 import { useLanguage } from '@/lib/i18n';
 import ContactHero from '@/components/contact/ContactHero';
 import ContactInfo from '@/components/contact/ContactInfo';
-import Contact from '@/components/home/Contact';
+import ContactForm from '@/components/home/Contact';
 import { storageService } from '@/lib/storage';
 
 const ContactPage: React.FC = () => {
@@ -44,7 +45,8 @@ const ContactPage: React.FC = () => {
     }
   };
 
-  const contactInfoItems = storageService.getContactSettings().contactInfoItems;
+  const contactSettings = storageService.getContactSettings();
+  const contactInfoItems = contactSettings.contactInfoItems;
 
   return (
     <div className="min-h-screen">
@@ -53,7 +55,7 @@ const ContactPage: React.FC = () => {
       <main>
         <ContactHero />
         <ContactInfo contactInfoItems={contactInfoItems} />
-        <Contact />
+        <ContactForm />
       </main>
       
       <Footer />

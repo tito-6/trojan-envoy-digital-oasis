@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { storageService } from "@/lib/storage";
@@ -32,11 +31,20 @@ const NavigationManager: React.FC = () => {
     setNavItems([...items].sort((a, b) => a.order - b.order));
     
     // Subscribe to changes
-    const unsubscribe = storageService.addEventListener("navigation-updated", (updatedItems) => {
+    const handleNavigationUpdated = (updatedItems: NavigationItem[]) => {
       setNavItems([...updatedItems].sort((a, b) => a.order - b.order));
+    };
+    
+    window.addEventListener('navigation-updated', () => {
+      setNavItems([...storageService.getAllNavigationItems()].sort((a, b) => a.order - b.order));
     });
     
-    return () => unsubscribe();
+    storageService.addEventListener('navigation-updated', handleNavigationUpdated);
+    
+    return () => {
+      storageService.addEventListener('navigation-updated', handleNavigationUpdated);
+      window.removeEventListener('navigation-updated', () => {});
+    };
   }, []);
 
   const handleAddItem = () => {

@@ -316,6 +316,7 @@ export interface KeyPoint {
   description: string;
   icon: string;
   order: number;
+  text?: string; // Added for compatibility
 }
 
 export interface StatItem {
@@ -358,6 +359,7 @@ export interface FAQItem {
   question: string;
   answer: string;
   order: number;
+  isActive?: boolean; // Added for compatibility
 }
 
 export interface FAQSettings {
@@ -368,6 +370,8 @@ export interface FAQSettings {
   faqItems: FAQItem[];
   enableSearch: boolean;
   enableCategories: boolean;
+  viewAllText?: string; // Added for compatibility
+  viewAllUrl?: string; // Added for compatibility
   lastUpdated: string;
 }
 
@@ -377,6 +381,9 @@ export interface ClientLogo {
   name: string;
   imageUrl: string;
   order: number;
+  isActive?: boolean; // Added for compatibility
+  logo?: string; // Added for compatibility
+  scale?: number; // Added for compatibility
 }
 
 export interface ReferencesSettings {
@@ -387,6 +394,8 @@ export interface ReferencesSettings {
   clientLogos: ClientLogo[];
   testimonialsSectionTitle: string;
   testimonialsSectionSubtitle: string;
+  viewCaseStudiesText?: string; // Added for compatibility
+  viewCaseStudiesUrl?: string; // Added for compatibility
   lastUpdated: string;
 }
 
@@ -406,4 +415,20 @@ export interface LanguageState {
   availableLanguages: { code: string; label: string; flag: string; name: string }[];
   changeLanguage: (lang: string) => void;
   t: (key: string, params?: Record<string, string>) => string;
+}
+
+// Header props interface
+export interface HeaderProps {
+  isDarkTheme: boolean;
+  toggleTheme: () => void;
+}
+
+// Portfolio component props
+export interface PortfolioFiltersProps {
+  onFilterChange: (filter: string) => void;
+  activeFilter: string;
+}
+
+export interface PortfolioGalleryProps {
+  activeFilter: string;
 }

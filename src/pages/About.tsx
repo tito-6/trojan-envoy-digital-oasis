@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from "@/components/common/Header";
@@ -10,6 +11,22 @@ import { storageService } from '@/lib/storage';
 
 const About: React.FC = () => {
   const { t } = useLanguage();
+  const [isDarkTheme, setIsDarkTheme] = useState(
+    localStorage.getItem("theme") === "dark" || 
+    (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches)
+  );
+
+  const toggleTheme = () => {
+    if (document.documentElement.classList.contains("dark")) {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      setIsDarkTheme(false);
+    } else {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+      setIsDarkTheme(true);
+    }
+  };
 
   useEffect(() => {
     // Add fade-in animation to elements
@@ -33,7 +50,7 @@ const About: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <Header />
+      <Header isDarkTheme={isDarkTheme} toggleTheme={toggleTheme} />
       
       <main>
         <AboutHero />
