@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -65,7 +66,7 @@ const Contact: React.FC<ContactProps> = ({ className }) => {
 
     // Initialize form data state with default values
     const initialFormData: Record<string, string> = {};
-    settings.formFields.forEach(field => {
+    settings.formFields.forEach((field: ContactFormField) => {
       initialFormData[field.name] = ""; // Set default value to empty string
     });
     setFormData(initialFormData);
@@ -169,124 +170,112 @@ const Contact: React.FC<ContactProps> = ({ className }) => {
           <Form {...form}>
             <form onSubmit={handleFormSubmit} className="space-y-4">
               {formFields.filter(field => field.type === 'text' || field.type === 'email' || field.type === 'tel').map((field) => {
-                if (typeof field === 'object' && field !== null) {
-                  return (
-                    <FormField
-                      key={field.id}
-                      control={form.control}
-                      name={field.name as keyof ContactFormValues}
-                      render={({ field: formField }) => (
-                        <FormItem>
-                          <FormLabel>{field.label} {field.required && <span className="text-red-500">*</span>}</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder={field.placeholder}
-                              type={field.type}
-                              required={field.required}
-                              value={formData[field.name] || ""}
-                              onChange={handleInputChange}
-                              {...formField}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  );
-                }
-                return null;
+                return (
+                  <FormField
+                    key={field.id}
+                    control={form.control}
+                    name={field.name as keyof ContactFormValues}
+                    render={({ field: formField }) => (
+                      <FormItem>
+                        <FormLabel>{field.label} {field.required && <span className="text-red-500">*</span>}</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={field.placeholder}
+                            type={field.type}
+                            required={field.required}
+                            value={formData[field.name] || ""}
+                            onChange={handleInputChange}
+                            {...formField}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                );
               })}
 
               {formFields.filter(field => field.type === 'select').map((field) => {
-                if (typeof field === 'object' && field !== null) {
-                  return (
-                    <div key={field.id} className="w-full">
-                      <label htmlFor={field.name} className="block text-sm font-medium mb-1">
-                        {field.label} {field.required && <span className="text-red-500">*</span>}
-                      </label>
-                      <select
-                        id={field.name}
-                        name={field.name}
-                        required={field.required}
-                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        value={formData[field.name] || ""}
-                        onChange={handleInputChange}
-                      >
-                        <option value="">Select {field.label}</option>
-                        {field.options && field.options.map((option, index) => (
-                          <option key={index} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  );
-                }
-                return null;
+                return (
+                  <div key={field.id} className="w-full">
+                    <label htmlFor={field.name} className="block text-sm font-medium mb-1">
+                      {field.label} {field.required && <span className="text-red-500">*</span>}
+                    </label>
+                    <select
+                      id={field.name}
+                      name={field.name}
+                      required={field.required}
+                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      value={formData[field.name] || ""}
+                      onChange={handleInputChange}
+                    >
+                      <option value="">Select {field.label}</option>
+                      {field.options && field.options.map((option, index) => (
+                        <option key={index} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
               })}
 
               {formFields.filter(field => field.type === 'textarea').map((field) => {
-                if (typeof field === 'object' && field !== null) {
-                  return (
-                    <FormField
-                      key={field.id}
-                      control={form.control}
-                      name={field.name as keyof ContactFormValues}
-                      render={({ field: formField }) => (
-                        <FormItem>
-                          <FormLabel>{field.label} {field.required && <span className="text-red-500">*</span>}</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder={field.placeholder}
-                              required={field.required}
-                              className="resize-none"
-                              value={formData[field.name] || ""}
-                              onChange={handleInputChange}
-                              {...formField}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  );
-                }
-                return null;
+                return (
+                  <FormField
+                    key={field.id}
+                    control={form.control}
+                    name={field.name as keyof ContactFormValues}
+                    render={({ field: formField }) => (
+                      <FormItem>
+                        <FormLabel>{field.label} {field.required && <span className="text-red-500">*</span>}</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder={field.placeholder}
+                            required={field.required}
+                            className="resize-none"
+                            value={formData[field.name] || ""}
+                            onChange={handleInputChange}
+                            {...formField}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                );
               })}
 
               {formFields.filter(field => field.type === 'checkbox').map((field) => {
-                if (typeof field === 'object' && field !== null) {
-                  return (
-                    <FormField
-                      key={field.id}
-                      control={form.control}
-                      name={field.name as keyof ContactFormValues}
-                      render={({ field: formField }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                          <FormControl>
-                            <Checkbox
-                              checked={!!formData[field.name]}
-                              onCheckedChange={(checked) => {
-                                setFormData(prevData => ({
-                                  ...prevData,
-                                  [field.name]: checked ? "true" : "",
-                                }));
-                                formField.onChange(checked);
-                              }}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>{field.label}</FormLabel>
-                            <FormDescription>
-                              This is for testing purposes.
-                            </FormDescription>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  );
-                }
-                return null;
+                return (
+                  <FormField
+                    key={field.id}
+                    control={form.control}
+                    name={field.name as keyof ContactFormValues}
+                    render={({ field: formField }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={formData[field.name] === "true"}
+                            onCheckedChange={(checked) => {
+                              setFormData(prevData => ({
+                                ...prevData,
+                                [field.name]: checked ? "true" : "",
+                              }));
+                              formField.onChange(checked);
+                            }}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>{field.label}</FormLabel>
+                          <FormDescription>
+                            This is for testing purposes.
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                );
               })}
 
               <Button disabled={isLoading}>

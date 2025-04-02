@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Code, Smartphone, Paintbrush, BarChart, Globe, ShoppingCart, FileText } from "lucide-react";
@@ -23,7 +22,7 @@ interface ServiceCardProps {
   id: number;
 }
 
-const ServiceCard: React.FC<ServiceCardProps> = ({ 
+export const ServiceCard: React.FC<ServiceCardProps> = ({ 
   title, 
   description, 
   formattedDescription,
@@ -37,7 +36,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   const { t } = useLanguage();
   
   const renderDescription = () => {
-    if (formattedDescription) {
+    if (formattedDescription && typeof formattedDescription === 'object') {
       try {
         const htmlContent = draftToHtml(formattedDescription);
         return (

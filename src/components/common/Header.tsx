@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/ui/LanguageSelector";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import { storageService } from "@/lib/storage";
 import { HeaderSettings, NavigationItem } from "@/lib/types";
 
@@ -36,7 +37,9 @@ export function Header({ isDarkTheme, toggleTheme }: HeaderProps) {
 
     // Subscribe to settings updates
     const handleSettingsUpdate = (event: CustomEvent) => {
-      setHeaderSettings(event.detail);
+      if (event.detail) {
+        setHeaderSettings(event.detail);
+      }
     };
 
     window.addEventListener('header-settings-updated', handleSettingsUpdate as EventListener);

@@ -1,15 +1,16 @@
-
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useOutletContext } from "react-router-dom";
+import { useLanguage } from "@/lib/i18n";
+import { storageService } from "@/lib/storage";
+import { ContentItem } from "@/lib/types";
+import { Header } from "@/components/common/Header";
 import Hero from "@/components/home/Hero";
 import Services from "@/components/home/Services";
 import About from "@/components/home/About";
-import Contact from "@/components/home/Contact";
-import Header from "@/components/common/Header";
-import Footer from "@/components/common/Footer";
 import References from "@/components/home/References";
+import Contact from "@/components/home/Contact";
 import HomeFAQ from "@/components/home/HomeFAQ";
-import { useLanguage } from "@/lib/i18n";
-import { storageService } from "@/lib/storage";
+import Footer from "@/components/common/Footer";
 
 const Index: React.FC = () => {
   const { t } = useLanguage();

@@ -67,7 +67,7 @@ export interface ContentItem {
   bgColor?: string;
   
   // Content formatting fields
-  formattedContent?: string;
+  formattedContent?: any;
   htmlContent?: string;
   seoHeadingStructure?: {
     h1?: string;
@@ -83,6 +83,9 @@ export interface ContentItem {
   
   // Order for sorting
   order?: number;
+  
+  // Service specific fields
+  link?: string;
 }
 
 // Contact Request
@@ -157,6 +160,16 @@ export interface FooterSettings {
   tagline?: string;
   copyrightText: string;
   sections: FooterSection[];
+  socialLinks: SocialLink[];
+  footerSections: FooterSection[];
+  privacyPolicyLink: string;
+  termsOfServiceLink: string;
+  companyInfo: {
+    description: string;
+    address: string;
+    phone: string;
+    email: string;
+  };
   showSocialLinks: boolean;
   showBackToTop: boolean;
   showNewsletter: boolean;
@@ -271,11 +284,15 @@ export interface ContactSettings {
 }
 
 // Service Item Types
-export interface ServiceItem extends ContentItem {
+export interface ServiceItem {
+  id: number;
+  title: string;
+  description: string;
   iconName: string;
+  link: string;
+  order: number;
   color: string;
   bgColor: string;
-  order: number;
 }
 
 export interface ServicesSettings {
@@ -283,9 +300,12 @@ export interface ServicesSettings {
   title: string;
   subtitle: string;
   description: string;
-  servicesPerPage: number;
-  defaultSorting: string;
-  enableFiltering: boolean;
+  servicesPerPage?: number;
+  defaultSorting?: string;
+  enableFiltering?: boolean;
+  services: ServiceItem[];
+  viewAllText: string;
+  viewAllUrl: string;
   lastUpdated: string;
 }
 
@@ -304,6 +324,11 @@ export interface StatItem {
   value: string;
   icon?: string;
   order: number;
+  description?: string;
+  start?: string;
+  suffix?: string;
+  color?: string;
+  isActive?: boolean;
 }
 
 export interface AboutSettings {
@@ -322,6 +347,8 @@ export interface AboutSettings {
   stats: StatItem[];
   teamSectionTitle: string;
   teamSectionSubtitle: string;
+  learnMoreText?: string;
+  learnMoreUrl?: string;
   lastUpdated: string;
 }
 
@@ -373,7 +400,7 @@ export interface User {
   isActive: boolean;
 }
 
-// Fix for LanguageSelector
+// Language/Internationalization
 export interface LanguageState {
   currentLanguage: string;
   availableLanguages: { code: string; label: string; flag: string; name: string }[];

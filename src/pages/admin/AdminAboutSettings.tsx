@@ -1,614 +1,1223 @@
+
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { storageService } from "@/lib/storage";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter,
-  DialogDescription
-} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { AboutSettings, KeyPoint, StatItem } from "@/lib/types";
-import { Plus, Trash, MoveUp, MoveDown, Link as LinkIcon, Image, FileText, Video } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { Plus, Pencil, Trash2, GripVertical } from "lucide-react";
+import { storageService } from "@/lib/storage";
+import { AboutSettings, KeyPoint, StatItem } from "@/lib/types";
+import AdminLayout from "@/components/admin/AdminLayout";
+
+// Form schemas for validation
+const aboutGeneralSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  subtitle: z.string().min(1, "Subtitle is required"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  missionTitle: z.string().min(1, "Mission title is required"),
+  missionDescription: z.string().min(10, "Mission description must be at least 10 characters"),
+  visionTitle: z.string().min(1, "Vision title is required"),
+  visionDescription: z.string().min(10, "Vision description must be at least 10 characters"),
+  learnMoreText: z.string().optional(),
+  learnMoreUrl: z.string().optional(),
+});
+
+const keyPointSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(5, "Description must be at least 5 characters"),
+  icon: z.string().min(1, "Icon name is required"),
+});
+
+const statsGeneralSchema = z.object({
+  showStats: z.boolean(),
+  statsTitle: z.string().min(1, "Stats title is required"),
+  statsSubtitle: z.string().min(1, "Stats subtitle is required"),
+});
+
+const statItemSchema = z.object({
+  label: z.string().min(1, "Label is required"),
+  value: z.string().min(1, "Value is required"),
+  icon: z.string().optional(),
+  description: z.string().optional(),
+  start: z.string().optional(),
+  suffix: z.string().optional(),
+  color: z.string().optional(),
+  isActive: z.boolean().optional(),
+});
+
+const teamSectionSchema = z.object({
+  teamSectionTitle: z.string().min(1, "Team section title is required"),
+  teamSectionSubtitle: z.string().min(1, "Team section subtitle is required"),
+});
 
 const AdminAboutSettings: React.FC = () => {
   const { toast } = useToast();
-  const [settings, setSettings] = useState<AboutSettings>(storageService.getAboutSettings());
+  const [settings, setSettings] = useState<AboutSettings | null>(null);
   const [activeTab, setActiveTab] = useState("general");
-  const [showMediaOptions, setShowMediaOptions] = useState(false);
-  const [mediaType, setMediaType] = useState<"image" | "video" | "document">("image");
-  const [newKeyPointText, setNewKeyPointText] = useState("");
-  const [addingKeyPoint, setAddingKeyPoint] = useState(false);
-
-  const handleGeneralSettingsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setSettings((prev) => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSaveSettings = () => {
-    storageService.updateAboutSettings(settings);
-    toast({
-      title: "Settings Updated",
-      description: "About section settings have been updated successfully."
-    });
-  };
-
-  const handleAddKeyPoint = () => {
-    const newKeyPoint = {
-      title: newKeyPointText,
-      description: "Click to edit description",
-      icon: "Lightbulb"
-    };
-    
-    storageService.addKeyPoint(newKeyPoint);
-    setNewKeyPointText("");
-    fetchSettings();
-    setAddingKeyPoint(false);
-  };
-
-  const handleKeyPointChange = (id: number, text: string) => {
-    storageService.updateKeyPoint(id, { text });
-    setSettings((prev) => ({
-      ...prev,
-      keyPoints: prev.keyPoints.map((point) => 
-        point.id === id ? { ...point, text } : point
-      )
-    }));
-  };
-
-  const handleDeleteKeyPoint = (id: number) => {
-    if (storageService.deleteKeyPoint(id)) {
-      setSettings((prev) => ({
-        ...prev,
-        keyPoints: prev.keyPoints.filter((point) => point.id !== id)
-      }));
-    }
-  };
-
-  const handleReorderKeyPoint = (id: number, direction: 'up' | 'down') => {
-    const keyPoints = [...settings.keyPoints];
-    const index = keyPoints.findIndex((point) => point.id === id);
-    
-    if (direction === 'up' && index > 0) {
-      const temp = keyPoints[index].order;
-      keyPoints[index].order = keyPoints[index - 1].order;
-      keyPoints[index - 1].order = temp;
-    } else if (direction === 'down' && index < keyPoints.length - 1) {
-      const temp = keyPoints[index].order;
-      keyPoints[index].order = keyPoints[index + 1].order;
-      keyPoints[index + 1].order = temp;
-    } else {
-      return; // No change needed
-    }
-    
-    storageService.reorderKeyPoints(
-      keyPoints.map(point => ({ id: point.id, order: point.order }))
-    );
-    
-    setSettings((prev) => ({
-      ...prev,
-      keyPoints: keyPoints.sort((a, b) => a.order - b.order)
-    }));
-  };
-
-  const handleAddStat = () => {
-    const newStat = {
-      value: "0+",
-      label: "New Statistic",
-      start: "0",
-      order: settings.stats.length + 1,
+  const [isAddingKeyPoint, setIsAddingKeyPoint] = useState(false);
+  const [isEditingKeyPoint, setIsEditingKeyPoint] = useState<KeyPoint | null>(null);
+  const [isAddingStatItem, setIsAddingStatItem] = useState(false);
+  const [isEditingStatItem, setIsEditingStatItem] = useState<StatItem | null>(null);
+  
+  useEffect(() => {
+    // Fetch about settings from storage/API
+    const storedSettings = storageService.getAboutSettings();
+    setSettings(storedSettings);
+  }, []);
+  
+  // Form hooks
+  const generalForm = useForm<z.infer<typeof aboutGeneralSchema>>({
+    resolver: zodResolver(aboutGeneralSchema),
+    defaultValues: {
+      title: settings?.title || "",
+      subtitle: settings?.subtitle || "",
+      description: settings?.description || "",
+      missionTitle: settings?.missionTitle || "",
+      missionDescription: settings?.missionDescription || "",
+      visionTitle: settings?.visionTitle || "",
+      visionDescription: settings?.visionDescription || "",
+      learnMoreText: settings?.learnMoreText || "",
+      learnMoreUrl: settings?.learnMoreUrl || "",
+    },
+  });
+  
+  const keyPointForm = useForm<z.infer<typeof keyPointSchema>>({
+    resolver: zodResolver(keyPointSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      icon: "",
+    },
+  });
+  
+  const statsGeneralForm = useForm<z.infer<typeof statsGeneralSchema>>({
+    resolver: zodResolver(statsGeneralSchema),
+    defaultValues: {
+      showStats: settings?.showStats || false,
+      statsTitle: settings?.statsTitle || "",
+      statsSubtitle: settings?.statsSubtitle || "",
+    },
+  });
+  
+  const statItemForm = useForm<z.infer<typeof statItemSchema>>({
+    resolver: zodResolver(statItemSchema),
+    defaultValues: {
+      label: "",
+      value: "",
+      icon: "",
+      description: "",
+      start: "",
+      suffix: "",
+      color: "",
       isActive: true,
-      icon: "trophy",
-      color: "#3498db",
-      suffix: "+",
-      description: "Short description"
+    },
+  });
+  
+  const teamSectionForm = useForm<z.infer<typeof teamSectionSchema>>({
+    resolver: zodResolver(teamSectionSchema),
+    defaultValues: {
+      teamSectionTitle: settings?.teamSectionTitle || "",
+      teamSectionSubtitle: settings?.teamSectionSubtitle || "",
+    },
+  });
+  
+  useEffect(() => {
+    if (settings) {
+      generalForm.reset({
+        title: settings.title,
+        subtitle: settings.subtitle,
+        description: settings.description,
+        missionTitle: settings.missionTitle,
+        missionDescription: settings.missionDescription,
+        visionTitle: settings.visionTitle,
+        visionDescription: settings.visionDescription,
+        learnMoreText: settings.learnMoreText || "",
+        learnMoreUrl: settings.learnMoreUrl || "",
+      });
+      
+      statsGeneralForm.reset({
+        showStats: settings.showStats,
+        statsTitle: settings.statsTitle,
+        statsSubtitle: settings.statsSubtitle,
+      });
+      
+      teamSectionForm.reset({
+        teamSectionTitle: settings.teamSectionTitle,
+        teamSectionSubtitle: settings.teamSectionSubtitle,
+      });
+    }
+  }, [settings, generalForm, statsGeneralForm, teamSectionForm]);
+  
+  // Handlers for key points
+  const handleAddKeyPoint = (data: z.infer<typeof keyPointSchema>) => {
+    if (!settings) return;
+    
+    const newKeyPoint: KeyPoint = {
+      id: Date.now(),
+      title: data.title,
+      description: data.description,
+      icon: data.icon,
+      order: settings.keyPoints.length,
     };
     
-    const addedStat = storageService.addStatItem(newStat);
-    setSettings((prev) => ({
-      ...prev,
-      stats: [...prev.stats, addedStat]
-    }));
-    
-    toast({
-      title: "Statistic Added",
-      description: "A new statistic has been added to the About section."
-    });
-  };
-
-  const handleStatChange = (id: number, field: keyof StatItem, value: any) => {
-    storageService.updateStatItem(id, { [field]: value } as Partial<StatItem>);
-    setSettings((prev) => ({
-      ...prev,
-      stats: prev.stats.map((stat) => 
-        stat.id === id ? { ...stat, [field]: value } : stat
-      )
-    }));
-  };
-
-  const handleToggleStatActive = (id: number, isActive: boolean) => {
-    handleStatChange(id, 'isActive', isActive);
-  };
-
-  const handleDeleteStat = (id: number) => {
-    if (storageService.deleteStatItem(id)) {
-      setSettings((prev) => ({
-        ...prev,
-        stats: prev.stats.filter((stat) => stat.id !== id)
-      }));
+    try {
+      storageService.addKeyPoint(newKeyPoint);
+      
+      setSettings({
+        ...settings,
+        keyPoints: [...settings.keyPoints, newKeyPoint],
+      });
+      
+      keyPointForm.reset();
+      setIsAddingKeyPoint(false);
       
       toast({
-        title: "Statistic Removed",
-        description: "The statistic has been removed from the About section."
+        title: "Key point added",
+        description: "The key point has been added successfully.",
+      });
+    } catch (error) {
+      console.error("Error adding key point:", error);
+      toast({
+        title: "Error",
+        description: "There was an error adding the key point.",
+        variant: "destructive",
       });
     }
   };
-
-  const handleReorderStat = (id: number, direction: 'up' | 'down') => {
-    const stats = [...settings.stats];
-    const index = stats.findIndex((stat) => stat.id === id);
+  
+  const handleUpdateKeyPoint = (data: z.infer<typeof keyPointSchema>) => {
+    if (!settings || !isEditingKeyPoint) return;
     
-    if (direction === 'up' && index > 0) {
-      const temp = stats[index].order;
-      stats[index].order = stats[index - 1].order;
-      stats[index - 1].order = temp;
-    } else if (direction === 'down' && index < stats.length - 1) {
-      const temp = stats[index].order;
-      stats[index].order = stats[index + 1].order;
-      stats[index + 1].order = temp;
-    } else {
-      return; // No change needed
+    const updatedKeyPoint = {
+      ...isEditingKeyPoint,
+      title: data.title,
+      description: data.description,
+      icon: data.icon,
+    };
+    
+    try {
+      storageService.updateKeyPoint(updatedKeyPoint);
+      
+      setSettings({
+        ...settings,
+        keyPoints: settings.keyPoints.map(kp => 
+          kp.id === updatedKeyPoint.id ? updatedKeyPoint : kp
+        ),
+      });
+      
+      keyPointForm.reset();
+      setIsEditingKeyPoint(null);
+      
+      toast({
+        title: "Key point updated",
+        description: "The key point has been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error updating key point:", error);
+      toast({
+        title: "Error",
+        description: "There was an error updating the key point.",
+        variant: "destructive",
+      });
     }
-    
-    storageService.reorderStatItems(
-      stats.map(stat => ({ id: stat.id, order: stat.order }))
-    );
-    
-    setSettings((prev) => ({
-      ...prev,
-      stats: stats.sort((a, b) => a.order - b.order)
-    }));
   };
-
-  const mediaOptions = [
-    { label: "Images", icon: <Image className="h-4 w-4" />, type: "image" as const },
-    { label: "Videos", icon: <Video className="h-4 w-4" />, type: "video" as const },
-    { label: "Documents", icon: <FileText className="h-4 w-4" />, type: "document" as const }
-  ];
-
+  
+  const handleDeleteKeyPoint = (id: number) => {
+    if (!settings) return;
+    
+    try {
+      storageService.deleteKeyPoint(id);
+      
+      setSettings({
+        ...settings,
+        keyPoints: settings.keyPoints.filter(kp => kp.id !== id),
+      });
+      
+      toast({
+        title: "Key point deleted",
+        description: "The key point has been deleted successfully.",
+      });
+    } catch (error) {
+      console.error("Error deleting key point:", error);
+      toast({
+        title: "Error",
+        description: "There was an error deleting the key point.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Handler for key point reordering
+  const handleKeyPointDragEnd = (result: any) => {
+    if (!result.destination || !settings) return;
+    
+    const items = Array.from(settings.keyPoints);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    // Update order property
+    const updatedItems = items.map((item, index) => ({
+      ...item,
+      order: index,
+    }));
+    
+    try {
+      storageService.reorderKeyPoints(updatedItems);
+      
+      setSettings({
+        ...settings,
+        keyPoints: updatedItems,
+      });
+    } catch (error) {
+      console.error("Error reordering key points:", error);
+      toast({
+        title: "Error",
+        description: "There was an error reordering the key points.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Handlers for stat items
+  const handleAddStatItem = (data: z.infer<typeof statItemSchema>) => {
+    if (!settings) return;
+    
+    const newStatItem: StatItem = {
+      id: Date.now(),
+      label: data.label,
+      value: data.value,
+      icon: data.icon || undefined,
+      order: settings.stats.length,
+      description: data.description,
+      start: data.start,
+      suffix: data.suffix,
+      color: data.color,
+      isActive: data.isActive || true,
+    };
+    
+    try {
+      storageService.addStatItem(newStatItem);
+      
+      setSettings({
+        ...settings,
+        stats: [...settings.stats, newStatItem],
+      });
+      
+      statItemForm.reset();
+      setIsAddingStatItem(false);
+      
+      toast({
+        title: "Stat item added",
+        description: "The statistic has been added successfully.",
+      });
+    } catch (error) {
+      console.error("Error adding stat item:", error);
+      toast({
+        title: "Error",
+        description: "There was an error adding the statistic.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleUpdateStatItem = (data: z.infer<typeof statItemSchema>) => {
+    if (!settings || !isEditingStatItem) return;
+    
+    const updatedStatItem = {
+      ...isEditingStatItem,
+      label: data.label,
+      value: data.value,
+      icon: data.icon || undefined,
+      description: data.description,
+      start: data.start,
+      suffix: data.suffix,
+      color: data.color,
+      isActive: data.isActive,
+    };
+    
+    try {
+      storageService.updateStatItem(updatedStatItem);
+      
+      setSettings({
+        ...settings,
+        stats: settings.stats.map(item => 
+          item.id === updatedStatItem.id ? updatedStatItem : item
+        ),
+      });
+      
+      statItemForm.reset();
+      setIsEditingStatItem(null);
+      
+      toast({
+        title: "Stat item updated",
+        description: "The statistic has been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error updating stat item:", error);
+      toast({
+        title: "Error",
+        description: "There was an error updating the statistic.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  const handleDeleteStatItem = (id: number) => {
+    if (!settings) return;
+    
+    try {
+      storageService.deleteStatItem(id);
+      
+      setSettings({
+        ...settings,
+        stats: settings.stats.filter(item => item.id !== id),
+      });
+      
+      toast({
+        title: "Stat item deleted",
+        description: "The statistic has been deleted successfully.",
+      });
+    } catch (error) {
+      console.error("Error deleting stat item:", error);
+      toast({
+        title: "Error",
+        description: "There was an error deleting the statistic.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Handler for stat item reordering
+  const handleStatItemDragEnd = (result: any) => {
+    if (!result.destination || !settings) return;
+    
+    const items = Array.from(settings.stats);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    // Update order property
+    const updatedItems = items.map((item, index) => ({
+      ...item,
+      order: index,
+    }));
+    
+    try {
+      storageService.reorderStatItems(updatedItems);
+      
+      setSettings({
+        ...settings,
+        stats: updatedItems,
+      });
+    } catch (error) {
+      console.error("Error reordering stat items:", error);
+      toast({
+        title: "Error",
+        description: "There was an error reordering the statistics.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Handler for updating general settings
+  const handleUpdateGeneralSettings = (data: z.infer<typeof aboutGeneralSchema>) => {
+    if (!settings) return;
+    
+    try {
+      const updatedSettings = {
+        ...settings,
+        title: data.title,
+        subtitle: data.subtitle,
+        description: data.description,
+        missionTitle: data.missionTitle,
+        missionDescription: data.missionDescription,
+        visionTitle: data.visionTitle,
+        visionDescription: data.visionDescription,
+        learnMoreText: data.learnMoreText,
+        learnMoreUrl: data.learnMoreUrl,
+        lastUpdated: new Date().toISOString(),
+      };
+      
+      storageService.updateAboutSettings(updatedSettings);
+      setSettings(updatedSettings);
+      
+      toast({
+        title: "Settings saved",
+        description: "General settings have been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error updating general settings:", error);
+      toast({
+        title: "Error",
+        description: "There was an error saving the general settings.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Handler for updating stats general settings
+  const handleUpdateStatsSettings = (data: z.infer<typeof statsGeneralSchema>) => {
+    if (!settings) return;
+    
+    try {
+      const updatedSettings = {
+        ...settings,
+        showStats: data.showStats,
+        statsTitle: data.statsTitle,
+        statsSubtitle: data.statsSubtitle,
+        lastUpdated: new Date().toISOString(),
+      };
+      
+      storageService.updateAboutSettings(updatedSettings);
+      setSettings(updatedSettings);
+      
+      toast({
+        title: "Settings saved",
+        description: "Statistics settings have been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error updating stats settings:", error);
+      toast({
+        title: "Error",
+        description: "There was an error saving the statistics settings.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  // Handler for updating team section settings
+  const handleUpdateTeamSettings = (data: z.infer<typeof teamSectionSchema>) => {
+    if (!settings) return;
+    
+    try {
+      const updatedSettings = {
+        ...settings,
+        teamSectionTitle: data.teamSectionTitle,
+        teamSectionSubtitle: data.teamSectionSubtitle,
+        lastUpdated: new Date().toISOString(),
+      };
+      
+      storageService.updateAboutSettings(updatedSettings);
+      setSettings(updatedSettings);
+      
+      toast({
+        title: "Settings saved",
+        description: "Team section settings have been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error updating team section settings:", error);
+      toast({
+        title: "Error",
+        description: "There was an error saving the team section settings.",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  if (!settings) {
+    return (
+      <AdminLayout>
+        <div className="container mx-auto py-10">
+          <h1 className="text-3xl font-bold mb-6">About Page Settings</h1>
+          <p>Loading settings...</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+  
   return (
     <AdminLayout>
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-display font-bold">About Section Settings</h1>
-          <Button onClick={handleSaveSettings}>Save Changes</Button>
-        </div>
+      <div className="container mx-auto py-10">
+        <h1 className="text-3xl font-bold mb-6">About Page Settings</h1>
         
-        <Tabs defaultValue="general" onValueChange={setActiveTab} value={activeTab} className="mb-6">
-          <TabsList className="grid grid-cols-3 w-full max-w-md">
+        <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="key-points">Key Points</TabsTrigger>
-            <TabsTrigger value="statistics">Statistics</TabsTrigger>
+            <TabsTrigger value="keypoints">Key Points</TabsTrigger>
+            <TabsTrigger value="stats">Statistics</TabsTrigger>
+            <TabsTrigger value="team">Team Section</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="general" className="mt-6">
+          {/* General Tab Content */}
+          <TabsContent value="general" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>General Settings</CardTitle>
                 <CardDescription>
-                  Configure the main content for the About section
+                  Configure the main sections of your About page.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input 
-                    id="title" 
-                    name="title" 
-                    value={settings.title} 
-                    onChange={handleGeneralSettingsChange} 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="subtitle">Subtitle</Label>
-                  <Input 
-                    id="subtitle" 
-                    name="subtitle" 
-                    value={settings.subtitle} 
-                    onChange={handleGeneralSettingsChange} 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea 
-                    id="description" 
-                    name="description" 
-                    rows={3}
-                    value={settings.description} 
-                    onChange={handleGeneralSettingsChange} 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="missionTitle">Mission Title</Label>
-                  <Input 
-                    id="missionTitle" 
-                    name="missionTitle" 
-                    value={settings.missionTitle} 
-                    onChange={handleGeneralSettingsChange} 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="missionDescription">Mission Description</Label>
-                  <Textarea 
-                    id="missionDescription" 
-                    name="missionDescription" 
-                    rows={3}
-                    value={settings.missionDescription} 
-                    onChange={handleGeneralSettingsChange} 
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="learnMoreText">Learn More Text</Label>
-                  <Input 
-                    id="learnMoreText" 
-                    name="learnMoreText" 
-                    value={settings.learnMoreText} 
-                    onChange={handleGeneralSettingsChange} 
-                  />
-                </div>
-                
-                <div className="flex items-center space-x-2 mb-6">
-                  <div className="grid flex-1 gap-2">
-                    <Label htmlFor="learnMoreUrl">Learn More URL</Label>
-                    <div className="flex">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-l-md border border-r-0 border-input bg-muted">
-                        <LinkIcon className="h-4 w-4" />
+              <CardContent>
+                <form onSubmit={generalForm.handleSubmit(handleUpdateGeneralSettings)} className="space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Hero Section</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Title</Label>
+                        <Input 
+                          id="title" 
+                          {...generalForm.register("title")} 
+                          placeholder="About Our Company"
+                        />
+                        {generalForm.formState.errors.title && (
+                          <p className="text-sm text-red-500">{generalForm.formState.errors.title.message}</p>
+                        )}
                       </div>
-                      <Input 
-                        id="learnMoreUrl" 
-                        name="learnMoreUrl" 
-                        value={settings.learnMoreUrl} 
-                        onChange={handleGeneralSettingsChange}
-                        className="rounded-l-none"
-                        placeholder="/about or https://example.com"
+                      <div className="space-y-2">
+                        <Label htmlFor="subtitle">Subtitle</Label>
+                        <Input 
+                          id="subtitle" 
+                          {...generalForm.register("subtitle")} 
+                          placeholder="Our Story"
+                        />
+                        {generalForm.formState.errors.subtitle && (
+                          <p className="text-sm text-red-500">{generalForm.formState.errors.subtitle.message}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea 
+                        id="description" 
+                        {...generalForm.register("description")} 
+                        placeholder="A brief description of your company..."
+                        rows={4}
                       />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      For internal pages, start with a slash (e.g., "/about"). 
-                      For external links, include the full URL (e.g., "https://example.com").
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="media-toggle">Enable Media Content</Label>
-                    <Switch 
-                      id="media-toggle" 
-                      checked={showMediaOptions}
-                      onCheckedChange={setShowMediaOptions}
-                    />
-                  </div>
-                </div>
-                
-                {showMediaOptions && (
-                  <div className="p-4 border rounded-md bg-muted/20 mt-4">
-                    <h3 className="text-sm font-medium mb-2">Media Options</h3>
-                    
-                    <NavigationMenu className="mb-4">
-                      <NavigationMenuList>
-                        {mediaOptions.map((option) => (
-                          <NavigationMenuItem key={option.type}>
-                            <Button 
-                              variant={mediaType === option.type ? "default" : "outline"}
-                              size="sm"
-                              className="mr-2"
-                              onClick={() => setMediaType(option.type)}
-                            >
-                              {option.icon}
-                              <span className="ml-2">{option.label}</span>
-                            </Button>
-                          </NavigationMenuItem>
-                        ))}
-                      </NavigationMenuList>
-                    </NavigationMenu>
-                    
-                    <div className="space-y-4">
-                      {mediaType === "image" && (
-                        <div>
-                          <Label htmlFor="image-upload">Upload Images</Label>
-                          <div className="mt-2">
-                            <Input id="image-upload" type="file" accept="image/*" multiple />
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            You can upload multiple images to showcase in the about section.
-                          </p>
-                        </div>
-                      )}
-                      
-                      {mediaType === "video" && (
-                        <div>
-                          <Label htmlFor="video-upload">Upload Video</Label>
-                          <div className="mt-2">
-                            <Input id="video-upload" type="file" accept="video/*" />
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Upload a video to showcase your company or team.
-                          </p>
-                          
-                          <div className="mt-4">
-                            <Label htmlFor="video-url">Or Enter Video URL</Label>
-                            <Input id="video-url" placeholder="https://youtube.com/..." />
-                            <p className="text-xs text-muted-foreground mt-1">
-                              You can also embed a YouTube or Vimeo video by pasting the URL.
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {mediaType === "document" && (
-                        <div>
-                          <Label htmlFor="document-upload">Upload Documents</Label>
-                          <div className="mt-2">
-                            <Input id="document-upload" type="file" accept=".pdf,.doc,.docx" multiple />
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Upload brochures, case studies, or other documents related to your company.
-                          </p>
-                        </div>
+                      {generalForm.formState.errors.description && (
+                        <p className="text-sm text-red-500">{generalForm.formState.errors.description.message}</p>
                       )}
                     </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="learnMoreText">Learn More Button Text</Label>
+                        <Input 
+                          id="learnMoreText" 
+                          {...generalForm.register("learnMoreText")} 
+                          placeholder="Learn More"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="learnMoreUrl">Learn More Button URL</Label>
+                        <Input 
+                          id="learnMoreUrl" 
+                          {...generalForm.register("learnMoreUrl")} 
+                          placeholder="/contact"
+                        />
+                      </div>
+                    </div>
                   </div>
+                  
+                  <Separator />
+                  
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-medium">Mission & Vision</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="missionTitle">Mission Title</Label>
+                        <Input 
+                          id="missionTitle" 
+                          {...generalForm.register("missionTitle")} 
+                          placeholder="Our Mission"
+                        />
+                        {generalForm.formState.errors.missionTitle && (
+                          <p className="text-sm text-red-500">{generalForm.formState.errors.missionTitle.message}</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="visionTitle">Vision Title</Label>
+                        <Input 
+                          id="visionTitle" 
+                          {...generalForm.register("visionTitle")} 
+                          placeholder="Our Vision"
+                        />
+                        {generalForm.formState.errors.visionTitle && (
+                          <p className="text-sm text-red-500">{generalForm.formState.errors.visionTitle.message}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="missionDescription">Mission Description</Label>
+                        <Textarea 
+                          id="missionDescription" 
+                          {...generalForm.register("missionDescription")} 
+                          placeholder="Our mission is to..."
+                          rows={4}
+                        />
+                        {generalForm.formState.errors.missionDescription && (
+                          <p className="text-sm text-red-500">{generalForm.formState.errors.missionDescription.message}</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="visionDescription">Vision Description</Label>
+                        <Textarea 
+                          id="visionDescription" 
+                          {...generalForm.register("visionDescription")} 
+                          placeholder="Our vision is to..."
+                          rows={4}
+                        />
+                        {generalForm.formState.errors.visionDescription && (
+                          <p className="text-sm text-red-500">{generalForm.formState.errors.visionDescription.message}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Button type="submit">Save General Settings</Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Key Points Tab Content */}
+          <TabsContent value="keypoints" className="space-y-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Key Points</CardTitle>
+                  <CardDescription>
+                    Highlight your company's key strengths or values.
+                  </CardDescription>
+                </div>
+                <Button onClick={() => setIsAddingKeyPoint(true)}>
+                  <Plus className="mr-2 h-4 w-4" /> Add Key Point
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {settings.keyPoints.length === 0 ? (
+                  <p className="text-center py-6 text-muted-foreground">
+                    No key points added yet. Click 'Add Key Point' to get started.
+                  </p>
+                ) : (
+                  <DragDropContext onDragEnd={handleKeyPointDragEnd}>
+                    <Droppable droppableId="keyPoints">
+                      {(provided) => (
+                        <div
+                          className="space-y-2"
+                          {...provided.droppableProps}
+                          ref={provided.innerRef}
+                        >
+                          {settings.keyPoints
+                            .sort((a, b) => a.order - b.order)
+                            .map((keyPoint, index) => (
+                              <Draggable
+                                key={keyPoint.id.toString()}
+                                draggableId={keyPoint.id.toString()}
+                                index={index}
+                              >
+                                {(provided) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    className="flex items-center justify-between p-4 border rounded-md bg-card"
+                                  >
+                                    <div className="flex items-center gap-4">
+                                      <div
+                                        {...provided.dragHandleProps}
+                                        className="cursor-grab"
+                                      >
+                                        <GripVertical className="h-5 w-5 text-muted-foreground" />
+                                      </div>
+                                      <div>
+                                        <h4 className="font-medium">{keyPoint.title}</h4>
+                                        <p className="text-sm text-muted-foreground max-w-md truncate">
+                                          {keyPoint.description}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => {
+                                          setIsEditingKeyPoint(keyPoint);
+                                          keyPointForm.reset({
+                                            title: keyPoint.title,
+                                            description: keyPoint.description,
+                                            icon: keyPoint.icon,
+                                          });
+                                        }}
+                                      >
+                                        <Pencil className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleDeleteKeyPoint(keyPoint.id)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  </DragDropContext>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
           
-          <TabsContent value="key-points" className="mt-6">
+          {/* Statistics Tab Content */}
+          <TabsContent value="stats" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Key Points</CardTitle>
+                <CardTitle>Statistics Settings</CardTitle>
                 <CardDescription>
-                  Manage the key points displayed in the About section
+                  Configure the statistics section of your About page.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="mb-4">
-                  <Button onClick={() => setAddingKeyPoint(true)} variant="outline" size="sm">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Key Point
-                  </Button>
-                </div>
-                
-                <Dialog open={addingKeyPoint} onOpenChange={setAddingKeyPoint}>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Key Point</DialogTitle>
-                      <DialogDescription>
-                        Enter the title and description for the key point.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogContent className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="key-point-title">Title</Label>
-                        <Input 
-                          id="key-point-title" 
-                          name="key-point-title" 
-                          value={newKeyPointText} 
-                          onChange={(e) => setNewKeyPointText(e.target.value)}
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="key-point-description">Description</Label>
-                        <Textarea 
-                          id="key-point-description" 
-                          name="key-point-description" 
-                          rows={3}
-                          value="Click to edit description"
-                        />
-                      </div>
-                    </DialogContent>
-                    <DialogFooter>
-                      <Button onClick={() => setAddingKeyPoint(false)}>Cancel</Button>
-                      <Button onClick={handleAddKeyPoint} variant="default">Add</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-                
-                <div className="space-y-4">
-                  {settings.keyPoints.sort((a, b) => a.order - b.order).map((point) => (
-                    <div key={point.id} className="flex items-center gap-2">
-                      <Input 
-                        value={point.text} 
-                        onChange={(e) => handleKeyPointChange(point.id, e.target.value)}
-                      />
-                      <div className="flex items-center gap-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleReorderKeyPoint(point.id, 'up')}
-                          className="h-8 w-8"
-                        >
-                          <MoveUp className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleReorderKeyPoint(point.id, 'down')}
-                          className="h-8 w-8"
-                        >
-                          <MoveDown className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleDeleteKeyPoint(point.id)}
-                          className="h-8 w-8 text-destructive"
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
+                <form onSubmit={statsGeneralForm.handleSubmit(handleUpdateStatsSettings)} className="space-y-6">
+                  <div className="flex items-center justify-between space-x-2">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="showStats">Show Statistics Section</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Enable or disable the statistics section on your About page.
+                      </p>
                     </div>
-                  ))}
-                </div>
+                    <Switch
+                      id="showStats"
+                      checked={statsGeneralForm.watch("showStats")}
+                      onCheckedChange={(checked) => 
+                        statsGeneralForm.setValue("showStats", checked)
+                      }
+                    />
+                  </div>
+                  
+                  {statsGeneralForm.watch("showStats") && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="statsTitle">Section Title</Label>
+                        <Input
+                          id="statsTitle"
+                          {...statsGeneralForm.register("statsTitle")}
+                          placeholder="Our Progress in Numbers"
+                        />
+                        {statsGeneralForm.formState.errors.statsTitle && (
+                          <p className="text-sm text-red-500">{statsGeneralForm.formState.errors.statsTitle.message}</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="statsSubtitle">Section Subtitle</Label>
+                        <Input
+                          id="statsSubtitle"
+                          {...statsGeneralForm.register("statsSubtitle")}
+                          placeholder="Key metrics that showcase our success"
+                        />
+                        {statsGeneralForm.formState.errors.statsSubtitle && (
+                          <p className="text-sm text-red-500">{statsGeneralForm.formState.errors.statsSubtitle.message}</p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  
+                  <Button type="submit">Save Statistics Settings</Button>
+                </form>
               </CardContent>
+              <CardFooter className="border-t px-6 py-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAddingStatItem(true)}
+                  disabled={!statsGeneralForm.watch("showStats")}
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Statistic
+                </Button>
+              </CardFooter>
             </Card>
+            
+            {statsGeneralForm.watch("showStats") && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Statistics Items</CardTitle>
+                  <CardDescription>
+                    Manage your statistical data points.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {settings.stats.length === 0 ? (
+                    <p className="text-center py-6 text-muted-foreground">
+                      No statistics added yet. Click 'Add Statistic' to get started.
+                    </p>
+                  ) : (
+                    <DragDropContext onDragEnd={handleStatItemDragEnd}>
+                      <Droppable droppableId="stats">
+                        {(provided) => (
+                          <div
+                            className="space-y-2"
+                            {...provided.droppableProps}
+                            ref={provided.innerRef}
+                          >
+                            {settings.stats
+                              .sort((a, b) => a.order - b.order)
+                              .map((stat, index) => (
+                                <Draggable
+                                  key={stat.id.toString()}
+                                  draggableId={stat.id.toString()}
+                                  index={index}
+                                >
+                                  {(provided) => (
+                                    <div
+                                      ref={provided.innerRef}
+                                      {...provided.draggableProps}
+                                      className="flex items-center justify-between p-4 border rounded-md bg-card"
+                                    >
+                                      <div className="flex items-center gap-4">
+                                        <div
+                                          {...provided.dragHandleProps}
+                                          className="cursor-grab"
+                                        >
+                                          <GripVertical className="h-5 w-5 text-muted-foreground" />
+                                        </div>
+                                        <div>
+                                          <div className="flex items-center gap-2">
+                                            <h4 className="font-medium">{stat.label}</h4>
+                                            <span className="font-bold">{stat.value}</span>
+                                            {stat.isActive === false && (
+                                              <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Inactive</span>
+                                            )}
+                                          </div>
+                                          {stat.description && (
+                                            <p className="text-sm text-muted-foreground max-w-md truncate">
+                                              {stat.description}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => {
+                                            setIsEditingStatItem(stat);
+                                            statItemForm.reset({
+                                              label: stat.label,
+                                              value: stat.value,
+                                              icon: stat.icon || "",
+                                              description: stat.description || "",
+                                              start: stat.start || "",
+                                              suffix: stat.suffix || "",
+                                              color: stat.color || "",
+                                              isActive: stat.isActive,
+                                            });
+                                          }}
+                                        >
+                                          <Pencil className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => handleDeleteStatItem(stat.id)}
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )}
+                                </Draggable>
+                              ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    </DragDropContext>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
           
-          <TabsContent value="statistics" className="mt-6">
+          {/* Team Section Tab Content */}
+          <TabsContent value="team" className="space-y-6">
             <Card>
               <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle>Statistics</CardTitle>
-                    <CardDescription>
-                      Manage the statistics cards displayed in the About section
-                    </CardDescription>
-                  </div>
-                  <Button onClick={handleAddStat} variant="default" size="sm">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Statistic
-                  </Button>
-                </div>
+                <CardTitle>Team Section Settings</CardTitle>
+                <CardDescription>
+                  Configure the team members section of your About page.
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-6">
-                  {settings.stats.sort((a, b) => a.order - b.order).map((stat) => (
-                    <Card key={stat.id} className="border-dashed">
-                      <CardHeader className="pb-2">
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-lg font-medium">Stat #{stat.id}</h3>
-                          <div className="flex items-center gap-1">
-                            <div className="flex items-center space-x-2 mr-2">
-                              <Switch 
-                                id={`active-toggle-${stat.id}`} 
-                                checked={stat.isActive !== false}
-                                onCheckedChange={(checked) => handleToggleStatActive(stat.id, checked)}
-                              />
-                              <Label htmlFor={`active-toggle-${stat.id}`} className="text-xs">
-                                {stat.isActive !== false ? "Active" : "Inactive"}
-                              </Label>
-                            </div>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => handleReorderStat(stat.id, 'up')}
-                              className="h-8 w-8"
-                            >
-                              <MoveUp className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => handleReorderStat(stat.id, 'down')}
-                              className="h-8 w-8"
-                            >
-                              <MoveDown className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => handleDeleteStat(stat.id)}
-                              className="h-8 w-8 text-destructive"
-                            >
-                              <Trash className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pb-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor={`stat-value-${stat.id}`}>Value</Label>
-                            <Input 
-                              id={`stat-value-${stat.id}`}
-                              value={stat.value} 
-                              onChange={(e) => handleStatChange(stat.id, 'value', e.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`stat-label-${stat.id}`}>Label</Label>
-                            <Input 
-                              id={`stat-label-${stat.id}`}
-                              value={stat.label} 
-                              onChange={(e) => handleStatChange(stat.id, 'label', e.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`stat-start-${stat.id}`}>Start Value (for animation)</Label>
-                            <Input 
-                              id={`stat-start-${stat.id}`}
-                              value={stat.start} 
-                              onChange={(e) => handleStatChange(stat.id, 'start', e.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`stat-suffix-${stat.id}`}>Suffix (e.g., "+", "%")</Label>
-                            <Input 
-                              id={`stat-suffix-${stat.id}`}
-                              value={stat.suffix || ""}
-                              onChange={(e) => handleStatChange(stat.id, 'suffix', e.target.value)}
-                            />
-                          </div>
-                          <div className="space-y-2 col-span-2">
-                            <Label htmlFor={`stat-description-${stat.id}`}>Description (optional)</Label>
-                            <Textarea 
-                              id={`stat-description-${stat.id}`}
-                              value={stat.description || ""}
-                              onChange={(e) => handleStatChange(stat.id, 'description', e.target.value)}
-                              rows={2}
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="mt-4">
-                          <div className="flex items-center space-x-2">
-                            <Label htmlFor={`stat-icon-${stat.id}`}>Color</Label>
-                            <input 
-                              type="color" 
-                              id={`stat-color-${stat.id}`}
-                              value={stat.color || "#3498db"}
-                              onChange={(e) => handleStatChange(stat.id, 'color', e.target.value)}
-                              className="w-8 h-8 p-0 border rounded"
-                            />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </CardContent>
-              {settings.stats.length === 0 && (
-                <CardFooter className="flex justify-center py-6 border-t">
-                  <div className="text-center">
-                    <p className="text-muted-foreground mb-2">No statistics added yet</p>
-                    <Button onClick={handleAddStat} variant="outline">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Your First Statistic
-                    </Button>
+                <form onSubmit={teamSectionForm.handleSubmit(handleUpdateTeamSettings)} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="teamSectionTitle">Section Title</Label>
+                    <Input
+                      id="teamSectionTitle"
+                      {...teamSectionForm.register("teamSectionTitle")}
+                      placeholder="Meet Our Team"
+                    />
+                    {teamSectionForm.formState.errors.teamSectionTitle && (
+                      <p className="text-sm text-red-500">{teamSectionForm.formState.errors.teamSectionTitle.message}</p>
+                    )}
                   </div>
-                </CardFooter>
-              )}
+                  <div className="space-y-2">
+                    <Label htmlFor="teamSectionSubtitle">Section Subtitle</Label>
+                    <Input
+                      id="teamSectionSubtitle"
+                      {...teamSectionForm.register("teamSectionSubtitle")}
+                      placeholder="The talented individuals behind our success"
+                    />
+                    {teamSectionForm.formState.errors.teamSectionSubtitle && (
+                      <p className="text-sm text-red-500">{teamSectionForm.formState.errors.teamSectionSubtitle.message}</p>
+                    )}
+                  </div>
+                  <Button type="submit">Save Team Section Settings</Button>
+                </form>
+              </CardContent>
+              <CardFooter className="border-t px-6 py-4">
+                <p className="text-sm text-muted-foreground">
+                  Note: Team members are managed in the Content section under 'Team Member' content type.
+                </p>
+              </CardFooter>
             </Card>
           </TabsContent>
         </Tabs>
+        
+        {/* Add Key Point Dialog */}
+        <Dialog open={isAddingKeyPoint} onOpenChange={setIsAddingKeyPoint}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Key Point</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={keyPointForm.handleSubmit(handleAddKeyPoint)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input id="title" {...keyPointForm.register("title")} placeholder="Innovation" />
+                {keyPointForm.formState.errors.title && (
+                  <p className="text-sm text-red-500">{keyPointForm.formState.errors.title.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea 
+                  id="description" 
+                  {...keyPointForm.register("description")} 
+                  placeholder="We are constantly innovating..." 
+                  rows={3}
+                />
+                {keyPointForm.formState.errors.description && (
+                  <p className="text-sm text-red-500">{keyPointForm.formState.errors.description.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="icon">Icon Name</Label>
+                <Input id="icon" {...keyPointForm.register("icon")} placeholder="Lightbulb" />
+                <p className="text-xs text-muted-foreground">
+                  Enter the name of a Lucide icon (e.g., Lightbulb, Shield, Star)
+                </p>
+                {keyPointForm.formState.errors.icon && (
+                  <p className="text-sm text-red-500">{keyPointForm.formState.errors.icon.message}</p>
+                )}
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsAddingKeyPoint(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Add Key Point</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Edit Key Point Dialog */}
+        <Dialog open={!!isEditingKeyPoint} onOpenChange={(open) => !open && setIsEditingKeyPoint(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Key Point</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={keyPointForm.handleSubmit(handleUpdateKeyPoint)} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-title">Title</Label>
+                <Input id="edit-title" {...keyPointForm.register("title")} />
+                {keyPointForm.formState.errors.title && (
+                  <p className="text-sm text-red-500">{keyPointForm.formState.errors.title.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description</Label>
+                <Textarea 
+                  id="edit-description" 
+                  {...keyPointForm.register("description")} 
+                  rows={3}
+                />
+                {keyPointForm.formState.errors.description && (
+                  <p className="text-sm text-red-500">{keyPointForm.formState.errors.description.message}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-icon">Icon Name</Label>
+                <Input id="edit-icon" {...keyPointForm.register("icon")} />
+                <p className="text-xs text-muted-foreground">
+                  Enter the name of a Lucide icon (e.g., Lightbulb, Shield, Star)
+                </p>
+                {keyPointForm.formState.errors.icon && (
+                  <p className="text-sm text-red-500">{keyPointForm.formState.errors.icon.message}</p>
+                )}
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsEditingKeyPoint(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Update Key Point</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Add Stat Item Dialog */}
+        <Dialog open={isAddingStatItem} onOpenChange={setIsAddingStatItem}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Statistic</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={statItemForm.handleSubmit(handleAddStatItem)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="label">Label</Label>
+                  <Input id="label" {...statItemForm.register("label")} placeholder="Clients" />
+                  {statItemForm.formState.errors.label && (
+                    <p className="text-sm text-red-500">{statItemForm.formState.errors.label.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="value">Value</Label>
+                  <Input id="value" {...statItemForm.register("value")} placeholder="500+" />
+                  {statItemForm.formState.errors.value && (
+                    <p className="text-sm text-red-500">{statItemForm.formState.errors.value.message}</p>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Input 
+                  id="description" 
+                  {...statItemForm.register("description")} 
+                  placeholder="Satisfied clients worldwide" 
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="start">Start Value (Optional)</Label>
+                  <Input id="start" {...statItemForm.register("start")} placeholder="0" />
+                  <p className="text-xs text-muted-foreground">
+                    Starting value for animation (if applicable)
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="suffix">Suffix (Optional)</Label>
+                  <Input id="suffix" {...statItemForm.register("suffix")} placeholder="+" />
+                  <p className="text-xs text-muted-foreground">
+                    Character(s) to appear after the value (e.g., +, %)
+                  </p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="icon">Icon Name (Optional)</Label>
+                <Input id="icon" {...statItemForm.register("icon")} placeholder="Users" />
+                <p className="text-xs text-muted-foreground">
+                  Enter the name of a Lucide icon (e.g., Users, Award, Clock)
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="color">Color (Optional)</Label>
+                <Input id="color" {...statItemForm.register("color")} placeholder="#4F46E5" />
+                <p className="text-xs text-muted-foreground">
+                  Color code or Tailwind color class (e.g., #4F46E5, text-blue-500)
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="isActive"
+                  checked={statItemForm.watch("isActive")}
+                  onCheckedChange={(checked) => statItemForm.setValue("isActive", checked)}
+                />
+                <Label htmlFor="isActive">Active</Label>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsAddingStatItem(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Add Statistic</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Edit Stat Item Dialog */}
+        <Dialog open={!!isEditingStatItem} onOpenChange={(open) => !open && setIsEditingStatItem(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Statistic</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={statItemForm.handleSubmit(handleUpdateStatItem)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-label">Label</Label>
+                  <Input id="edit-label" {...statItemForm.register("label")} />
+                  {statItemForm.formState.errors.label && (
+                    <p className="text-sm text-red-500">{statItemForm.formState.errors.label.message}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-value">Value</Label>
+                  <Input id="edit-value" {...statItemForm.register("value")} />
+                  {statItemForm.formState.errors.value && (
+                    <p className="text-sm text-red-500">{statItemForm.formState.errors.value.message}</p>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-description">Description (Optional)</Label>
+                <Input id="edit-description" {...statItemForm.register("description")} />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-start">Start Value (Optional)</Label>
+                  <Input id="edit-start" {...statItemForm.register("start")} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-suffix">Suffix (Optional)</Label>
+                  <Input id="edit-suffix" {...statItemForm.register("suffix")} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-icon">Icon Name (Optional)</Label>
+                <Input id="edit-icon" {...statItemForm.register("icon")} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-color">Color (Optional)</Label>
+                <Input id="edit-color" {...statItemForm.register("color")} />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="edit-isActive"
+                  checked={statItemForm.watch("isActive")}
+                  onCheckedChange={(checked) => statItemForm.setValue("isActive", checked)}
+                />
+                <Label htmlFor="edit-isActive">Active</Label>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsEditingStatItem(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Update Statistic</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

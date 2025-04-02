@@ -1,28 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Plus, Edit, Trash2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { ContentItem } from '@/lib/types';
-import { storageService } from '@/lib/storage';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState, useEffect } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
+import { Header } from "@/components/common/Header";
+import Footer from "@/components/common/Footer";
+import PortfolioHero from "@/components/portfolio/PortfolioHero";
+import PortfolioFilters from "@/components/portfolio/PortfolioFilters";
+import PortfolioGallery from "@/components/portfolio/PortfolioGallery";
+import { storageService } from "@/lib/storage";
+import { Input } from "@/components/ui/input";
 
 const Portfolio: React.FC = () => {
   const [portfolioItems, setPortfolioItems] = useState<ContentItem[]>([]);

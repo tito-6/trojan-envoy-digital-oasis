@@ -13,7 +13,10 @@ import { storageService } from "@/lib/storage";
 import { LanguageState } from "@/lib/types";
 
 export function LanguageSelector() {
-  const { availableLanguages, currentLanguage, changeLanguage } = useLanguage() as LanguageState;
+  const languageState = useLanguage();
+  const { currentLanguage, changeLanguage } = languageState as unknown as LanguageState;
+  const availableLanguages = (languageState as unknown as LanguageState).availableLanguages;
+  
   const [enabledLanguages, setEnabledLanguages] = useState<string[]>([]);
   const [defaultLanguage, setDefaultLanguage] = useState<string>("en");
 
