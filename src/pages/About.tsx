@@ -1,11 +1,12 @@
-
-import React, { useEffect } from "react";
-import Header from "@/components/common/Header";
-import Footer from "@/components/common/Footer";
-import AboutHero from "@/components/about/AboutHero";
-import TeamSection from "@/components/about/TeamSection";
-import ValuesSection from "@/components/about/ValuesSection";
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Header } from "@/components/common/Header";
+import Footer from '@/components/common/Footer';
+import AboutHero from '@/components/about/AboutHero';
+import ValuesSection from '@/components/about/ValuesSection';
+import TeamSection from '@/components/about/TeamSection';
 import { useLanguage } from "@/lib/i18n";
+import { storageService } from '@/lib/storage';
 
 const About: React.FC = () => {
   const { t } = useLanguage();

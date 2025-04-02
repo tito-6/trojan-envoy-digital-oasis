@@ -1,10 +1,12 @@
-
-import React, { useEffect } from "react";
-import Header from "@/components/common/Header";
-import Footer from "@/components/common/Footer";
-import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
-import { useLanguage } from "@/lib/i18n";
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Header } from '@/components/common/Header';
+import Footer from '@/components/common/Footer';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { storageService } from '@/lib/storage';
+import { Clock, Tag, ArrowRight } from 'lucide-react';
 
 interface CaseStudy {
   id: number;

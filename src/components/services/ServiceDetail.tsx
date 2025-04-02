@@ -1,259 +1,154 @@
-
-import React, { useState } from 'react';
-import { ArrowRight, Check, ChevronRight, ExternalLink, FileText, Play } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
-import { formatDate } from '@/lib/utils';
-import { useLanguage } from '@/lib/i18n';
-import { ContentItem } from '@/lib/types';
-import { iconLibrary } from '@/lib/iconUtils';
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Eye, Clock, Tag, FileText, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { storageService } from "@/lib/storage";
+import { ContentItem } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
 interface ServiceDetailProps {
-  service: ContentItem;
+  className?: string;
 }
 
-export function ServiceDetail({ service }: ServiceDetailProps) {
-  const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState('overview');
+const ServiceDetail: React.FC<ServiceDetailProps> = ({ className }) => {
+  const { slug } = useParams<{ slug: string }>();
+  const [service, setService] = useState<ContentItem | null>(null);
+
+  useEffect(() => {
+    if (slug) {
+      const storedService = storageService.getContentByType("Service").find((item) => item.slug === slug);
+      setService(storedService || null);
+    }
+  }, [slug]);
 
   if (!service) {
     return (
-      <div className="container py-20 text-center">
-        <p className="text-muted-foreground">{t('services.notFound')}</p>
+      <div className="container py-12">
+        <div className="text-center">
+          <h2 className="text-3xl font-bold mb-4">Service Not Found</h2>
+          <p className="text-muted-foreground">
+            Sorry, the service you are looking for could not be found.
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Get the icon component if it exists
-  const IconComponent = service.iconName ? iconLibrary[service.iconName as keyof typeof iconLibrary] || null : null;
+  const renderSeoHeadingStructure = (seoHeadingStructure: any) => {
+    if (!seoHeadingStructure) return null;
 
-  // Process the document sections
-  const sections = [
-    { id: 'overview', label: t('services.overview'), content: service.description },
-    { id: 'features', label: t('services.features'), content: service.content },
-  ];
+    return (
+      <div className="space-y-6">
+        {seoHeadingStructure.h1 && (
+          <div>
+            <h3 className="text-lg font-medium">H1</h3>
+            <p className="text-muted-foreground">{seoHeadingStructure.h1}</p>
+          </div>
+        )}
 
-  // Check if we have videos or documents
-  const hasMedia = (service.videos && service.videos.length > 0) || 
-                   (service.documents && service.documents.length > 0);
+        {seoHeadingStructure.h2 && seoHeadingStructure.h2.length > 0 && (
+          <div>
+            <h3 className="text-lg font-medium">H2</h3>
+            <ul className="ml-6 list-disc text-muted-foreground">
+              {seoHeadingStructure.h2.map((h2: string, idx: number) => (
+                <li key={idx}>{h2}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-  if (hasMedia) {
-    sections.push({ 
-      id: 'resources', 
-      label: t('services.resources'), 
-      content: t('services.resourcesDescription')
-    });
-  }
+        {seoHeadingStructure.h3 && Object.keys(seoHeadingStructure.h3).length > 0 && (
+          <div>
+            <h3 className="text-lg font-medium">H3</h3>
+            <div className="ml-6 space-y-4">
+              {Object.entries(seoHeadingStructure.h3).map(([parent, h3Items]) => (
+                <div key={parent}>
+                  <p className="font-medium">{parent}</p>
+                  <ul className="ml-6 list-disc text-muted-foreground">
+                    {(h3Items as string[]).map((item: string, idx: number) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
-    <div className="container py-10 md:py-16">
-      <div className="grid md:grid-cols-3 gap-12">
-        <div className="md:col-span-2 space-y-8">
-          <div>
-            <div className="flex items-center space-x-2 text-muted-foreground mb-4">
-              <a href="/" className="hover:text-foreground transition-colors">
-                {t('nav.home')}
-              </a>
-              <ChevronRight className="h-4 w-4" />
-              <a href="/services" className="hover:text-foreground transition-colors">
-                {t('nav.services')}
-              </a>
-              <ChevronRight className="h-4 w-4" />
-              <span className="text-foreground">{service.title}</span>
-            </div>
+    <div className="container py-12">
+      <article className="space-y-6">
+        <header className="space-y-2">
+          <h1 className="text-4xl font-bold">{service.title}</h1>
+          <p className="text-muted-foreground">{service.description}</p>
+        </header>
 
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-4">
-              {service.title}
-            </h1>
-
-            {/* Icon with title for mobile */}
-            <div className="flex items-center md:hidden mb-4">
-              {IconComponent && (
-                <div
-                  className={cn(
-                    "mr-3 p-2 rounded-full",
-                    service.bgColor ? `bg-[${service.bgColor}]` : "bg-primary/10",
-                    service.color ? `text-[${service.color}]` : "text-primary"
-                  )}
-                >
-                  <IconComponent className="h-6 w-6" />
-                </div>
-              )}
-            </div>
-
-            {/* Overview/Description */}
-            <div className="prose prose-slate dark:prose-invert max-w-none">
-              <p className="text-xl text-muted-foreground mb-6">
-                {service.description}
-              </p>
-            </div>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 text-sm">
+            <Eye className="h-4 w-4" />
+            <span>1234 views</span>
           </div>
+          <div className="flex items-center space-x-2 text-sm">
+            <Clock className="h-4 w-4" />
+            <span>Updated {formatDate(service.lastUpdated)}</span>
+          </div>
+          {service.category && (
+            <div className="flex items-center space-x-2 text-sm">
+              <Tag className="h-4 w-4" />
+              <span>{service.category}</span>
+            </div>
+          )}
+        </div>
 
-          <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="mb-6">
-              {sections.map(section => (
-                <TabsTrigger key={section.id} value={section.id}>
-                  {section.label}
-                </TabsTrigger>
+        <Separator />
+
+        <Card>
+          <CardContent>
+            <div dangerouslySetInnerHTML={{ __html: service.content || "" }} />
+          </CardContent>
+        </Card>
+
+        {service.seoKeywords && service.seoKeywords.length > 0 && (
+          <div className="flex items-center space-x-2">
+            <FileText className="h-5 w-5" />
+            <p className="text-sm font-medium">SEO Keywords:</p>
+            <div className="flex space-x-2">
+              {service.seoKeywords.map((keyword, index) => (
+                <Badge key={index}>{keyword}</Badge>
               ))}
-            </TabsList>
-
-            <TabsContent value="overview" className="space-y-6">
-              {service.formattedContent ? (
-                <div className="prose prose-slate dark:prose-invert max-w-none">
-                  {typeof service.formattedContent === 'string' ? (
-                    <div dangerouslySetInnerHTML={{ __html: service.formattedContent }} />
-                  ) : (
-                    <p>{t('services.noContent')}</p>
-                  )}
-                </div>
-              ) : service.htmlContent ? (
-                <div 
-                  className="prose prose-slate dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: service.htmlContent }} 
-                />
-              ) : service.content ? (
-                <div 
-                  className="prose prose-slate dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: service.content }} 
-                />
-              ) : (
-                <p className="text-muted-foreground">{t('services.noContent')}</p>
-              )}
-
-              {/* SEO headings rendering if they exist */}
-              {service.seoHeadingStructure && (
-                <div className="mt-12 space-y-10">
-                  {service.seoHeadingStructure.h2 && service.seoHeadingStructure.h2.length > 0 && 
-                    service.seoHeadingStructure.h2.map((heading, idx) => (
-                      <div key={idx} className="space-y-4">
-                        <h2 className="text-2xl font-bold tracking-tight">{heading}</h2>
-                        
-                        {service.seoHeadingStructure && 
-                         service.seoHeadingStructure.h3 && 
-                         service.seoHeadingStructure.h3[heading] && (
-                          <div className="space-y-3 ml-4">
-                            {typeof service.seoHeadingStructure.h3[heading] === 'object' && 
-                             Array.isArray(service.seoHeadingStructure.h3[heading]) && 
-                             service.seoHeadingStructure.h3[heading].map((subheading, subIdx) => (
-                              <div key={subIdx} className="flex items-start">
-                                <Check className="h-5 w-5 text-primary mr-2 mt-1 flex-shrink-0" />
-                                <p>{subheading}</p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="features" className="space-y-6">
-              <div 
-                className="prose prose-slate dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: service.content || '' }} 
-              />
-            </TabsContent>
-
-            {hasMedia && (
-              <TabsContent value="resources" className="space-y-10">
-                {service.videos && service.videos.length > 0 && (
-                  <div>
-                    <h3 className="text-xl font-semibold mb-4">{t('services.videoResources')}</h3>
-                    <div className="grid gap-6 md:grid-cols-2">
-                      {service.videos.map((video, idx) => (
-                        <div key={idx} className="bg-secondary/30 rounded-lg overflow-hidden border border-border">
-                          <div className="aspect-video relative">
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Button className="rounded-full" size="icon">
-                                <Play className="h-6 w-6" />
-                              </Button>
-                            </div>
-                            <div className="p-4 bg-background">
-                              <h4 className="font-medium line-clamp-1">{t('services.videoTitle', { number: idx + 1 })}</h4>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {service.documents && service.documents.length > 0 && (
-                  <div>
-                    <h3 className="text-xl font-semibold mb-4">{t('services.documentResources')}</h3>
-                    <div className="space-y-3">
-                      {service.documents.map((doc, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
-                          <div className="flex items-center">
-                            <FileText className="h-5 w-5 text-primary mr-3" />
-                            <span>{doc.split('/').pop() || `${t('services.document')} ${idx + 1}`}</span>
-                          </div>
-                          <Button size="sm" variant="outline">
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            {t('services.download')}
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-            )}
-          </Tabs>
-        </div>
-
-        <div>
-          <div className="bg-card rounded-lg border p-6 sticky top-24">
-            {/* Icon with title for desktop */}
-            <div className="hidden md:flex items-center mb-6">
-              {IconComponent && (
-                <div
-                  className={cn(
-                    "mr-3 p-2 rounded-full",
-                    service.bgColor ? `bg-[${service.bgColor}]` : "bg-primary/10",
-                    service.color ? `text-[${service.color}]` : "text-primary"
-                  )}
-                >
-                  <IconComponent className="h-6 w-6" />
-                </div>
-              )}
-              <h3 className="text-xl font-semibold">{service.title}</h3>
             </div>
-
-            <ul className="space-y-3 mb-6">
-              <li className="flex items-start">
-                <Check className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
-                <span>{t('services.benefit1')}</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
-                <span>{t('services.benefit2')}</span>
-              </li>
-              <li className="flex items-start">
-                <Check className="h-5 w-5 text-primary mr-2 mt-0.5 flex-shrink-0" />
-                <span>{t('services.benefit3')}</span>
-              </li>
-            </ul>
-
-            <Separator className="my-6" />
-            
-            <div className="mb-6">
-              <Button className="w-full">
-                {t('services.getStarted')}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          
-            <p className="text-sm text-muted-foreground">
-              {t('services.updatedLabel')}: {formatDate(service.lastUpdated)}
-            </p>
           </div>
+        )}
+
+        {service.seoHeadingStructure && (
+          <Card>
+            <CardContent>
+              <h4 className="text-lg font-medium mb-4">SEO Heading Structure</h4>
+              {renderSeoHeadingStructure(service.seoHeadingStructure)}
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="flex justify-end space-x-2">
+          {service.documents && service.documents.length > 0 && (
+            <Button variant="secondary">
+              <Download className="h-4 w-4 mr-2" />
+              Download Brochure
+            </Button>
+          )}
+          <Button asChild>
+            <a href="/contact">Request a Quote</a>
+          </Button>
         </div>
-      </div>
+      </article>
     </div>
   );
-}
+};
+
+export default ServiceDetail;

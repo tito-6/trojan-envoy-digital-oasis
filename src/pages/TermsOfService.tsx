@@ -1,7 +1,10 @@
-
-import React, { useEffect } from "react";
-import Header from "@/components/common/Header";
-import Footer from "@/components/common/Footer";
+import React, { useState } from 'react';
+import { Header } from '@/components/common/Header';
+import Footer from '@/components/common/Footer';
+import { Separator } from '@/components/ui/separator';
+import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { useLanguage } from "@/lib/i18n";
 
 const TermsOfService: React.FC = () => {

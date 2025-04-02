@@ -1,25 +1,11 @@
-
-import React, { useEffect, useState } from "react";
-import Header from "@/components/common/Header";
-import Footer from "@/components/common/Footer";
-import { useLanguage } from "@/lib/i18n";
-import { 
-  Card, 
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  CardDescription 
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { 
-  ArrowRight, 
-  Briefcase, 
-  Clock, 
-  MapPin, 
-  DollarSign 
-} from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Header } from '@/components/common/Header';
+import Footer from '@/components/common/Footer';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { storageService } from '@/lib/storage';
+import { Briefcase, MapPin, Calendar, DollarSign } from 'lucide-react';
 
 interface JobPosition {
   id: string;
@@ -36,7 +22,6 @@ interface JobPosition {
 }
 
 const Careers: React.FC = () => {
-  const { t } = useLanguage();
   const [jobPositions, setJobPositions] = useState<JobPosition[]>([
     {
       id: "1",

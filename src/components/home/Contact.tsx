@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -64,10 +63,9 @@ const Contact: React.FC<ContactProps> = ({ className }) => {
     setContactSettings(settings);
     setFormFields(settings.formFields);
 
-    // Initialize form data state with default values
     const initialFormData: Record<string, string> = {};
     settings.formFields.forEach((field: ContactFormField) => {
-      initialFormData[field.name] = ""; // Set default value to empty string
+      initialFormData[field.name] = "";
     });
     setFormData(initialFormData);
   }, []);
@@ -97,7 +95,6 @@ const Contact: React.FC<ContactProps> = ({ className }) => {
     setIsLoading(true);
 
     try {
-      // Validate required fields
       const requiredFields = formFields.filter(field => field.required);
       for (const field of requiredFields) {
         if (!formData[field.name]) {
@@ -111,7 +108,6 @@ const Contact: React.FC<ContactProps> = ({ className }) => {
         }
       }
 
-      // Construct contact request object
       const contactRequest = {
         name: formData.name,
         email: formData.email,
@@ -129,14 +125,12 @@ const Contact: React.FC<ContactProps> = ({ className }) => {
         description: "Your message has been sent successfully!",
       });
 
-      // Reset form data
       const resetFormData: Record<string, string> = {};
       formFields.forEach(field => {
         resetFormData[field.name] = "";
       });
       setFormData(resetFormData);
 
-      // Reset form fields using react-hook-form reset
       form.reset();
     } catch (error) {
       toast({
@@ -185,7 +179,7 @@ const Contact: React.FC<ContactProps> = ({ className }) => {
                             required={field.required}
                             value={formData[field.name] || ""}
                             onChange={handleInputChange}
-                            {...formField}
+                            name={field.name}
                           />
                         </FormControl>
                         <FormMessage />
@@ -236,7 +230,7 @@ const Contact: React.FC<ContactProps> = ({ className }) => {
                             className="resize-none"
                             value={formData[field.name] || ""}
                             onChange={handleInputChange}
-                            {...formField}
+                            name={field.name}
                           />
                         </FormControl>
                         <FormMessage />
@@ -262,8 +256,8 @@ const Contact: React.FC<ContactProps> = ({ className }) => {
                                 ...prevData,
                                 [field.name]: checked ? "true" : "",
                               }));
-                              formField.onChange(checked);
                             }}
+                            name={field.name}
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">

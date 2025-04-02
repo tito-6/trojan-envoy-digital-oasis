@@ -1,9 +1,10 @@
-
-import React from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import Header from "@/components/common/Header";
-import Footer from "@/components/common/Footer";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, Search, Home } from 'lucide-react';
+import { Header } from '@/components/common/Header';
+import Footer from '@/components/common/Footer';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const NotFound: React.FC = () => {
   return (

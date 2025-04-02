@@ -59,6 +59,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [isDarkTheme, setIsDarkTheme] = useState(
+    localStorage.getItem("theme") === "dark" || 
+    (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches)
+  );
   
   const handleLogout = () => {
     // In a real app, this would handle the logout logic
@@ -72,6 +76,18 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     setTimeout(() => {
       navigate("/admin/login");
     }, 1000);
+  };
+  
+  const toggleTheme = () => {
+    if (document.documentElement.classList.contains("dark")) {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      setIsDarkTheme(false);
+    } else {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+      setIsDarkTheme(true);
+    }
   };
   
   const navigationItems = [
@@ -232,7 +248,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           </div>
           
           <div className="flex items-center ml-auto gap-2">
-            <ThemeToggle />
+            <ThemeToggle isDarkTheme={isDarkTheme} toggleTheme={toggleTheme} />
             
             <div className="relative">
               <Button variant="ghost" className="flex items-center gap-2">

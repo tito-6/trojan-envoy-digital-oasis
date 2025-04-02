@@ -1,16 +1,18 @@
-
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Calendar, User, Tag, ArrowRight, Share } from "lucide-react";
-import Header from "@/components/common/Header";
-import Footer from "@/components/common/Footer";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { storageService } from "@/lib/storage";
-import { ContentItem } from "@/lib/types";
-import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/lib/i18n";
+import React, { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { CalendarDays, User, Tag, Clock, ChevronLeft } from 'lucide-react';
+import { Header } from '@/components/common/Header';
+import Footer from '@/components/common/Footer';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { storageService } from '@/lib/storage';
+import { formatDate } from '@/lib/utils';
+import { ContentItem } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/lib/i18n';
 
 const BlogPost: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -107,7 +109,7 @@ const BlogPost: React.FC = () => {
         <article className="max-w-3xl mx-auto">
           <div className="mb-8">
             <Link to="/blog" className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ChevronLeft className="w-4 h-4 mr-2" />
               {t("Back to all posts")}
             </Link>
             
@@ -120,8 +122,8 @@ const BlogPost: React.FC = () => {
               
               {blogPost.lastUpdated && (
                 <div className="flex items-center text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4 mr-1" />
-                  <span>{new Date(blogPost.publishDate || blogPost.lastUpdated).toLocaleDateString()}</span>
+                  <CalendarDays className="w-4 h-4 mr-1" />
+                  <span>{formatDate(blogPost.publishDate || blogPost.lastUpdated)}</span>
                 </div>
               )}
               

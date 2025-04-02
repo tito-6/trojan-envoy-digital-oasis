@@ -14,3 +14,10 @@ export function formatDate(date: string | Date): string {
     day: 'numeric'
   });
 }
+
+// Add a function to get icon by name as a replacement for iconLibrary
+export function getIconByName(iconName: string) {
+  // This function would normally map icon names to actual icon components
+  // For now, we'll return a default icon or null
+  return null;
+}
