@@ -1,8 +1,9 @@
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Header from "@/components/common/Header";
+import { Header } from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
-import ServiceDetailComponent from "@/components/services/ServiceDetail";
+import { ServiceDetail as ServiceDetailComponent } from "@/components/services/ServiceDetail";
 import ServicesCTA from "@/components/services/ServicesCTA";
 import { storageService } from "@/lib/storage";
 import { ContentItem } from "@/lib/types";
@@ -14,6 +15,22 @@ const ServiceDetailPage: React.FC = () => {
   const { t } = useLanguage();
   const [service, setService] = useState<ContentItem | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDarkTheme, setIsDarkTheme] = useState(
+    localStorage.getItem("theme") === "dark" || 
+    (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches)
+  );
+  
+  const toggleTheme = () => {
+    if (document.documentElement.classList.contains("dark")) {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      setIsDarkTheme(false);
+    } else {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+      setIsDarkTheme(true);
+    }
+  };
   
   useEffect(() => {
     if (slug) {
@@ -170,7 +187,7 @@ const ServiceDetailPage: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen">
-        <Header />
+        <Header isDarkTheme={isDarkTheme} toggleTheme={toggleTheme} />
         <main className="flex items-center justify-center py-40">
           <div className="animate-pulse">
             <div className="h-8 w-64 bg-secondary rounded"></div>
@@ -184,7 +201,7 @@ const ServiceDetailPage: React.FC = () => {
   if (!service) {
     return (
       <div className="min-h-screen">
-        <Header />
+        <Header isDarkTheme={isDarkTheme} toggleTheme={toggleTheme} />
         <main className="flex flex-col items-center justify-center py-40 text-center px-4">
           <h1 className="text-3xl font-bold mb-4">{t('nav.services')}</h1>
           <p className="text-muted-foreground mb-6">{t('service.not.found')}</p>
@@ -196,7 +213,7 @@ const ServiceDetailPage: React.FC = () => {
   
   return (
     <div className="min-h-screen">
-      <Header />
+      <Header isDarkTheme={isDarkTheme} toggleTheme={toggleTheme} />
       
       <main>
         <ServiceDetailComponent service={service} />

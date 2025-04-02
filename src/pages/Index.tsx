@@ -1,23 +1,47 @@
-import React from "react";
-import { useOutletContext } from "react-router-dom";
-import { useLanguage } from "@/lib/i18n";
-import { storageService } from "@/lib/storage";
-import { ContentItem } from "@/lib/types";
-import { Header } from "@/components/common/Header";
-import Hero from "@/components/home/Hero";
-import Services from "@/components/home/Services";
-import About from "@/components/home/About";
-import References from "@/components/home/References";
-import Contact from "@/components/home/Contact";
-import HomeFAQ from "@/components/home/HomeFAQ";
-import Footer from "@/components/common/Footer";
+
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ArrowRight } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n';
+import { Header } from '@/components/common/Header';
+import Footer from '@/components/common/Footer';
+import Hero from '@/components/home/Hero';
+import Services from '@/components/home/Services';
+import About from '@/components/home/About';
+import Contact from '@/components/home/Contact';
+import References from '@/components/home/References';
+import HomeFAQ from '@/components/home/HomeFAQ';
 
 const Index: React.FC = () => {
   const { t } = useLanguage();
-  const [update, forceUpdate] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isDarkTheme, setIsDarkTheme] = useState(
+    localStorage.getItem("theme") === "dark" || 
+    (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches)
+  );
 
   useEffect(() => {
-    // Add fade-in animation to elements with the fade-in-element class
+    // Simulate loading animation
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+
+    // Set up theme toggle function
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+      setIsDarkTheme(true);
+    } else if (savedTheme === "light") {
+      document.documentElement.classList.remove("dark");
+      setIsDarkTheme(false);
+    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      document.documentElement.classList.add("dark");
+      setIsDarkTheme(true);
+    }
+
+    // Add fade-in animation to elements
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -27,70 +51,56 @@ const Index: React.FC = () => {
       });
     }, { threshold: 0.1 });
 
-    const elements = document.querySelectorAll(".should-animate");
-    elements.forEach((el) => observer.observe(el));
+    const animatedElements = document.querySelectorAll(".should-animate");
+    animatedElements.forEach((el) => observer.observe(el));
 
-    // Get header settings for the page title
-    const headerSettings = storageService.getHeaderSettings();
-    document.title = `${t('hero.title')} | ${headerSettings.siteTitle}`;
-
-    // Set up storage listeners for live updates
-    const aboutUpdateListener = () => {
-      // Force re-render when about settings change
-      forceUpdate(prev => !prev);
-    };
-    
-    const referencesUpdateListener = () => {
-      // Force re-render when references settings change
-      forceUpdate(prev => !prev);
-    };
-    
-    const faqUpdateListener = () => {
-      // Force re-render when FAQ settings change
-      forceUpdate(prev => !prev);
-    };
-    
-    const contactUpdateListener = () => {
-      // Force re-render when contact settings change
-      forceUpdate(prev => !prev);
-    };
-    
-    const footerUpdateListener = () => {
-      // Force re-render when footer settings change
-      forceUpdate(prev => !prev);
-    };
-    
-    // Subscribe to settings updates
-    const unsubscribeAbout = storageService.addEventListener('about-settings-updated', aboutUpdateListener);
-    const unsubscribeReferences = storageService.addEventListener('references-settings-updated', referencesUpdateListener);
-    const unsubscribeFAQ = storageService.addEventListener('faq-settings-updated', faqUpdateListener);
-    const unsubscribeContact = storageService.addEventListener('contact-settings-updated', contactUpdateListener);
-    const unsubscribeFooter = storageService.addEventListener('footer-settings-updated', footerUpdateListener);
-    
+    // Cleanup function
     return () => {
+      clearTimeout(timer);
       observer.disconnect();
-      unsubscribeAbout();
-      unsubscribeReferences();
-      unsubscribeFAQ();
-      unsubscribeContact();
-      unsubscribeFooter();
     };
-  }, [t]);
+  }, []);
+
+  const toggleTheme = () => {
+    if (document.documentElement.classList.contains("dark")) {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      setIsDarkTheme(false);
+    } else {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+      setIsDarkTheme(true);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <Header isDarkTheme={isDarkTheme} toggleTheme={toggleTheme} />
+        <div className="container py-20 space-y-12">
+          <Skeleton className="h-[500px] w-full rounded-xl" />
+          <Skeleton className="h-[300px] w-full rounded-xl" />
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
-      <Header />
+      <Header isDarkTheme={isDarkTheme} toggleTheme={toggleTheme} />
       
       <main>
         <Hero />
         <Services />
-        <About key={`about-${update}`} />
-        <References key={`references-${update}`} />
-        <HomeFAQ key={`faq-${update}`} />
-        <Contact key={`contact-${update}`} />
+        <About />
+        <References />
+        <HomeFAQ />
+        <Contact />
       </main>
       
-      <Footer key={`footer-${update}`} />
+      <Footer />
     </div>
   );
 };

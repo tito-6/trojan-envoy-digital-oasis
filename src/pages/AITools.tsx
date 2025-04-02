@@ -1,6 +1,6 @@
 
-import React, { useEffect } from "react";
-import Header from "@/components/common/Header";
+import React, { useEffect, useState } from "react";
+import { Header } from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
 import { useLanguage } from "@/lib/i18n";
 import { Sparkles, Bot, FileSearch, Gauge, Clock } from "lucide-react";
@@ -48,8 +48,25 @@ const AIToolsCard: React.FC<{
 
 const AITools: React.FC = () => {
   const { t } = useLanguage();
+  const [isDarkTheme, setIsDarkTheme] = useState(
+    localStorage.getItem("theme") === "dark" || 
+    (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches)
+  );
 
   useEffect(() => {
+    // Set up theme toggle function
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+      setIsDarkTheme(true);
+    } else if (savedTheme === "light") {
+      document.documentElement.classList.remove("dark");
+      setIsDarkTheme(false);
+    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      document.documentElement.classList.add("dark");
+      setIsDarkTheme(true);
+    }
+
     // Fade in animation
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -68,6 +85,18 @@ const AITools: React.FC = () => {
 
     return () => observer.disconnect();
   }, []);
+
+  const toggleTheme = () => {
+    if (document.documentElement.classList.contains("dark")) {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      setIsDarkTheme(false);
+    } else {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+      setIsDarkTheme(true);
+    }
+  };
 
   const aiTools = [
     {
@@ -89,7 +118,7 @@ const AITools: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <Header />
+      <Header isDarkTheme={isDarkTheme} toggleTheme={toggleTheme} />
       
       <main>
         {/* Hero Section */}
