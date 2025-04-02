@@ -25,6 +25,25 @@ const Footer: React.FC = () => {
   // Replace {year} with current year in copyright text
   const copyrightText = settings.copyrightText.replace('{year}', currentYear.toString());
 
+  // Helper function to safely render description content
+  const renderDescription = () => {
+    const description = settings.companyInfo.description;
+    
+    if (typeof description === 'string') {
+      return description;
+    }
+    
+    if (description && 
+        typeof description === 'object' && 
+        'blocks' in description && 
+        Array.isArray(description.blocks) && 
+        description.blocks.length > 0) {
+      return description.blocks[0].text || '';
+    }
+    
+    return '';
+  };
+
   return (
     <footer className="bg-secondary text-secondary-foreground pt-16 pb-8">
       <div className="container mx-auto px-4">
@@ -36,17 +55,7 @@ const Footer: React.FC = () => {
             </Link>
             <div 
               className="text-muted-foreground mt-4 max-w-md"
-              dangerouslySetInnerHTML={{ __html: 
-                typeof settings.companyInfo.description === 'string' 
-                  ? settings.companyInfo.description 
-                  : (typeof settings.companyInfo.description === 'object' && 
-                     settings.companyInfo.description !== null && 
-                     'blocks' in settings.companyInfo.description &&
-                     Array.isArray(settings.companyInfo.description.blocks) && 
-                     settings.companyInfo.description.blocks.length > 0) 
-                      ? settings.companyInfo.description.blocks[0].text || '' 
-                      : ''
-              }}
+              dangerouslySetInnerHTML={{ __html: renderDescription() }}
             />
 
             <div className="mt-6 space-y-3">

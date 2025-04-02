@@ -205,16 +205,13 @@ const Contact: React.FC = () => {
         delete formattedData.countryCode;
       }
       
-      const contactRequest: Partial<ContactRequest> = {
+      const contactRequest: Omit<ContactRequest, 'id' | 'dateSubmitted' | 'status'> = {
         name: formattedData.name as string,
         email: formattedData.email as string,
-        subject: formattedData.subject as string,
         message: formattedData.message as string,
+        subject: formattedData.subject as string | undefined,
+        phone: phoneField ? formattedData[phoneField.name] as string : undefined,
       };
-      
-      if (phoneField) {
-        contactRequest.phone = formattedData[phoneField.name] as string;
-      }
       
       storageService.addContactRequest(contactRequest);
       
