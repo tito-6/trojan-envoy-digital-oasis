@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from "react";
+import { storageService } from "@/lib/storage";
+import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useNavigate } from "react-router-dom";
+import { Trash, Plus, X, Edit } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -12,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -21,12 +24,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import AdminLayout from "@/components/admin/AdminLayout";
 import {
   Dialog,
   DialogContent,
@@ -36,85 +36,93 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash, Edit, Save, X } from "lucide-react";
-import { storageService } from "@/lib/storage";
-import { FooterSettings, FooterSection, FooterLink, SocialLink } from "@/lib/types";
-
-// Define the schema for footer settings form
-const footerSettingsSchema = z.object({
-  companyInfo: z.object({
-    description: z.string().min(1, "Description is required"),
-    address: z.string().min(1, "Address is required"),
-    phone: z.string().min(1, "Phone number is required"),
-    email: z.string().email("Invalid email address"),
-  }),
-  copyrightText: z.string().min(1, "Copyright text is required"),
-  privacyPolicyLink: z.string().min(1, "Privacy policy link is required"),
-  termsOfServiceLink: z.string().min(1, "Terms of service link is required"),
-});
-
-type FooterSettingsFormValues = z.infer<typeof footerSettingsSchema>;
-
-// Schema for social link form
-const socialLinkSchema = z.object({
-  platform: z.string().min(1, "Platform name is required"),
-  icon: z.string().min(1, "Icon name is required"),
-  url: z.string().url("Must be a valid URL"),
-});
-
-type SocialLinkFormValues = z.infer<typeof socialLinkSchema>;
-
-// Schema for footer section form
-const footerSectionSchema = z.object({
-  title: z.string().min(1, "Section title is required"),
-});
-
-type FooterSectionFormValues = z.infer<typeof footerSectionSchema>;
-
-// Schema for footer link form
-const footerLinkSchema = z.object({
-  label: z.string().min(1, "Link label is required"),
-  path: z.string().min(1, "Link path is required"),
-  isExternal: z.boolean().default(false),
-});
-
-type FooterLinkFormValues = z.infer<typeof footerLinkSchema>;
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FooterSettings, FooterSettingsFormData, SocialLink, FooterSection, FooterLink } from "@/lib/types";
 
 const FooterSettingsPage: React.FC = () => {
   const { toast } = useToast();
-  const navigate = useNavigate();
-  const [settings, setSettings] = useState<FooterSettings>(storageService.getFooterSettings());
+  const [settings, setSettings] = useState<FooterSettings>(() => storageService.getFooterSettings());
   const [activeTab, setActiveTab] = useState("general");
-  const [socialDialogOpen, setSocialDialogOpen] = useState(false);
-  const [editingSocialId, setEditingSocialId] = useState<number | null>(null);
-  const [sectionDialogOpen, setSectionDialogOpen] = useState(false);
-  const [editingSectionId, setEditingSectionId] = useState<number | null>(null);
-  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
-  const [editingLinkId, setEditingLinkId] = useState<number | null>(null);
-  const [currentSectionId, setCurrentSectionId] = useState<number | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [footerSectionToEdit, setFooterSectionToEdit] = useState<FooterSection | null>(null);
+  const [editingSocialLink, setEditingSocialLink] = useState<SocialLink | null>(null);
+  const [editingFooterLink, setEditingFooterLink] = useState<{ sectionId: number; link: FooterLink } | null>(null);
+  const [showAddSocialLinkDialog, setShowAddSocialLinkDialog] = useState(false);
+  const [showAddSectionDialog, setShowAddSectionDialog] = useState(false);
+  const [showAddLinkDialog, setShowAddLinkDialog] = useState(false);
+  const [selectedSectionId, setSelectedSectionId] = useState<number | null>(null);
 
-  // Form for general footer settings
-  const form = useForm<FooterSettingsFormValues>({
-    resolver: zodResolver(footerSettingsSchema),
+  useEffect(() => {
+    const handleFooterSettingsChange = () => {
+      setSettings(storageService.getFooterSettings());
+    };
+
+    const unsubscribe = storageService.addEventListener('footer-settings-updated', handleFooterSettingsChange);
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const generalFormSchema = z.object({
+    copyrightText: z.string().min(1, "Copyright text is required"),
+    privacyPolicyLink: z.string().min(1, "Privacy policy link is required"),
+    termsOfServiceLink: z.string().min(1, "Terms of service link is required"),
+    companyInfo: z.object({
+      description: z.string().min(1, "Company description is required"),
+      address: z.string().min(1, "Company address is required"),
+      phone: z.string().min(1, "Company phone is required"),
+      email: z.string().email("Invalid email address").min(1, "Company email is required"),
+    }),
+  });
+
+  const socialLinkSchema = z.object({
+    platform: z.string().min(1, "Platform name is required"),
+    icon: z.string().min(1, "Icon is required"),
+    url: z.string().url("Must be a valid URL").min(1, "URL is required"),
+  });
+
+  const footerSectionSchema = z.object({
+    title: z.string().min(1, "Section title is required"),
+  });
+
+  const footerLinkSchema = z.object({
+    label: z.string().min(1, "Link label is required"),
+    path: z.string().min(1, "Link path is required"),
+    isExternal: z.boolean().default(false),
+  });
+
+  const generalForm = useForm<z.infer<typeof generalFormSchema>>({
+    resolver: zodResolver(generalFormSchema),
     defaultValues: {
+      copyrightText: settings.copyrightText,
+      privacyPolicyLink: settings.privacyPolicyLink,
+      termsOfServiceLink: settings.termsOfServiceLink,
       companyInfo: {
-        description: settings.companyInfo.description as string,
+        description: settings.companyInfo.description,
         address: settings.companyInfo.address,
         phone: settings.companyInfo.phone,
         email: settings.companyInfo.email,
       },
-      copyrightText: settings.copyrightText,
-      privacyPolicyLink: settings.privacyPolicyLink,
-      termsOfServiceLink: settings.termsOfServiceLink,
     },
   });
 
-  // Form for social links
-  const socialForm = useForm<SocialLinkFormValues>({
+  const socialLinkForm = useForm<z.infer<typeof socialLinkSchema>>({
     resolver: zodResolver(socialLinkSchema),
     defaultValues: {
       platform: "",
@@ -123,16 +131,14 @@ const FooterSettingsPage: React.FC = () => {
     },
   });
 
-  // Form for footer sections
-  const sectionForm = useForm<FooterSectionFormValues>({
+  const footerSectionForm = useForm<z.infer<typeof footerSectionSchema>>({
     resolver: zodResolver(footerSectionSchema),
     defaultValues: {
       title: "",
     },
   });
 
-  // Form for footer links
-  const linkForm = useForm<FooterLinkFormValues>({
+  const footerLinkForm = useForm<z.infer<typeof footerLinkSchema>>({
     resolver: zodResolver(footerLinkSchema),
     defaultValues: {
       label: "",
@@ -141,856 +147,1024 @@ const FooterSettingsPage: React.FC = () => {
     },
   });
 
-  useEffect(() => {
-    // Update the form values when settings change
-    form.reset({
-      companyInfo: {
-        description: settings.companyInfo.description as string,
-        address: settings.companyInfo.address,
-        phone: settings.companyInfo.phone,
-        email: settings.companyInfo.email,
-      },
-      copyrightText: settings.copyrightText,
-      privacyPolicyLink: settings.privacyPolicyLink,
-      termsOfServiceLink: settings.termsOfServiceLink,
-    });
-  }, [settings, form]);
-
-  // Save general footer settings
-  const onSubmit = (data: FooterSettingsFormValues) => {
+  const onUpdateGeneralSettings = (data: z.infer<typeof generalFormSchema>) => {
     try {
-      // Use updateFooterSettings instead of setFooterSettings
-      storageService.updateFooterSettings({
-        ...settings,
-        companyInfo: data.companyInfo,
+      const updatedSettings: Partial<FooterSettings> = {
         copyrightText: data.copyrightText,
         privacyPolicyLink: data.privacyPolicyLink,
         termsOfServiceLink: data.termsOfServiceLink,
-      });
+        companyInfo: {
+          description: data.companyInfo.description,
+          address: data.companyInfo.address,
+          phone: data.companyInfo.phone,
+          email: data.companyInfo.email,
+        },
+      };
 
-      setSettings(storageService.getFooterSettings());
-
+      storageService.updateFooterSettings(updatedSettings);
+      
       toast({
-        title: "Footer settings updated",
-        description: "The footer settings have been successfully updated.",
+        title: "Settings updated",
+        description: "Footer general settings have been updated successfully.",
       });
     } catch (error) {
       console.error("Error updating footer settings:", error);
       toast({
-        title: "Error updating footer settings",
-        description: "There was an error updating the footer settings. Please try again.",
+        title: "Error",
+        description: "There was an error updating the footer settings.",
         variant: "destructive",
       });
     }
   };
 
-  // Add or update social link
-  const handleSocialSubmit = (data: SocialLinkFormValues) => {
+  const handleAddSocialLink = (data: z.infer<typeof socialLinkSchema>) => {
     try {
-      if (editingSocialId) {
-        // Update existing social link
-        storageService.updateFooterSettings({
-          ...settings,
-          socialLinks: settings.socialLinks.map(link => 
-            link.id === editingSocialId 
-              ? { ...link, ...data, order: link.order } 
-              : link
-          ),
-        });
-      } else {
-        // Add new social link
-        const newId = settings.socialLinks.length > 0 
-          ? Math.max(...settings.socialLinks.map(link => link.id)) + 1 
-          : 1;
-        
-        storageService.updateFooterSettings({
-          ...settings,
-          socialLinks: [
-            ...settings.socialLinks,
-            { 
-              id: newId, 
-              ...data, 
-              order: settings.socialLinks.length 
-            }
-          ],
-        });
-      }
+      const updatedSettings = { ...settings };
+      const newSocialLink: SocialLink = {
+        id: Date.now(),
+        platform: data.platform,
+        icon: data.icon,
+        url: data.url,
+        order: updatedSettings.socialLinks.length,
+      };
 
-      setSettings(storageService.getFooterSettings());
-      setSocialDialogOpen(false);
-      setEditingSocialId(null);
-      socialForm.reset();
-
+      updatedSettings.socialLinks.push(newSocialLink);
+      storageService.updateFooterSettings(updatedSettings);
+      
+      setShowAddSocialLinkDialog(false);
+      socialLinkForm.reset();
+      
       toast({
-        title: editingSocialId ? "Social link updated" : "Social link added",
-        description: `The social link has been successfully ${editingSocialId ? "updated" : "added"}.`,
+        title: "Social link added",
+        description: `${data.platform} social link has been added successfully.`,
       });
     } catch (error) {
-      console.error("Error managing social link:", error);
+      console.error("Error adding social link:", error);
       toast({
-        title: "Error managing social link",
-        description: "There was an error managing the social link. Please try again.",
+        title: "Error",
+        description: "There was an error adding the social link.",
         variant: "destructive",
       });
     }
   };
 
-  // Delete social link
-  const handleDeleteSocial = (id: number) => {
+  const handleUpdateSocialLink = (data: z.infer<typeof socialLinkSchema>) => {
+    if (!editingSocialLink) return;
+
     try {
-      storageService.updateFooterSettings({
-        ...settings,
-        socialLinks: settings.socialLinks.filter(link => link.id !== id),
+      const updatedSettings = { ...settings };
+      const index = updatedSettings.socialLinks.findIndex(link => link.id === editingSocialLink.id);
+      
+      if (index !== -1) {
+        updatedSettings.socialLinks[index] = {
+          ...updatedSettings.socialLinks[index],
+          platform: data.platform,
+          icon: data.icon,
+          url: data.url,
+        };
+        
+        storageService.updateFooterSettings(updatedSettings);
+        
+        setEditingSocialLink(null);
+        socialLinkForm.reset();
+        
+        toast({
+          title: "Social link updated",
+          description: `${data.platform} social link has been updated successfully.`,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating social link:", error);
+      toast({
+        title: "Error",
+        description: "There was an error updating the social link.",
+        variant: "destructive",
       });
+    }
+  };
 
-      setSettings(storageService.getFooterSettings());
-
+  const handleDeleteSocialLink = (id: number) => {
+    try {
+      const updatedSettings = { ...settings };
+      updatedSettings.socialLinks = updatedSettings.socialLinks.filter(link => link.id !== id);
+      
+      storageService.updateFooterSettings(updatedSettings);
+      
       toast({
         title: "Social link deleted",
-        description: "The social link has been successfully deleted.",
+        description: "The social link has been deleted successfully.",
       });
     } catch (error) {
       console.error("Error deleting social link:", error);
       toast({
-        title: "Error deleting social link",
-        description: "There was an error deleting the social link. Please try again.",
+        title: "Error",
+        description: "There was an error deleting the social link.",
         variant: "destructive",
       });
     }
   };
 
-  // Edit social link - open dialog with current values
-  const handleEditSocial = (link: SocialLink) => {
-    setEditingSocialId(link.id);
-    socialForm.reset({
-      platform: link.platform,
-      icon: link.icon,
-      url: link.url,
-    });
-    setSocialDialogOpen(true);
-  };
-
-  // Add or update footer section
-  const handleSectionSubmit = (data: FooterSectionFormValues) => {
+  const handleAddFooterSection = (data: z.infer<typeof footerSectionSchema>) => {
     try {
-      if (editingSectionId) {
-        // Update existing section
-        storageService.updateFooterSettings({
-          ...settings,
-          footerSections: settings.footerSections.map(section => 
-            section.id === editingSectionId 
-              ? { ...section, title: data.title } 
-              : section
-          ),
-        });
-      } else {
-        // Add new section
-        const newId = settings.footerSections.length > 0 
-          ? Math.max(...settings.footerSections.map(section => section.id)) + 1 
-          : 1;
-        
-        storageService.updateFooterSettings({
-          ...settings,
-          footerSections: [
-            ...settings.footerSections,
-            { 
-              id: newId, 
-              title: data.title, 
-              links: [],
-              order: settings.footerSections.length 
-            }
-          ],
-        });
-      }
-
-      setSettings(storageService.getFooterSettings());
-      setSectionDialogOpen(false);
-      setEditingSectionId(null);
-      sectionForm.reset();
-
+      const updatedSettings = { ...settings };
+      const newSection: FooterSection = {
+        id: Date.now(),
+        title: data.title,
+        links: [],
+        order: updatedSettings.footerSections.length,
+      };
+      
+      updatedSettings.footerSections.push(newSection);
+      storageService.updateFooterSettings(updatedSettings);
+      
+      setShowAddSectionDialog(false);
+      footerSectionForm.reset();
+      
       toast({
-        title: editingSectionId ? "Footer section updated" : "Footer section added",
-        description: `The footer section has been successfully ${editingSectionId ? "updated" : "added"}.`,
+        title: "Footer section added",
+        description: `${data.title} section has been added successfully.`,
       });
     } catch (error) {
-      console.error("Error managing footer section:", error);
+      console.error("Error adding footer section:", error);
       toast({
-        title: "Error managing footer section",
-        description: "There was an error managing the footer section. Please try again.",
+        title: "Error",
+        description: "There was an error adding the footer section.",
         variant: "destructive",
       });
     }
   };
 
-  // Delete footer section
-  const handleDeleteSection = (id: number) => {
+  const handleUpdateFooterSection = (data: z.infer<typeof footerSectionSchema>) => {
+    if (!footerSectionToEdit) return;
+
     try {
-      storageService.updateFooterSettings({
-        ...settings,
-        footerSections: settings.footerSections.filter(section => section.id !== id),
+      const updatedSettings = { ...settings };
+      const index = updatedSettings.footerSections.findIndex(section => section.id === footerSectionToEdit.id);
+      
+      if (index !== -1) {
+        updatedSettings.footerSections[index] = {
+          ...updatedSettings.footerSections[index],
+          title: data.title,
+        };
+        
+        storageService.updateFooterSettings(updatedSettings);
+        
+        setFooterSectionToEdit(null);
+        footerSectionForm.reset();
+        
+        toast({
+          title: "Footer section updated",
+          description: `${data.title} section has been updated successfully.`,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating footer section:", error);
+      toast({
+        title: "Error",
+        description: "There was an error updating the footer section.",
+        variant: "destructive",
       });
+    }
+  };
 
-      setSettings(storageService.getFooterSettings());
-
+  const handleDeleteFooterSection = (id: number) => {
+    try {
+      const updatedSettings = { ...settings };
+      updatedSettings.footerSections = updatedSettings.footerSections.filter(section => section.id !== id);
+      
+      storageService.updateFooterSettings(updatedSettings);
+      
       toast({
         title: "Footer section deleted",
-        description: "The footer section has been successfully deleted.",
+        description: "The footer section has been deleted successfully.",
       });
     } catch (error) {
       console.error("Error deleting footer section:", error);
       toast({
-        title: "Error deleting footer section",
-        description: "There was an error deleting the footer section. Please try again.",
+        title: "Error",
+        description: "There was an error deleting the footer section.",
         variant: "destructive",
       });
     }
   };
 
-  // Edit footer section - open dialog with current values
-  const handleEditSection = (section: FooterSection) => {
-    setEditingSectionId(section.id);
-    sectionForm.reset({
-      title: section.title,
-    });
-    setSectionDialogOpen(true);
-  };
-
-  // Add or update footer link
-  const handleLinkSubmit = (data: FooterLinkFormValues) => {
-    if (!currentSectionId) return;
+  const handleAddFooterLink = (data: z.infer<typeof footerLinkSchema>) => {
+    if (!selectedSectionId) return;
 
     try {
-      const section = settings.footerSections.find(s => s.id === currentSectionId);
-      if (!section) return;
-
-      if (editingLinkId) {
-        // Update existing link
-        const updatedSections = settings.footerSections.map(section => {
-          if (section.id === currentSectionId) {
-            return {
-              ...section,
-              links: section.links.map(link => 
-                link.id === editingLinkId 
-                  ? { ...link, ...data } 
-                  : link
-              )
-            };
-          }
-          return section;
-        });
-
-        storageService.updateFooterSettings({
-          ...settings,
-          footerSections: updatedSections,
-        });
-      } else {
-        // Add new link
-        const newId = section.links.length > 0 
-          ? Math.max(...section.links.map(link => link.id)) + 1 
-          : 1;
+      const updatedSettings = { ...settings };
+      const sectionIndex = updatedSettings.footerSections.findIndex(section => section.id === selectedSectionId);
+      
+      if (sectionIndex !== -1) {
+        const newLink: FooterLink = {
+          id: Date.now(),
+          label: data.label,
+          path: data.path,
+          isExternal: data.isExternal,
+          order: updatedSettings.footerSections[sectionIndex].links.length,
+        };
         
-        const updatedSections = settings.footerSections.map(section => {
-          if (section.id === currentSectionId) {
-            return {
-              ...section,
-              links: [
-                ...section.links,
-                { 
-                  id: newId, 
-                  ...data, 
-                  order: section.links.length 
-                }
-              ]
-            };
-          }
-          return section;
-        });
-
-        storageService.updateFooterSettings({
-          ...settings,
-          footerSections: updatedSections,
+        updatedSettings.footerSections[sectionIndex].links.push(newLink);
+        storageService.updateFooterSettings(updatedSettings);
+        
+        setShowAddLinkDialog(false);
+        setSelectedSectionId(null);
+        footerLinkForm.reset();
+        
+        toast({
+          title: "Footer link added",
+          description: `${data.label} link has been added successfully.`,
         });
       }
-
-      setSettings(storageService.getFooterSettings());
-      setLinkDialogOpen(false);
-      setEditingLinkId(null);
-      setCurrentSectionId(null);
-      linkForm.reset();
-
-      toast({
-        title: editingLinkId ? "Footer link updated" : "Footer link added",
-        description: `The footer link has been successfully ${editingLinkId ? "updated" : "added"}.`,
-      });
     } catch (error) {
-      console.error("Error managing footer link:", error);
+      console.error("Error adding footer link:", error);
       toast({
-        title: "Error managing footer link",
-        description: "There was an error managing the footer link. Please try again.",
+        title: "Error",
+        description: "There was an error adding the footer link.",
         variant: "destructive",
       });
     }
   };
 
-  // Delete footer link
-  const handleDeleteLink = (sectionId: number, linkId: number) => {
+  const handleUpdateFooterLink = (data: z.infer<typeof footerLinkSchema>) => {
+    if (!editingFooterLink) return;
+
     try {
-      const updatedSections = settings.footerSections.map(section => {
-        if (section.id === sectionId) {
-          return {
-            ...section,
-            links: section.links.filter(link => link.id !== linkId)
+      const updatedSettings = { ...settings };
+      const sectionIndex = updatedSettings.footerSections.findIndex(
+        section => section.id === editingFooterLink.sectionId
+      );
+      
+      if (sectionIndex !== -1) {
+        const linkIndex = updatedSettings.footerSections[sectionIndex].links.findIndex(
+          link => link.id === editingFooterLink.link.id
+        );
+        
+        if (linkIndex !== -1) {
+          updatedSettings.footerSections[sectionIndex].links[linkIndex] = {
+            ...updatedSettings.footerSections[sectionIndex].links[linkIndex],
+            label: data.label,
+            path: data.path,
+            isExternal: data.isExternal,
           };
+          
+          storageService.updateFooterSettings(updatedSettings);
+          
+          setEditingFooterLink(null);
+          footerLinkForm.reset();
+          
+          toast({
+            title: "Footer link updated",
+            description: `${data.label} link has been updated successfully.`,
+          });
         }
-        return section;
-      });
-
-      storageService.updateFooterSettings({
-        ...settings,
-        footerSections: updatedSections,
-      });
-
-      setSettings(storageService.getFooterSettings());
-
+      }
+    } catch (error) {
+      console.error("Error updating footer link:", error);
       toast({
-        title: "Footer link deleted",
-        description: "The footer link has been successfully deleted.",
+        title: "Error",
+        description: "There was an error updating the footer link.",
+        variant: "destructive",
       });
+    }
+  };
+
+  const handleDeleteFooterLink = (sectionId: number, linkId: number) => {
+    try {
+      const updatedSettings = { ...settings };
+      const sectionIndex = updatedSettings.footerSections.findIndex(section => section.id === sectionId);
+      
+      if (sectionIndex !== -1) {
+        updatedSettings.footerSections[sectionIndex].links = updatedSettings.footerSections[sectionIndex].links.filter(
+          link => link.id !== linkId
+        );
+        
+        storageService.updateFooterSettings(updatedSettings);
+        
+        toast({
+          title: "Footer link deleted",
+          description: "The footer link has been deleted successfully.",
+        });
+      }
     } catch (error) {
       console.error("Error deleting footer link:", error);
       toast({
-        title: "Error deleting footer link",
-        description: "There was an error deleting the footer link. Please try again.",
+        title: "Error",
+        description: "There was an error deleting the footer link.",
         variant: "destructive",
       });
     }
   };
 
-  // Edit footer link - open dialog with current values
-  const handleEditLink = (sectionId: number, link: FooterLink) => {
-    setCurrentSectionId(sectionId);
-    setEditingLinkId(link.id);
-    linkForm.reset({
-      label: link.label,
-      path: link.path,
-      isExternal: link.isExternal,
-    });
-    setLinkDialogOpen(true);
-  };
-
-  // Add new link to section
-  const handleAddLink = (sectionId: number) => {
-    setCurrentSectionId(sectionId);
-    setEditingLinkId(null);
-    linkForm.reset({
-      label: "",
-      path: "",
-      isExternal: false,
-    });
-    setLinkDialogOpen(true);
-  };
-
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6">Footer Settings</h1>
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="social">Social Links</TabsTrigger>
-          <TabsTrigger value="sections">Footer Sections</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="general">
-          <Card>
-            <CardHeader>
-              <CardTitle>General Footer Settings</CardTitle>
-              <CardDescription>
-                Manage general footer information, including company details and copyright information.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="companyInfo.description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Company Description</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Enter company description..." 
-                              {...field} 
-                              rows={4}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            A brief description of your company that will appear in the footer.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="companyInfo.address"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Company Address</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder="Enter company address..." 
-                              {...field} 
-                              rows={3}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            The physical address of your company.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="companyInfo.phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone Number</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Enter phone number..." 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Contact phone number for your company.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="companyInfo.email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email Address</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Enter email address..." 
-                              {...field} 
-                              type="email"
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Contact email for your company.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="copyrightText"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Copyright Text</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Enter copyright text..." 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Copyright information. Use {'{year}'} to insert the current year automatically.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="privacyPolicyLink"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Privacy Policy Link</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Enter privacy policy link..." 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Link to your privacy policy page (e.g., /privacy-policy).
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="termsOfServiceLink"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Terms of Service Link</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Enter terms of service link..." 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Link to your terms of service page (e.g., /terms-of-service).
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <Button type="submit">Save Settings</Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="social">
-          <Card>
-            <CardHeader>
-              <CardTitle>Social Media Links</CardTitle>
-              <CardDescription>
-                Manage social media links that appear in the footer.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4">
-                <Button onClick={() => {
-                  setEditingSocialId(null);
-                  socialForm.reset({
-                    platform: "",
-                    icon: "",
-                    url: "",
-                  });
-                  setSocialDialogOpen(true);
-                }}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Social Link
-                </Button>
-              </div>
-              
-              <div className="space-y-4">
-                {settings.socialLinks.length === 0 ? (
-                  <p className="text-muted-foreground">No social links added yet.</p>
-                ) : (
-                  settings.socialLinks.map(link => (
-                    <div key={link.id} className="flex items-center justify-between p-4 border rounded-md">
-                      <div>
-                        <h3 className="font-medium">{link.platform}</h3>
-                        <p className="text-sm text-muted-foreground">Icon: {link.icon}</p>
-                        <p className="text-sm text-muted-foreground truncate max-w-xs">URL: {link.url}</p>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleEditSocial(link)}>
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button variant="destructive" size="sm" onClick={() => handleDeleteSocial(link.id)}>
-                          <Trash className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              
-              <Dialog open={socialDialogOpen} onOpenChange={setSocialDialogOpen}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{editingSocialId ? "Edit Social Link" : "Add Social Link"}</DialogTitle>
-                    <DialogDescription>
-                      {editingSocialId 
-                        ? "Update the details of this social media link." 
-                        : "Add a new social media link to your footer."}
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <Form {...socialForm}>
-                    <form onSubmit={socialForm.handleSubmit(handleSocialSubmit)} className="space-y-4">
+    <AdminLayout>
+      <div className="container mx-auto py-10">
+        <h1 className="text-3xl font-bold mb-8">Footer Settings</h1>
+
+        <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="social">Social Links</TabsTrigger>
+            <TabsTrigger value="sections">Footer Sections</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="general">
+            <Card>
+              <CardHeader>
+                <CardTitle>General Footer Settings</CardTitle>
+                <CardDescription>
+                  Configure the general settings for your website footer
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...generalForm}>
+                  <form onSubmit={generalForm.handleSubmit(onUpdateGeneralSettings)} className="space-y-6">
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Company Information</h3>
                       <FormField
-                        control={socialForm.control}
-                        name="platform"
+                        control={generalForm.control}
+                        name="companyInfo.description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Platform Name</FormLabel>
+                            <FormLabel>Company Description</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., Facebook, Twitter, LinkedIn" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={socialForm.control}
-                        name="icon"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Icon Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., facebook, twitter, linkedin" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Enter the Font Awesome icon name without "fa-" prefix.
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={socialForm.control}
-                        name="url"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>URL</FormLabel>
-                            <FormControl>
-                              <Input placeholder="https://..." {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Full URL to your social media profile.
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <DialogFooter>
-                        <Button type="submit">
-                          {editingSocialId ? "Update" : "Add"} Social Link
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="sections">
-          <Card>
-            <CardHeader>
-              <CardTitle>Footer Sections and Links</CardTitle>
-              <CardDescription>
-                Manage footer navigation sections and links.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-4">
-                <Button onClick={() => {
-                  setEditingSectionId(null);
-                  sectionForm.reset({
-                    title: "",
-                  });
-                  setSectionDialogOpen(true);
-                }}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Footer Section
-                </Button>
-              </div>
-              
-              {settings.footerSections.length === 0 ? (
-                <p className="text-muted-foreground">No footer sections added yet.</p>
-              ) : (
-                <Accordion type="multiple" className="w-full">
-                  {settings.footerSections.map((section) => (
-                    <AccordionItem key={section.id} value={section.id.toString()}>
-                      <div className="flex items-center justify-between">
-                        <AccordionTrigger className="flex-1">
-                          {section.title}
-                        </AccordionTrigger>
-                        <div className="flex space-x-2 px-4">
-                          <Button variant="outline" size="sm" onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditSection(section);
-                          }}>
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button variant="destructive" size="sm" onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteSection(section.id);
-                          }}>
-                            <Trash className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      <AccordionContent>
-                        <div className="pl-4 pt-2 pb-1">
-                          <div className="flex justify-between items-center mb-2">
-                            <h4 className="text-sm font-medium">Links</h4>
-                            <Button variant="outline" size="sm" onClick={() => handleAddLink(section.id)}>
-                              <Plus className="w-3 h-3 mr-1" />
-                              Add Link
-                            </Button>
-                          </div>
-                          
-                          {section.links.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No links added to this section yet.</p>
-                          ) : (
-                            <div className="space-y-2">
-                              {section.links.map((link) => (
-                                <div key={link.id} className="flex items-center justify-between p-2 border rounded-md">
-                                  <div>
-                                    <p className="font-medium">{link.label}</p>
-                                    <p className="text-xs text-muted-foreground">Path: {link.path}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {link.isExternal ? "External link" : "Internal link"}
-                                    </p>
-                                  </div>
-                                  <div className="flex space-x-1">
-                                    <Button variant="ghost" size="sm" onClick={() => handleEditLink(section.id, link)}>
-                                      <Edit className="w-3 h-3" />
-                                    </Button>
-                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteLink(section.id, link.id)}>
-                                      <Trash className="w-3 h-3" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              )}
-              
-              <Dialog open={sectionDialogOpen} onOpenChange={setSectionDialogOpen}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{editingSectionId ? "Edit Footer Section" : "Add Footer Section"}</DialogTitle>
-                    <DialogDescription>
-                      {editingSectionId 
-                        ? "Update the title of this footer section." 
-                        : "Add a new section to your footer navigation."}
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <Form {...sectionForm}>
-                    <form onSubmit={sectionForm.handleSubmit(handleSectionSubmit)} className="space-y-4">
-                      <FormField
-                        control={sectionForm.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Section Title</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., Company, Services, Resources" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <DialogFooter>
-                        <Button type="submit">
-                          {editingSectionId ? "Update" : "Add"} Section
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-              
-              <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{editingLinkId ? "Edit Footer Link" : "Add Footer Link"}</DialogTitle>
-                    <DialogDescription>
-                      {editingLinkId 
-                        ? "Update the details of this footer link." 
-                        : "Add a new link to this footer section."}
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <Form {...linkForm}>
-                    <form onSubmit={linkForm.handleSubmit(handleLinkSubmit)} className="space-y-4">
-                      <FormField
-                        control={linkForm.control}
-                        name="label"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Link Label</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., About Us, Services, Contact" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={linkForm.control}
-                        name="path"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Link Path</FormLabel>
-                            <FormControl>
-                              <Input placeholder="e.g., /about, /services, https://example.com" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              Use relative paths for internal links (e.g., /about) or full URLs for external links.
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={linkForm.control}
-                        name="isExternal"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
+                              <Textarea
+                                placeholder="Enter company description"
+                                {...field}
+                                rows={3}
                               />
                             </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>External Link</FormLabel>
-                              <FormDescription>
-                                Check this box if this link should open in a new tab.
-                              </FormDescription>
-                            </div>
+                            <FormMessage />
                           </FormItem>
                         )}
                       />
-                      
-                      <DialogFooter>
-                        <Button type="submit">
-                          {editingLinkId ? "Update" : "Add"} Link
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+                      <FormField
+                        control={generalForm.control}
+                        name="companyInfo.address"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Address</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Enter company address"
+                                {...field}
+                                rows={2}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={generalForm.control}
+                          name="companyInfo.phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Phone</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter phone number"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={generalForm.control}
+                          name="companyInfo.email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter email address"
+                                  type="email"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Footer Text</h3>
+                      <FormField
+                        control={generalForm.control}
+                        name="copyrightText"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Copyright Text</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="© {year} Company Name. All rights reserved."
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Use {"{year}"} to automatically insert the current year.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-medium">Legal Links</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={generalForm.control}
+                          name="privacyPolicyLink"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Privacy Policy Link</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="/privacy-policy"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={generalForm.control}
+                          name="termsOfServiceLink"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Terms of Service Link</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="/terms-of-service"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <Button type="submit" className="mt-4">
+                      Save Changes
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="social">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Social Media Links</CardTitle>
+                    <CardDescription>
+                      Configure the social media links for your website footer
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => {
+                    setShowAddSocialLinkDialog(true);
+                    socialLinkForm.reset();
+                  }}>
+                    <Plus className="mr-2 h-4 w-4" /> Add Social Link
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Platform</TableHead>
+                      <TableHead>Icon</TableHead>
+                      <TableHead>URL</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {settings.socialLinks.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center">
+                          No social links added yet.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      settings.socialLinks.map((link) => (
+                        <TableRow key={link.id}>
+                          <TableCell>{link.platform}</TableCell>
+                          <TableCell>{link.icon}</TableCell>
+                          <TableCell className="max-w-xs truncate">
+                            <a
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 hover:underline"
+                            >
+                              {link.url}
+                            </a>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setEditingSocialLink(link);
+                                  socialLinkForm.reset({
+                                    platform: link.platform,
+                                    icon: link.icon,
+                                    url: link.url,
+                                  });
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteSocialLink(link.id)}
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="sections">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Footer Sections</CardTitle>
+                    <CardDescription>
+                      Configure the sections and links in your website footer
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => {
+                    setShowAddSectionDialog(true);
+                    footerSectionForm.reset();
+                  }}>
+                    <Plus className="mr-2 h-4 w-4" /> Add Section
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="single" collapsible className="w-full">
+                  {settings.footerSections.length === 0 ? (
+                    <div className="text-center py-4">
+                      No footer sections added yet.
+                    </div>
+                  ) : (
+                    settings.footerSections.map((section) => (
+                      <AccordionItem key={section.id} value={section.id.toString()}>
+                        <div className="flex items-center">
+                          <AccordionTrigger className="flex-1">
+                            {section.title}
+                          </AccordionTrigger>
+                          <div className="flex gap-2 pr-4">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setFooterSectionToEdit(section);
+                                footerSectionForm.reset({
+                                  title: section.title,
+                                });
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteFooterSection(section.id);
+                              }}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <AccordionContent>
+                          <div className="pt-4">
+                            <div className="flex justify-between items-center mb-4">
+                              <h4 className="text-sm font-medium">Links</h4>
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedSectionId(section.id);
+                                  setShowAddLinkDialog(true);
+                                  footerLinkForm.reset();
+                                }}
+                              >
+                                <Plus className="mr-2 h-3 w-3" /> Add Link
+                              </Button>
+                            </div>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Label</TableHead>
+                                  <TableHead>Path</TableHead>
+                                  <TableHead>External</TableHead>
+                                  <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {section.links.length === 0 ? (
+                                  <TableRow>
+                                    <TableCell colSpan={4} className="text-center">
+                                      No links added to this section yet.
+                                    </TableCell>
+                                  </TableRow>
+                                ) : (
+                                  section.links.map((link) => (
+                                    <TableRow key={link.id}>
+                                      <TableCell>{link.label}</TableCell>
+                                      <TableCell className="max-w-xs truncate">{link.path}</TableCell>
+                                      <TableCell>{link.isExternal ? "Yes" : "No"}</TableCell>
+                                      <TableCell className="text-right">
+                                        <div className="flex justify-end gap-2">
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => {
+                                              setEditingFooterLink({
+                                                sectionId: section.id,
+                                                link: link,
+                                              });
+                                              footerLinkForm.reset({
+                                                label: link.label,
+                                                path: link.path,
+                                                isExternal: link.isExternal,
+                                              });
+                                            }}
+                                          >
+                                            <Edit className="h-4 w-4" />
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleDeleteFooterLink(section.id, link.id)}
+                                          >
+                                            <Trash className="h-4 w-4" />
+                                          </Button>
+                                        </div>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))
+                                )}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))
+                  )}
+                </Accordion>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Add Social Link Dialog */}
+      <Dialog open={showAddSocialLinkDialog} onOpenChange={setShowAddSocialLinkDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Social Link</DialogTitle>
+            <DialogDescription>
+              Add a new social media link to your footer.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...socialLinkForm}>
+            <form onSubmit={socialLinkForm.handleSubmit(handleAddSocialLink)} className="space-y-4">
+              <FormField
+                control={socialLinkForm.control}
+                name="platform"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Platform Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. LinkedIn, Twitter, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={socialLinkForm.control}
+                name="icon"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Icon Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. linkedin, twitter, etc." {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Icon name from Font Awesome (without the "fa-" prefix)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={socialLinkForm.control}
+                name="url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit">Add Social Link</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Social Link Dialog */}
+      <Dialog open={!!editingSocialLink} onOpenChange={(open) => !open && setEditingSocialLink(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Social Link</DialogTitle>
+            <DialogDescription>
+              Update the social media link.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...socialLinkForm}>
+            <form onSubmit={socialLinkForm.handleSubmit(handleUpdateSocialLink)} className="space-y-4">
+              <FormField
+                control={socialLinkForm.control}
+                name="platform"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Platform Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. LinkedIn, Twitter, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={socialLinkForm.control}
+                name="icon"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Icon Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. linkedin, twitter, etc." {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Icon name from Font Awesome (without the "fa-" prefix)
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={socialLinkForm.control}
+                name="url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>URL</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit">Update Social Link</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Footer Section Dialog */}
+      <Dialog open={showAddSectionDialog} onOpenChange={setShowAddSectionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Footer Section</DialogTitle>
+            <DialogDescription>
+              Add a new section to your footer.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...footerSectionForm}>
+            <form onSubmit={footerSectionForm.handleSubmit(handleAddFooterSection)} className="space-y-4">
+              <FormField
+                control={footerSectionForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Section Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Company, Resources, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit">Add Section</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Footer Section Dialog */}
+      <Dialog open={!!footerSectionToEdit} onOpenChange={(open) => !open && setFooterSectionToEdit(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Footer Section</DialogTitle>
+            <DialogDescription>
+              Update the footer section title.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...footerSectionForm}>
+            <form onSubmit={footerSectionForm.handleSubmit(handleUpdateFooterSection)} className="space-y-4">
+              <FormField
+                control={footerSectionForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Section Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Company, Resources, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit">Update Section</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Footer Link Dialog */}
+      <Dialog open={showAddLinkDialog} onOpenChange={setShowAddLinkDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Footer Link</DialogTitle>
+            <DialogDescription>
+              Add a new link to the footer section.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...footerLinkForm}>
+            <form onSubmit={footerLinkForm.handleSubmit(handleAddFooterLink)} className="space-y-4">
+              <FormField
+                control={footerLinkForm.control}
+                name="label"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Link Label</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. About Us, Services, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={footerLinkForm.control}
+                name="path"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Link Path</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. /about, /services, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={footerLinkForm.control}
+                name="isExternal"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>External Link</FormLabel>
+                      <FormDescription>
+                        Check if this link should open in a new tab
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit">Add Link</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Footer Link Dialog */}
+      <Dialog open={!!editingFooterLink} onOpenChange={(open) => !open && setEditingFooterLink(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Footer Link</DialogTitle>
+            <DialogDescription>
+              Update the footer link.
+            </DialogDescription>
+          </DialogHeader>
+          <Form {...footerLinkForm}>
+            <form onSubmit={footerLinkForm.handleSubmit(handleUpdateFooterLink)} className="space-y-4">
+              <FormField
+                control={footerLinkForm.control}
+                name="label"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Link Label</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. About Us, Services, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={footerLinkForm.control}
+                name="path"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Link Path</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. /about, /services, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={footerLinkForm.control}
+                name="isExternal"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>External Link</FormLabel>
+                      <FormDescription>
+                        Check if this link should open in a new tab
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <DialogFooter>
+                <Button type="submit">Update Link</Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </AdminLayout>
   );
 };
 

@@ -206,11 +206,12 @@ const Contact: React.FC = () => {
       }
       
       const contactRequest: Omit<ContactRequest, 'id' | 'dateSubmitted' | 'status'> = {
-        name: formattedData.name as string,
-        email: formattedData.email as string,
-        message: formattedData.message as string,
+        name: formattedData.name as string || "",
+        email: formattedData.email as string || "",
+        message: formattedData.message as string || "",
+        phone: phoneField ? (formattedData[phoneField.name] as string) : undefined,
+        company: formattedData.company as string | undefined,
         subject: formattedData.subject as string | undefined,
-        phone: phoneField ? formattedData[phoneField.name] as string : undefined,
       };
       
       storageService.addContactRequest(contactRequest);

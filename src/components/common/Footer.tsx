@@ -38,7 +38,7 @@ const Footer: React.FC = () => {
         'blocks' in description && 
         Array.isArray(description.blocks) && 
         description.blocks.length > 0) {
-      return description.blocks[0].text || '';
+      return description.blocks[0]?.text || '';
     }
     
     return '';

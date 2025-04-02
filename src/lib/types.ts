@@ -287,6 +287,39 @@ export interface FooterSettings {
   lastUpdated: string;
 }
 
+export interface FooterSettingsFormData {
+  id: number;
+  companyInfo: {
+    description: string;
+    address: string;
+    phone: string;
+    email: string;
+  };
+  socialLinks: Array<{
+    id: number;
+    platform: string;
+    icon: string;
+    url: string;
+    order: number;
+  }>;
+  footerSections: Array<{
+    id: number;
+    title: string;
+    order: number;
+    links: Array<{
+      id: number;
+      label: string;
+      path: string;
+      order: number;
+      isExternal: boolean;
+    }>;
+  }>;
+  copyrightText: string;
+  privacyPolicyLink: string;
+  termsOfServiceLink: string;
+  lastUpdated: string;
+}
+
 export interface SocialLink {
   id: number;
   platform: string;
