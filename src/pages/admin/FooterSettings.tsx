@@ -1,972 +1,954 @@
-import React, { useState, useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { storageService } from '@/lib/storage';
-import { FooterSettings as FooterSettingsType, SocialLink, FooterSection, FooterLink } from '@/lib/types';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowUpDown, Check, Edit, Trash2, Plus, Info, MoveUp, MoveDown, Save, X } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import IconSelector from '@/components/admin/icon-management/IconSelector';
-import RichTextEditor from '@/components/admin/richtext/RichTextEditor';
 
-const socialLinkSchema = z.object({
-  platform: z.string().min(2, {
-    message: 'Platform must be at least 2 characters.',
-  }),
-  icon: z.string().min(2, {
-    message: 'Icon must be at least 2 characters.',
-  }),
-  url: z.string().url({
-    message: 'Please enter a valid URL.',
-  }),
-});
+import React, { useState, useEffect } from "react";
+import AdminLayout from "@/components/admin/AdminLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer";
+import { FooterSettings, SocialLink, FooterSection, FooterLink } from "@/lib/types";
+import { storageService } from "@/lib/storage";
+import { ChevronDownIcon, PlusCircle, Trash2, ChevronUpIcon, ChevronDown } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-const footerSectionSchema = z.object({
-  title: z.string().min(2, {
-    message: 'Title must be at least 2 characters.',
-  }),
-});
+// Initial default settings for a new footer
+const defaultFooterSettings: FooterSettings = {
+  id: 1,
+  companyInfo: {
+    description: "We are a leading digital transformation agency specializing in enterprise solutions. Trusted by global brands to deliver innovative technology solutions.",
+    address: "123 Tech Boulevard, Innovation District\nSan Francisco, CA 94107",
+    phone: "+1 (555) 123-4567",
+    email: "contact@trojanenvoy.com"
+  },
+  socialLinks: [
+    {
+      id: 1,
+      platform: "Facebook",
+      icon: "facebook",
+      url: "https://facebook.com",
+      order: 1
+    },
+    {
+      id: 2,
+      platform: "Twitter",
+      icon: "twitter",
+      url: "https://twitter.com",
+      order: 2
+    },
+    {
+      id: 3,
+      platform: "LinkedIn",
+      icon: "linkedin",
+      url: "https://linkedin.com",
+      order: 3
+    }
+  ],
+  footerSections: [
+    {
+      id: 1,
+      title: "Company",
+      links: [
+        { id: 1, label: "About Us", path: "/about", order: 1, isExternal: false },
+        { id: 2, label: "Careers", path: "/careers", order: 2, isExternal: false },
+        { id: 3, label: "Contact", path: "/contact", order: 3, isExternal: false }
+      ],
+      order: 1
+    },
+    {
+      id: 2,
+      title: "Services",
+      links: [
+        { id: 4, label: "Development", path: "/services/development", order: 1, isExternal: false },
+        { id: 5, label: "Design", path: "/services/design", order: 2, isExternal: false },
+        { id: 6, label: "Consulting", path: "/services/consulting", order: 3, isExternal: false }
+      ],
+      order: 2
+    },
+    {
+      id: 3,
+      title: "Resources",
+      links: [
+        { id: 7, label: "Blog", path: "/blog", order: 1, isExternal: false },
+        { id: 8, label: "Case Studies", path: "/case-studies", order: 2, isExternal: false },
+        { id: 9, label: "Documentation", path: "https://docs.trojanenvoy.com", order: 3, isExternal: true }
+      ],
+      order: 3
+    }
+  ],
+  copyrightText: "© {year} Trojan Envoy. All rights reserved.",
+  privacyPolicyLink: "/privacy-policy",
+  termsOfServiceLink: "/terms-of-service",
+  lastUpdated: new Date().toISOString()
+};
 
-const footerLinkSchema = z.object({
-  label: z.string().min(2, {
-    message: 'Label must be at least 2 characters.',
-  }),
-  path: z.string().min(1, {
-    message: 'Path must be at least 1 character.',
-  }),
-});
-
-const FooterSettings: React.FC = () => {
-  const { toast } = useToast();
-  const [settings, setSettings] = useState<FooterSettingsType>(storageService.getFooterSettings());
-  const [updating, setUpdating] = useState(false);
-  const [companyDescription, setCompanyDescription] = useState(settings.companyInfo.description);
-  const [address, setAddress] = useState(settings.companyInfo.address);
-  const [phone, setPhone] = useState(settings.companyInfo.phone);
-  const [email, setEmail] = useState(settings.companyInfo.email);
-  const [socialLinks, setSocialLinks] = useState<SocialLink[]>(settings.socialLinks);
-  const [newSocialLink, setNewSocialLink] = useState<Omit<SocialLink, 'id' | 'order'>>({
-    platform: '',
-    icon: '',
-    url: '',
-  });
+const FooterSettingsPage: React.FC = () => {
+  const [settings, setSettings] = useState<FooterSettings>(defaultFooterSettings);
+  const [activeTab, setActiveTab] = useState<string>("company-info");
   const [editingSocialLink, setEditingSocialLink] = useState<SocialLink | null>(null);
-  const [footerSections, setFooterSections] = useState<FooterSection[]>(settings.footerSections);
-  const [newFooterSection, setNewFooterSection] = useState<Omit<FooterSection, 'id' | 'order'>>({
-    title: '',
-    links: [],
-  });
-  const [editingFooterSection, setEditingFooterSection] = useState<FooterSection | null>(null);
-  const [newFooterLink, setNewFooterLink] = useState<Omit<FooterLink, 'id' | 'order'>>({
-    label: '',
-    path: '',
-    isExternal: false,
-  });
-  const [editingFooterLink, setEditingFooterLink] = useState<FooterLink | null>(null);
-  const [selectedSectionId, setSelectedSectionId] = useState<number | null>(null);
-  const [copyrightText, setCopyrightText] = useState(settings.copyrightText);
-  const [privacyPolicyLink, setPrivacyPolicyLink] = useState(settings.privacyPolicyLink);
-  const [termsOfServiceLink, setTermsOfServiceLink] = useState(settings.termsOfServiceLink);
-
+  const [showSocialLinkDialog, setShowSocialLinkDialog] = useState<boolean>(false);
+  const [editingSection, setEditingSection] = useState<FooterSection | null>(null);
+  const [showSectionDialog, setShowSectionDialog] = useState<boolean>(false);
+  const [editingLink, setEditingLink] = useState<{link: FooterLink, sectionId: number} | null>(null);
+  const [showLinkDialog, setShowLinkDialog] = useState<boolean>(false);
+  const { toast } = useToast();
+  
   useEffect(() => {
-    setSettings(storageService.getFooterSettings());
+    // Load existing settings from storage
+    const existingSettings = storageService.getFooterSettings();
+    if (existingSettings) {
+      setSettings(existingSettings);
+    }
   }, []);
-
-  useEffect(() => {
-    setCompanyDescription(settings.companyInfo.description);
-    setAddress(settings.companyInfo.address);
-    setPhone(settings.companyInfo.phone);
-    setEmail(settings.companyInfo.email);
-    setSocialLinks(settings.socialLinks);
-    setFooterSections(settings.footerSections);
-    setCopyrightText(settings.copyrightText);
-    setPrivacyPolicyLink(settings.privacyPolicyLink);
-    setTermsOfServiceLink(settings.termsOfServiceLink);
-  }, [settings]);
-
-  const handleUpdate = async () => {
-    setUpdating(true);
-    try {
-      const updatedSettings: Partial<FooterSettingsType> = {
-        ...settings,
-        companyInfo: {
-          description: companyDescription,
-          address: address,
-          phone: phone,
-          email: email,
-        },
-        socialLinks: socialLinks,
-        footerSections: footerSections,
-        copyrightText: copyrightText,
-        privacyPolicyLink: privacyPolicyLink,
-        termsOfServiceLink: termsOfServiceLink,
-      };
-      storageService.updateFooterSettings(updatedSettings);
-      toast({
-        title: 'Footer settings updated successfully!',
-      });
-    } catch (error) {
-      toast({
-        title: 'Failed to update footer settings.',
-        variant: 'destructive',
-      });
-    } finally {
-      setUpdating(false);
-    }
+  
+  // Function to update the settings in state and storage
+  const updateSettings = (newSettings: FooterSettings) => {
+    setSettings(newSettings);
+    storageService.setFooterSettings(newSettings);
+    storageService.dispatchEvent('footer-settings-updated');
   };
-
-  const addSocialLink = () => {
-    try {
-      socialLinkSchema.parse(newSocialLink);
-      const newLink = { ...newSocialLink, id: Date.now(), order: socialLinks.length };
-      setSocialLinks([...socialLinks, newLink]);
-      setNewSocialLink({ platform: '', icon: '', url: '' });
-    } catch (error: any) {
-      toast({
-        title: 'Failed to add social link.',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const updateSocialLink = (id: number) => {
-    try {
-      socialLinkSchema.parse(editingSocialLink);
-      const updatedLinks = socialLinks.map((link) =>
-        link.id === id ? { ...link, ...editingSocialLink } : link
-      );
-      setSocialLinks(updatedLinks);
-      setEditingSocialLink(null);
-    } catch (error: any) {
-      toast({
-        title: 'Failed to update social link.',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const deleteSocialLink = (id: number) => {
-    const updatedLinks = socialLinks.filter((link) => link.id !== id);
-    setSocialLinks(updatedLinks);
-  };
-
-  const moveSocialLink = (index: number, direction: 'up' | 'down') => {
-    const newSocialLinks = [...socialLinks];
-    if (direction === 'up' && index > 0) {
-      [newSocialLinks[index], newSocialLinks[index - 1]] = [
-        newSocialLinks[index - 1],
-        newSocialLinks[index],
-      ];
-    } else if (direction === 'down' && index < socialLinks.length - 1) {
-      [newSocialLinks[index], newSocialLinks[index + 1]] = [
-        newSocialLinks[index + 1],
-        newSocialLinks[index],
-      ];
-    }
-    setSocialLinks(newSocialLinks);
-  };
-
-  const addFooterSection = () => {
-    try {
-      footerSectionSchema.parse(newFooterSection);
-      const newSection = { ...newFooterSection, id: Date.now(), order: footerSections.length };
-      setFooterSections([...footerSections, newSection]);
-      setNewFooterSection({ title: '', links: [] });
-    } catch (error: any) {
-      toast({
-        title: 'Failed to add footer section.',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const updateFooterSection = (id: number) => {
-    try {
-      footerSectionSchema.parse(editingFooterSection);
-      const updatedSections = footerSections.map((section) =>
-        section.id === id ? { ...section, ...editingFooterSection } : section
-      );
-      setFooterSections(updatedSections);
-      setEditingFooterSection(null);
-    } catch (error: any) {
-      toast({
-        title: 'Failed to update footer section.',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const deleteFooterSection = (id: number) => {
-    const updatedSections = footerSections.filter((section) => section.id !== id);
-    setFooterSections(updatedSections);
-  };
-
-  const addFooterLink = (sectionId: number) => {
-    try {
-      footerLinkSchema.parse(newFooterLink);
-      const updatedSections = footerSections.map((section) => {
-        if (section.id === sectionId) {
-          const newLink = { ...newFooterLink, id: Date.now(), order: section.links.length };
-          return { ...section, links: [...section.links, newLink] };
-        }
-        return section;
-      });
-      setFooterSections(updatedSections);
-      setNewFooterLink({ label: '', path: '', isExternal: false });
-      setSelectedSectionId(null);
-    } catch (error: any) {
-      toast({
-        title: 'Failed to add footer link.',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const updateFooterLink = (sectionId: number, linkId: number) => {
-    try {
-      footerLinkSchema.parse(editingFooterLink);
-      const updatedSections = footerSections.map((section) => {
-        if (section.id === sectionId) {
-          const updatedLinks = section.links.map((link) =>
-            link.id === linkId ? { ...link, ...editingFooterLink } : link
-          );
-          return { ...section, links: updatedLinks };
-        }
-        return section;
-      });
-      setFooterSections(updatedSections);
-      setEditingFooterLink(null);
-    } catch (error: any) {
-      toast({
-        title: 'Failed to update footer link.',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const deleteFooterLink = (sectionId: number, linkId: number) => {
-    const updatedSections = footerSections.map((section) => {
-      if (section.id === sectionId) {
-        const updatedLinks = section.links.filter((link) => link.id !== linkId);
-        return { ...section, links: updatedLinks };
-      }
-      return section;
+  
+  // Handle changes in company info
+  const handleCompanyInfoChange = (field: keyof typeof settings.companyInfo, value: string) => {
+    updateSettings({
+      ...settings,
+      companyInfo: {
+        ...settings.companyInfo,
+        [field]: value
+      },
+      lastUpdated: new Date().toISOString()
     });
-    setFooterSections(updatedSections);
   };
-
-  const handleRichTextChange = (content: any) => {
-    setCompanyDescription(content);
+  
+  // Handle changes in copyright text
+  const handleCopyrightTextChange = (value: string) => {
+    updateSettings({
+      ...settings,
+      copyrightText: value,
+      lastUpdated: new Date().toISOString()
+    });
   };
-
+  
+  // Handle changes in policy links
+  const handlePolicyLinkChange = (field: 'privacyPolicyLink' | 'termsOfServiceLink', value: string) => {
+    updateSettings({
+      ...settings,
+      [field]: value,
+      lastUpdated: new Date().toISOString()
+    });
+  };
+  
+  // Add a new social link
+  const addSocialLink = () => {
+    setEditingSocialLink({
+      id: Date.now(),
+      platform: "",
+      icon: "",
+      url: "",
+      order: settings.socialLinks.length + 1
+    });
+    setShowSocialLinkDialog(true);
+  };
+  
+  // Edit an existing social link
+  const editSocialLink = (link: SocialLink) => {
+    setEditingSocialLink(link);
+    setShowSocialLinkDialog(true);
+  };
+  
+  // Save social link from dialog
+  const saveSocialLink = () => {
+    if (editingSocialLink) {
+      let newLinks: SocialLink[];
+      
+      if (settings.socialLinks.some(link => link.id === editingSocialLink.id)) {
+        // Update existing link
+        newLinks = settings.socialLinks.map(link => 
+          link.id === editingSocialLink.id ? editingSocialLink : link
+        );
+      } else {
+        // Add new link
+        newLinks = [...settings.socialLinks, editingSocialLink];
+      }
+      
+      updateSettings({
+        ...settings,
+        socialLinks: newLinks,
+        lastUpdated: new Date().toISOString()
+      });
+      
+      toast({
+        title: "Success",
+        description: "Social link has been saved.",
+      });
+      
+      setShowSocialLinkDialog(false);
+      setEditingSocialLink(null);
+    }
+  };
+  
+  // Delete a social link
+  const deleteSocialLink = (id: number) => {
+    const newLinks = settings.socialLinks.filter(link => link.id !== id);
+    
+    updateSettings({
+      ...settings,
+      socialLinks: newLinks,
+      lastUpdated: new Date().toISOString()
+    });
+    
+    toast({
+      title: "Success",
+      description: "Social link has been deleted.",
+    });
+  };
+  
+  // Reorder social links
+  const moveSocialLink = (id: number, direction: 'up' | 'down') => {
+    const linkIndex = settings.socialLinks.findIndex(link => link.id === id);
+    if (linkIndex === -1) return;
+    
+    const newLinks = [...settings.socialLinks];
+    
+    // Swap with adjacent item
+    if (direction === 'up' && linkIndex > 0) {
+      [newLinks[linkIndex], newLinks[linkIndex - 1]] = [newLinks[linkIndex - 1], newLinks[linkIndex]];
+    } else if (direction === 'down' && linkIndex < newLinks.length - 1) {
+      [newLinks[linkIndex], newLinks[linkIndex + 1]] = [newLinks[linkIndex + 1], newLinks[linkIndex]];
+    }
+    
+    // Update order values
+    const updatedLinks = newLinks.map((link, index) => ({
+      ...link,
+      order: index + 1
+    }));
+    
+    updateSettings({
+      ...settings,
+      socialLinks: updatedLinks,
+      lastUpdated: new Date().toISOString()
+    });
+  };
+  
+  // Add a new section
+  const addSection = () => {
+    setEditingSection({
+      id: Date.now(),
+      title: "",
+      links: [],
+      order: settings.footerSections.length + 1
+    });
+    setShowSectionDialog(true);
+  };
+  
+  // Edit an existing section
+  const editSection = (section: FooterSection) => {
+    setEditingSection(section);
+    setShowSectionDialog(true);
+  };
+  
+  // Save section from dialog
+  const saveSection = () => {
+    if (editingSection) {
+      let newSections: FooterSection[];
+      
+      if (settings.footerSections.some(section => section.id === editingSection.id)) {
+        // Update existing section
+        newSections = settings.footerSections.map(section => 
+          section.id === editingSection.id ? editingSection : section
+        );
+      } else {
+        // Add new section
+        newSections = [...settings.footerSections, editingSection];
+      }
+      
+      updateSettings({
+        ...settings,
+        footerSections: newSections,
+        lastUpdated: new Date().toISOString()
+      });
+      
+      toast({
+        title: "Success",
+        description: "Footer section has been saved.",
+      });
+      
+      setShowSectionDialog(false);
+      setEditingSection(null);
+    }
+  };
+  
+  // Delete a section
+  const deleteSection = (id: number) => {
+    const newSections = settings.footerSections.filter(section => section.id !== id);
+    
+    updateSettings({
+      ...settings,
+      footerSections: newSections,
+      lastUpdated: new Date().toISOString()
+    });
+    
+    toast({
+      title: "Success",
+      description: "Footer section has been deleted.",
+    });
+  };
+  
+  // Reorder sections
+  const moveSection = (id: number, direction: 'up' | 'down') => {
+    const sectionIndex = settings.footerSections.findIndex(section => section.id === id);
+    if (sectionIndex === -1) return;
+    
+    const newSections = [...settings.footerSections];
+    
+    // Swap with adjacent item
+    if (direction === 'up' && sectionIndex > 0) {
+      [newSections[sectionIndex], newSections[sectionIndex - 1]] = [newSections[sectionIndex - 1], newSections[sectionIndex]];
+    } else if (direction === 'down' && sectionIndex < newSections.length - 1) {
+      [newSections[sectionIndex], newSections[sectionIndex + 1]] = [newSections[sectionIndex + 1], newSections[sectionIndex]];
+    }
+    
+    // Update order values
+    const updatedSections = newSections.map((section, index) => ({
+      ...section,
+      order: index + 1
+    }));
+    
+    updateSettings({
+      ...settings,
+      footerSections: updatedSections,
+      lastUpdated: new Date().toISOString()
+    });
+  };
+  
+  // Add a new link to a section
+  const addLink = (sectionId: number) => {
+    setEditingLink({
+      link: {
+        id: Date.now(),
+        label: "",
+        path: "",
+        order: settings.footerSections.find(s => s.id === sectionId)?.links.length || 0 + 1,
+        isExternal: false
+      },
+      sectionId
+    });
+    setShowLinkDialog(true);
+  };
+  
+  // Edit an existing link
+  const editLink = (link: FooterLink, sectionId: number) => {
+    setEditingLink({ link, sectionId });
+    setShowLinkDialog(true);
+  };
+  
+  // Save link from dialog
+  const saveLink = () => {
+    if (editingLink) {
+      const { link, sectionId } = editingLink;
+      const sectionIndex = settings.footerSections.findIndex(s => s.id === sectionId);
+      
+      if (sectionIndex === -1) return;
+      
+      const section = settings.footerSections[sectionIndex];
+      let newLinks: FooterLink[];
+      
+      if (section.links.some(l => l.id === link.id)) {
+        // Update existing link
+        newLinks = section.links.map(l => l.id === link.id ? link : l);
+      } else {
+        // Add new link
+        newLinks = [...section.links, link];
+      }
+      
+      const updatedSection = {
+        ...section,
+        links: newLinks
+      };
+      
+      const updatedSections = settings.footerSections.map((s, idx) => 
+        idx === sectionIndex ? updatedSection : s
+      );
+      
+      updateSettings({
+        ...settings,
+        footerSections: updatedSections,
+        lastUpdated: new Date().toISOString()
+      });
+      
+      toast({
+        title: "Success",
+        description: "Link has been saved.",
+      });
+      
+      setShowLinkDialog(false);
+      setEditingLink(null);
+    }
+  };
+  
+  // Delete a link
+  const deleteLink = (linkId: number, sectionId: number) => {
+    const sectionIndex = settings.footerSections.findIndex(s => s.id === sectionId);
+    if (sectionIndex === -1) return;
+    
+    const section = settings.footerSections[sectionIndex];
+    const newLinks = section.links.filter(link => link.id !== linkId);
+    
+    const updatedSection = {
+      ...section,
+      links: newLinks
+    };
+    
+    const updatedSections = settings.footerSections.map((s, idx) => 
+      idx === sectionIndex ? updatedSection : s
+    );
+    
+    updateSettings({
+      ...settings,
+      footerSections: updatedSections,
+      lastUpdated: new Date().toISOString()
+    });
+    
+    toast({
+      title: "Success",
+      description: "Link has been deleted.",
+    });
+  };
+  
+  // Reorder links in a section
+  const moveLink = (linkId: number, sectionId: number, direction: 'up' | 'down') => {
+    const sectionIndex = settings.footerSections.findIndex(s => s.id === sectionId);
+    if (sectionIndex === -1) return;
+    
+    const section = settings.footerSections[sectionIndex];
+    const linkIndex = section.links.findIndex(link => link.id === linkId);
+    if (linkIndex === -1) return;
+    
+    const newLinks = [...section.links];
+    
+    // Swap with adjacent item
+    if (direction === 'up' && linkIndex > 0) {
+      [newLinks[linkIndex], newLinks[linkIndex - 1]] = [newLinks[linkIndex - 1], newLinks[linkIndex]];
+    } else if (direction === 'down' && linkIndex < newLinks.length - 1) {
+      [newLinks[linkIndex], newLinks[linkIndex + 1]] = [newLinks[linkIndex + 1], newLinks[linkIndex]];
+    }
+    
+    // Update order values
+    const updatedLinks = newLinks.map((link, index) => ({
+      ...link,
+      order: index + 1
+    }));
+    
+    const updatedSection = {
+      ...section,
+      links: updatedLinks
+    };
+    
+    const updatedSections = settings.footerSections.map((s, idx) => 
+      idx === sectionIndex ? updatedSection : s
+    );
+    
+    updateSettings({
+      ...settings,
+      footerSections: updatedSections,
+      lastUpdated: new Date().toISOString()
+    });
+  };
+  
   return (
-    <div className="container mx-auto py-6 space-y-10">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Footer Settings</h1>
-          <p className="text-muted-foreground">
-            Manage your website footer information and navigation links
-          </p>
+    <AdminLayout>
+      <div className="container mx-auto py-10">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">Footer Settings</h1>
+          <div className="text-sm text-muted-foreground">
+            Last updated: {new Date(settings.lastUpdated).toLocaleString()}
+          </div>
         </div>
-        <Button onClick={handleUpdate} disabled={updating}>
-          {updating ? 'Saving...' : 'Save Changes'}
-        </Button>
-      </div>
-
-      <Tabs defaultValue="company-info">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="company-info">Company Info</TabsTrigger>
-          <TabsTrigger value="navigation">Navigation Links</TabsTrigger>
-          <TabsTrigger value="legal">Legal & Copyright</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="company-info" className="space-y-6 mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Company Information</CardTitle>
-              <CardDescription>
-                Update your company description and contact details
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <FormLabel htmlFor="description">Company Description</FormLabel>
-                <div className="mt-2">
-                  <RichTextEditor
-                    initialContent={companyDescription}
-                    onChange={setCompanyDescription}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid grid-cols-4 w-full max-w-3xl">
+            <TabsTrigger value="company-info">Company Info</TabsTrigger>
+            <TabsTrigger value="social-links">Social Links</TabsTrigger>
+            <TabsTrigger value="footer-sections">Footer Sections</TabsTrigger>
+            <TabsTrigger value="legal">Legal</TabsTrigger>
+          </TabsList>
+          
+          {/* Company Info Tab */}
+          <TabsContent value="company-info" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Company Information</CardTitle>
+                <CardDescription>
+                  Update your company information that appears in the footer
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <FormLabel htmlFor="address">Address</FormLabel>
-                  <Textarea
-                    id="address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Enter your company address"
-                    rows={4}
+                  <Label htmlFor="description">Company Description</Label>
+                  <Textarea 
+                    id="description"
+                    placeholder="Enter company description"
+                    value={settings.companyInfo.description}
+                    onChange={(e) => handleCompanyInfoChange('description', e.target.value)}
+                    className="min-h-[100px]"
                   />
-                  <FormDescription>
-                    Display your physical address. Use line breaks for formatting.
-                  </FormDescription>
                 </div>
-
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <FormLabel htmlFor="phone">Phone Number</FormLabel>
-                    <Input
-                      id="phone"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+1 (555) 123-4567"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <FormLabel htmlFor="email">Email Address</FormLabel>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="contact@example.com"
-                    />
-                  </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="address">Address</Label>
+                  <Textarea 
+                    id="address"
+                    placeholder="Enter company address"
+                    value={settings.companyInfo.address}
+                    onChange={(e) => handleCompanyInfoChange('address', e.target.value)}
+                    className="min-h-[80px]"
+                  />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Social Media Links</CardTitle>
-              <CardDescription>
-                Manage your social media profiles
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-end mb-4">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="flex items-center gap-1">
-                      <Plus className="h-4 w-4" /> Add Social Link
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Social Media Link</DialogTitle>
-                      <DialogDescription>
-                        Add a new social media platform to your footer
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="space-y-2">
-                        <FormLabel htmlFor="new-platform">Platform Name</FormLabel>
-                        <Input
-                          id="new-platform"
-                          value={newSocialLink.platform}
-                          onChange={(e) =>
-                            setNewSocialLink({ ...newSocialLink, platform: e.target.value })
-                          }
-                          placeholder="LinkedIn"
-                        />
+                
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input 
+                    id="phone"
+                    placeholder="Enter phone number"
+                    value={settings.companyInfo.phone}
+                    onChange={(e) => handleCompanyInfoChange('phone', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input 
+                    id="email"
+                    placeholder="Enter email address"
+                    value={settings.companyInfo.email}
+                    onChange={(e) => handleCompanyInfoChange('email', e.target.value)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Social Links Tab */}
+          <TabsContent value="social-links" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Social Media Links</CardTitle>
+                <CardDescription>
+                  Manage your social media links that appear in the footer
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {settings.socialLinks.map((link, index) => (
+                    <div key={link.id} className="flex items-center justify-between border p-3 rounded">
+                      <div>
+                        <p className="font-medium">{link.platform}</p>
+                        <p className="text-sm text-muted-foreground">{link.url}</p>
                       </div>
-                      <div className="space-y-2">
-                        <FormLabel htmlFor="new-icon">Icon Name</FormLabel>
-                        <div className="flex gap-2">
-                          <Input
-                            id="new-icon"
-                            value={newSocialLink.icon}
-                            onChange={(e) =>
-                              setNewSocialLink({ ...newSocialLink, icon: e.target.value })
-                            }
-                            placeholder="linkedin"
-                            className="flex-1"
-                          />
-                          <IconSelector
-                            onSelect={(icon) =>
-                              setNewSocialLink({ ...newSocialLink, icon })
-                            }
-                          />
-                        </div>
-                        <FormDescription>
-                          Enter a Font Awesome icon name, like "linkedin" or "twitter"
-                        </FormDescription>
-                      </div>
-                      <div className="space-y-2">
-                        <FormLabel htmlFor="new-url">URL</FormLabel>
-                        <Input
-                          id="new-url"
-                          value={newSocialLink.url}
-                          onChange={(e) =>
-                            setNewSocialLink({ ...newSocialLink, url: e.target.value })
-                          }
-                          placeholder="https://linkedin.com/company/yourcompany"
-                        />
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => moveSocialLink(link.id, 'up')}
+                          disabled={index === 0}
+                        >
+                          <ChevronUpIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => moveSocialLink(link.id, 'down')}
+                          disabled={index === settings.socialLinks.length - 1}
+                        >
+                          <ChevronDownIcon className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => editSocialLink(link)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => deleteSocialLink(link.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <DialogFooter>
-                      <Button onClick={addSocialLink}>Add Link</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              {socialLinks.length > 0 ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order</TableHead>
-                      <TableHead>Platform</TableHead>
-                      <TableHead>Icon</TableHead>
-                      <TableHead>URL</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {socialLinks.map((link, index) => (
-                      <TableRow key={link.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-2">
-                            <span>{link.order}</span>
-                            <div className="flex flex-col">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => moveSocialLink(index, 'up')}
-                                disabled={index === 0}
-                              >
-                                <MoveUp className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => moveSocialLink(index, 'down')}
-                                disabled={index === socialLinks.length - 1}
-                              >
-                                <MoveDown className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>{link.platform}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <i className={`fab fa-${link.icon} text-primary`}></i>
-                            <span className="text-xs text-muted-foreground">
-                              {link.icon}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-mono text-xs truncate max-w-[200px]">
-                          {link.url}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Edit Social Media Link</DialogTitle>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                  <div className="space-y-2">
-                                    <FormLabel htmlFor={`edit-platform-${link.id}`}>
-                                      Platform Name
-                                    </FormLabel>
-                                    <Input
-                                      id={`edit-platform-${link.id}`}
-                                      value={
-                                        editingSocialLink?.id === link.id
-                                          ? editingSocialLink.platform
-                                          : link.platform
-                                      }
-                                      onChange={(e) =>
-                                        setEditingSocialLink({
-                                          ...editingSocialLink!,
-                                          platform: e.target.value,
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <FormLabel htmlFor={`edit-icon-${link.id}`}>
-                                      Icon Name
-                                    </FormLabel>
-                                    <div className="flex gap-2">
-                                      <Input
-                                        id={`edit-icon-${link.id}`}
-                                        value={
-                                          editingSocialLink?.id === link.id
-                                            ? editingSocialLink.icon
-                                            : link.icon
-                                        }
-                                        onChange={(e) =>
-                                          setEditingSocialLink({
-                                            ...editingSocialLink!,
-                                            icon: e.target.value,
-                                          })
-                                        }
-                                        className="flex-1"
-                                      />
-                                      <IconSelector
-                                        onSelect={(icon) =>
-                                          setEditingSocialLink({
-                                            ...editingSocialLink!,
-                                            icon,
-                                          })
-                                        }
-                                      />
-                                    </div>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <FormLabel htmlFor={`edit-url-${link.id}`}>
-                                      URL
-                                    </FormLabel>
-                                    <Input
-                                      id={`edit-url-${link.id}`}
-                                      value={
-                                        editingSocialLink?.id === link.id
-                                          ? editingSocialLink.url
-                                          : link.url
-                                      }
-                                      onChange={(e) =>
-                                        setEditingSocialLink({
-                                          ...editingSocialLink!,
-                                          url: e.target.value,
-                                        })
-                                      }
-                                    />
-                                  </div>
-                                </div>
-                                <DialogFooter>
-                                  <Button onClick={() => updateSocialLink(link.id)}>
-                                    Save Changes
-                                  </Button>
-                                </DialogFooter>
-                              </DialogContent>
-                            </Dialog>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => deleteSocialLink(link.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              ) : (
-                <div className="text-center py-4 text-muted-foreground">
-                  No social links added yet.
+                  ))}
+                
+                  <Button onClick={addSocialLink} className="w-full mt-4">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Social Link
+                  </Button>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="navigation" className="space-y-6 mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Footer Navigation Sections</CardTitle>
-              <CardDescription>
-                Manage the sections and links in your website footer
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex justify-end mb-4">
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="flex items-center gap-1">
-                      <Plus className="h-4 w-4" /> Add Section
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Footer Section</DialogTitle>
-                      <DialogDescription>
-                        Add a new section to your footer navigation
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="space-y-2">
-                        <FormLabel htmlFor="new-section-title">Section Title</FormLabel>
-                        <Input
-                          id="new-section-title"
-                          value={newFooterSection.title}
-                          onChange={(e) =>
-                            setNewFooterSection({ ...newFooterSection, title: e.target.value })
-                          }
-                          placeholder="Company"
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button onClick={addFooterSection}>Add Section</Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              {footerSections.length > 0 ? (
-                <Accordion type="single" collapsible>
-                  {footerSections.map((section, sectionIndex) => (
-                    <AccordionItem key={section.id} value={`section-${section.id}`}>
-                      <AccordionTrigger className="flex justify-between items-center py-2">
-                        {section.title}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Footer Sections Tab */}
+          <TabsContent value="footer-sections" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Footer Sections</CardTitle>
+                <CardDescription>
+                  Manage the navigation sections that appear in the footer
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="multiple" className="space-y-4">
+                  {settings.footerSections.map((section, sectionIndex) => (
+                    <AccordionItem key={section.id} value={section.id.toString()} className="border p-3 rounded">
+                      <div className="flex items-center justify-between">
+                        <AccordionTrigger className="flex-1 py-0">
+                          <h3 className="font-medium">{section.title}</h3>
+                        </AccordionTrigger>
                         <div className="flex gap-2">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Edit Footer Section</DialogTitle>
-                              </DialogHeader>
-                              <div className="grid gap-4 py-4">
-                                <div className="space-y-2">
-                                  <FormLabel htmlFor={`edit-section-title-${section.id}`}>
-                                    Section Title
-                                  </FormLabel>
-                                  <Input
-                                    id={`edit-section-title-${section.id}`}
-                                    value={
-                                      editingFooterSection?.id === section.id
-                                        ? editingFooterSection.title
-                                        : section.title
-                                    }
-                                    onChange={(e) =>
-                                      setEditingFooterSection({
-                                        ...editingFooterSection!,
-                                        title: e.target.value,
-                                      })
-                                    }
-                                  />
-                                </div>
-                              </div>
-                              <DialogFooter>
-                                <Button onClick={() => updateFooterSection(section.id)}>
-                                  Save Changes
-                                </Button>
-                              </DialogFooter>
-                            </Dialog>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => deleteFooterSection(section.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </Dialog>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              moveSection(section.id, 'up');
+                            }}
+                            disabled={sectionIndex === 0}
+                          >
+                            <ChevronUpIcon className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              moveSection(section.id, 'down');
+                            }}
+                            disabled={sectionIndex === settings.footerSections.length - 1}
+                          >
+                            <ChevronDownIcon className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              editSection(section);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteSection(section.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
-                      </AccordionTrigger>
+                      </div>
                       <AccordionContent>
-                        <div className="flex justify-end mb-4">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                size="sm"
-                                className="flex items-center gap-1"
-                                onClick={() => setSelectedSectionId(section.id)}
-                              >
-                                <Plus className="h-4 w-4" /> Add Link
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Add Footer Link</DialogTitle>
-                                <DialogDescription>
-                                  Add a new link to this footer section
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="grid gap-4 py-4">
-                                <div className="space-y-2">
-                                  <FormLabel htmlFor="new-link-label">Link Label</FormLabel>
-                                  <Input
-                                    id="new-link-label"
-                                    value={newFooterLink.label}
-                                    onChange={(e) =>
-                                      setNewFooterLink({ ...newFooterLink, label: e.target.value })
-                                    }
-                                    placeholder="About Us"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <FormLabel htmlFor="new-link-path">Link Path</FormLabel>
-                                  <Input
-                                    id="new-link-path"
-                                    value={newFooterLink.path}
-                                    onChange={(e) =>
-                                      setNewFooterLink({ ...newFooterLink, path: e.target.value })
-                                    }
-                                    placeholder="/about"
-                                  />
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id="new-link-external"
-                                    checked={newFooterLink.isExternal}
-                                    onCheckedChange={(checked) =>
-                                      setNewFooterLink({ ...newFooterLink, isExternal: checked! })
-                                    }
-                                  />
-                                  <label
-                                    htmlFor="new-link-external"
-                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                  >
-                                    External Link
-                                  </label>
-                                </div>
+                        <div className="space-y-3 mt-3">
+                          {section.links.map((link, linkIndex) => (
+                            <div key={link.id} className="flex items-center justify-between border p-2 rounded">
+                              <div>
+                                <p className="text-sm font-medium">{link.label}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {link.path} {link.isExternal && "(External)"}
+                                </p>
                               </div>
-                              <DialogFooter>
-                                <Button onClick={() => addFooterLink(section.id)}>
-                                  Add Link
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => moveLink(link.id, section.id, 'up')}
+                                  disabled={linkIndex === 0}
+                                >
+                                  <ChevronUpIcon className="h-4 w-4" />
                                 </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => moveLink(link.id, section.id, 'down')}
+                                  disabled={linkIndex === section.links.length - 1}
+                                >
+                                  <ChevronDownIcon className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => editLink(link, section.id)}
+                                >
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => deleteLink(link.id, section.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          <Button 
+                            onClick={() => addLink(section.id)} 
+                            className="w-full mt-3"
+                            size="sm"
+                          >
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add Link
+                          </Button>
                         </div>
-
-                        {section.links.length > 0 ? (
-                          <Table>
-                            <TableHeader>
-                              <TableRow>
-                                <TableHead>Label</TableHead>
-                                <TableHead>Path</TableHead>
-                                <TableHead>External</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                              </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                              {section.links.map((link) => (
-                                <TableRow key={link.id}>
-                                  <TableCell>{link.label}</TableCell>
-                                  <TableCell className="font-mono text-xs truncate max-w-[200px]">
-                                    {link.path}
-                                  </TableCell>
-                                  <TableCell>
-                                    {link.isExternal ? (
-                                      <Badge variant="outline">External</Badge>
-                                    ) : (
-                                      <Badge>Internal</Badge>
-                                    )}
-                                  </TableCell>
-                                  <TableCell className="text-right">
-                                    <div className="flex justify-end gap-2">
-                                      <Dialog>
-                                        <DialogTrigger asChild>
-                                          <Button variant="ghost" size="icon">
-                                            <Edit className="h-4 w-4" />
-                                          </Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                          <DialogHeader>
-                                            <DialogTitle>Edit Footer Link</DialogTitle>
-                                          </DialogHeader>
-                                          <div className="grid gap-4 py-4">
-                                            <div className="space-y-2">
-                                              <FormLabel htmlFor={`edit-link-label-${link.id}`}>
-                                                Link Label
-                                              </FormLabel>
-                                              <Input
-                                                id={`edit-link-label-${link.id}`}
-                                                value={
-                                                  editingFooterLink?.id === link.id
-                                                    ? editingFooterLink.label
-                                                    : link.label
-                                                }
-                                                onChange={(e) =>
-                                                  setEditingFooterLink({
-                                                    ...editingFooterLink!,
-                                                    label: e.target.value,
-                                                  })
-                                                }
-                                              />
-                                            </div>
-                                            <div className="space-y-2">
-                                              <FormLabel htmlFor={`edit-link-path-${link.id}`}>
-                                                Link Path
-                                              </FormLabel>
-                                              <Input
-                                                id={`edit-link-path-${link.id}`}
-                                                value={
-                                                  editingFooterLink?.id === link.id
-                                                    ? editingFooterLink.path
-                                                    : link.path
-                                                }
-                                                onChange={(e) =>
-                                                  setEditingFooterLink({
-                                                    ...editingFooterLink!,
-                                                    path: e.target.value,
-                                                  })
-                                                }
-                                              />
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                              <Checkbox
-                                                id={`edit-link-external-${link.id}`}
-                                                checked={
-                                                  editingFooterLink?.id === link.id
-                                                    ? editingFooterLink.isExternal
-                                                    : link.isExternal
-                                                }
-                                                onCheckedChange={(checked) =>
-                                                  setEditingFooterLink({
-                                                    ...editingFooterLink!,
-                                                    isExternal: checked!,
-                                                  })
-                                                }
-                                              />
-                                              <label
-                                                htmlFor={`edit-link-external-${link.id}`}
-                                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                              >
-                                                External Link
-                                              </label>
-                                            </div>
-                                          </div>
-                                          <DialogFooter>
-                                            <Button
-                                              onClick={() => updateFooterLink(section.id, link.id)}
-                                            >
-                                              Save Changes
-                                            </Button>
-                                          </DialogFooter>
-                                        </DialogContent>
-                                      </Dialog>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => deleteFooterLink(section.id, link.id)}
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        ) : (
-                          <div className="text-center py-4 text-muted-foreground">
-                            No links added to this section yet.
-                          </div>
-                        )}
                       </AccordionContent>
                     </AccordionItem>
                   ))}
                 </Accordion>
-              ) : (
-                <div className="text-center py-4 text-muted-foreground">
-                  No footer sections added yet.
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="legal" className="space-y-6 mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Legal & Copyright</CardTitle>
-              <CardDescription>
-                Update your copyright notice and legal page links
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <FormLabel htmlFor="copyright">Copyright Text</FormLabel>
-                <Input
-                  id="copyright"
-                  value={copyrightText}
-                  onChange={(e) => setCopyrightText(e.target.value)}
-                  placeholder="© {year} Your Company Name. All rights reserved."
-                />
-                <FormDescription>
-                  Use "{year}" as a placeholder for the current year
-                </FormDescription>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <Button onClick={addSection} className="w-full mt-4">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Add Section
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Legal Tab */}
+          <TabsContent value="legal" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Legal Information</CardTitle>
+                <CardDescription>
+                  Manage copyright text and legal links
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <FormLabel htmlFor="privacy-link">Privacy Policy Link</FormLabel>
-                  <Input
-                    id="privacy-link"
-                    value={privacyPolicy
+                  <Label htmlFor="copyright">Copyright Text</Label>
+                  <Input 
+                    id="copyright"
+                    placeholder="Enter copyright text"
+                    value={settings.copyrightText}
+                    onChange={(e) => handleCopyrightTextChange(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Use {'{year}'} placeholder to include current year automatically.
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="privacyPolicy">Privacy Policy Link</Label>
+                  <Input 
+                    id="privacyPolicy"
+                    placeholder="Enter privacy policy link"
+                    value={settings.privacyPolicyLink}
+                    onChange={(e) => handlePolicyLinkChange('privacyPolicyLink', e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="termsOfService">Terms of Service Link</Label>
+                  <Input 
+                    id="termsOfService"
+                    placeholder="Enter terms of service link"
+                    value={settings.termsOfServiceLink}
+                    onChange={(e) => handlePolicyLinkChange('termsOfServiceLink', e.target.value)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+      
+      {/* Social Link Dialog */}
+      <Dialog open={showSocialLinkDialog} onOpenChange={setShowSocialLinkDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingSocialLink && settings.socialLinks.some(link => link.id === editingSocialLink.id)
+                ? "Edit Social Link"
+                : "Add Social Link"
+              }
+            </DialogTitle>
+            <DialogDescription>
+              {editingSocialLink && settings.socialLinks.some(link => link.id === editingSocialLink.id)
+                ? "Update the details of this social media link."
+                : "Add a new social media link to your footer."
+              }
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="platform">Platform Name</Label>
+              <Input 
+                id="platform"
+                placeholder="e.g. Facebook, Twitter, LinkedIn"
+                value={editingSocialLink?.platform || ""}
+                onChange={(e) => setEditingSocialLink(prev => 
+                  prev ? {...prev, platform: e.target.value} : null
+                )}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="icon">Icon Name</Label>
+              <Input 
+                id="icon"
+                placeholder="e.g. facebook, twitter, linkedin"
+                value={editingSocialLink?.icon || ""}
+                onChange={(e) => setEditingSocialLink(prev => 
+                  prev ? {...prev, icon: e.target.value} : null
+                )}
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter the Font Awesome icon name (without fa- prefix)
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="url">URL</Label>
+              <Input 
+                id="url"
+                placeholder="https://example.com"
+                value={editingSocialLink?.url || ""}
+                onChange={(e) => setEditingSocialLink(prev => 
+                  prev ? {...prev, url: e.target.value} : null
+                )}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSocialLinkDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveSocialLink}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Section Dialog */}
+      <Dialog open={showSectionDialog} onOpenChange={setShowSectionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingSection && settings.footerSections.some(section => section.id === editingSection.id)
+                ? "Edit Section"
+                : "Add Section"
+              }
+            </DialogTitle>
+            <DialogDescription>
+              {editingSection && settings.footerSections.some(section => section.id === editingSection.id)
+                ? "Update the details of this footer section."
+                : "Add a new navigation section to your footer."
+              }
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="sectionTitle">Section Title</Label>
+              <Input 
+                id="sectionTitle"
+                placeholder="e.g. Company, Services, Resources"
+                value={editingSection?.title || ""}
+                onChange={(e) => setEditingSection(prev => 
+                  prev ? {...prev, title: e.target.value} : null
+                )}
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSectionDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveSection}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Link Dialog */}
+      <Dialog open={showLinkDialog} onOpenChange={setShowLinkDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {editingLink && settings.footerSections
+                .find(s => s.id === editingLink.sectionId)?.links
+                .some(l => l.id === editingLink.link.id)
+                ? "Edit Link"
+                : "Add Link"
+              }
+            </DialogTitle>
+            <DialogDescription>
+              {editingLink && settings.footerSections
+                .find(s => s.id === editingLink.sectionId)?.links
+                .some(l => l.id === editingLink.link.id)
+                ? "Update the details of this link."
+                : "Add a new link to this section."
+              }
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="linkLabel">Label</Label>
+              <Input 
+                id="linkLabel"
+                placeholder="e.g. About Us, Services, Contact"
+                value={editingLink?.link.label || ""}
+                onChange={(e) => setEditingLink(prev => 
+                  prev ? {...prev, link: {...prev.link, label: e.target.value}} : null
+                )}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="linkPath">Path</Label>
+              <Input 
+                id="linkPath"
+                placeholder="e.g. /about, /services, https://example.com"
+                value={editingLink?.link.path || ""}
+                onChange={(e) => setEditingLink(prev => 
+                  prev ? {...prev, link: {...prev.link, path: e.target.value}} : null
+                )}
+              />
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="isExternal" 
+                checked={editingLink?.link.isExternal || false}
+                onCheckedChange={(checked) => setEditingLink(prev => 
+                  prev ? {...prev, link: {...prev.link, isExternal: checked as boolean}} : null
+                )}
+              />
+              <Label htmlFor="isExternal">Is External Link</Label>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowLinkDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveLink}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </AdminLayout>
+  );
+};
+
+export default FooterSettingsPage;
