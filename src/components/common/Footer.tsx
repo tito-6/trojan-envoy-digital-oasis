@@ -34,11 +34,13 @@ const Footer: React.FC = () => {
     }
     
     if (description && 
-        typeof description === 'object' && 
-        'blocks' in description && 
-        Array.isArray(description.blocks) && 
-        description.blocks.length > 0) {
-      return description.blocks[0]?.text || '';
+        typeof description === 'object') {
+      // Check if it has a blocks property and it's an array
+      if ('blocks' in description && 
+          Array.isArray((description as any).blocks) && 
+          (description as any).blocks.length > 0) {
+        return (description as any).blocks[0]?.text || '';
+      }
     }
     
     return '';
