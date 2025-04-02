@@ -987,3 +987,4 @@ class StorageService {
 
     return defaultFAQSettings;
   };
+}
