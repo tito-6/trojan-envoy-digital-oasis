@@ -49,16 +49,30 @@ const Index: React.FC = () => {
       forceUpdate(prev => !prev);
     };
     
+    const contactUpdateListener = () => {
+      // Force re-render when contact settings change
+      forceUpdate(prev => !prev);
+    };
+    
+    const footerUpdateListener = () => {
+      // Force re-render when footer settings change
+      forceUpdate(prev => !prev);
+    };
+    
     // Subscribe to settings updates
     const unsubscribeAbout = storageService.addEventListener('about-settings-updated', aboutUpdateListener);
     const unsubscribeReferences = storageService.addEventListener('references-settings-updated', referencesUpdateListener);
     const unsubscribeFAQ = storageService.addEventListener('faq-settings-updated', faqUpdateListener);
+    const unsubscribeContact = storageService.addEventListener('contact-settings-updated', contactUpdateListener);
+    const unsubscribeFooter = storageService.addEventListener('footer-settings-updated', footerUpdateListener);
     
     return () => {
       observer.disconnect();
       unsubscribeAbout();
       unsubscribeReferences();
       unsubscribeFAQ();
+      unsubscribeContact();
+      unsubscribeFooter();
     };
   }, [t]);
 
@@ -72,10 +86,10 @@ const Index: React.FC = () => {
         <About key={`about-${update}`} />
         <References key={`references-${update}`} />
         <HomeFAQ key={`faq-${update}`} />
-        <Contact />
+        <Contact key={`contact-${update}`} />
       </main>
       
-      <Footer />
+      <Footer key={`footer-${update}`} />
     </div>
   );
 };

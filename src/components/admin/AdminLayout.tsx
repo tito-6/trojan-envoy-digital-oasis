@@ -12,11 +12,11 @@ import {
   Users,
   Shield,
   MonitorSmartphone,
-  LucideIcon,
-  Palette,
   Info,
   Building,
-  HelpCircle
+  HelpCircle,
+  Mail,
+  FootprintsIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -102,7 +102,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     },
     { 
       title: "Services Management", 
-      icon: <Palette className="w-4 h-4" />, 
+      icon: <FileText className="w-4 h-4" />, 
       href: "/admin/services-settings" 
     },
     { 
@@ -114,6 +114,16 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       title: "FAQ Management", 
       icon: <HelpCircle className="w-4 h-4" />, 
       href: "/admin/faq-settings" 
+    },
+    { 
+      title: "Contact Management", 
+      icon: <Mail className="w-4 h-4" />, 
+      href: "/admin/contact-settings" 
+    },
+    { 
+      title: "Footer Management", 
+      icon: <FootprintsIcon className="w-4 h-4" />, 
+      href: "/admin/footer-settings" 
     },
     { 
       title: "Contact Requests", 
@@ -145,7 +155,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           <h1 className="font-display font-bold">Admin Panel</h1>
         </div>
         
-        <div className="flex flex-col p-3 gap-1 flex-grow">
+        <div className="flex flex-col p-3 gap-1 flex-grow overflow-y-auto">
           {navigationItems.map((item) => (
             <SidebarItem
               key={item.title}
@@ -189,7 +199,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   </Button>
                 </div>
                 
-                <div className="flex flex-col p-3 gap-1">
+                <div className="flex flex-col p-3 gap-1 overflow-y-auto max-h-[calc(100vh-80px)]">
                   {navigationItems.map((item) => (
                     <SidebarItem
                       key={item.title}
@@ -237,7 +247,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </header>
         
         {/* Page Content */}
-        <main className="flex-grow bg-background">
+        <main className="flex-grow bg-background overflow-y-auto">
           {children}
         </main>
       </div>

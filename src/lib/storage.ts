@@ -1,4 +1,4 @@
-import { ContentItem, ContactRequest, User, NavigationItem, HeaderSettings, HeroSettings, PartnerLogo, TechIcon, ServicesSettings, ServiceItem, AboutSettings, KeyPoint, StatItem, ReferencesSettings, FAQSettings, ClientLogo, FAQItem } from './types';
+import { ContentItem, ContactRequest, User, NavigationItem, HeaderSettings, HeroSettings, PartnerLogo, TechIcon, ServicesSettings, ServiceItem, AboutSettings, KeyPoint, StatItem, ReferencesSettings, FAQSettings, ClientLogo, FAQItem, FooterSettings, SocialLink, FooterSection, FooterLink, ContactSettings, ContactInfoItem, ContactFormField } from './types';
 
 const initialContent: ContentItem[] = [];
 
@@ -160,6 +160,160 @@ const initialFAQSettings: FAQSettings = {
   lastUpdated: "2023-11-15"
 };
 
+const initialFooterSettings: FooterSettings = {
+  id: 1,
+  companyInfo: {
+    description: "Premium software development and digital marketing agency delivering excellence and driving results for businesses worldwide.",
+    address: "1234 Tech Avenue, Innovation District, New York, NY 10001",
+    phone: "+1 (555) 123-4567",
+    email: "contact@trojanenvoy.com"
+  },
+  socialLinks: [
+    { id: 1, platform: "LinkedIn", icon: "linkedin", url: "#", order: 0 },
+    { id: 2, platform: "Twitter", icon: "twitter", url: "#", order: 1 },
+    { id: 3, platform: "Facebook", icon: "facebook", url: "#", order: 2 },
+    { id: 4, platform: "Instagram", icon: "instagram", url: "#", order: 3 }
+  ],
+  footerSections: [
+    {
+      id: 1,
+      title: "Company",
+      order: 0,
+      links: [
+        { id: 1, label: "About Us", path: "/about", order: 0, isExternal: false },
+        { id: 2, label: "Services", path: "/services", order: 1, isExternal: false },
+        { id: 3, label: "Portfolio", path: "/portfolio", order: 2, isExternal: false },
+        { id: 4, label: "Careers", path: "/careers", order: 3, isExternal: false },
+        { id: 5, label: "Contact", path: "/contact", order: 4, isExternal: false }
+      ]
+    },
+    {
+      id: 2,
+      title: "Services",
+      order: 1,
+      links: [
+        { id: 6, label: "Web Development", path: "/services/web-development", order: 0, isExternal: false },
+        { id: 7, label: "Mobile Development", path: "/services/mobile-development", order: 1, isExternal: false },
+        { id: 8, label: "UI/UX Design", path: "/services/ui-ux-design", order: 2, isExternal: false },
+        { id: 9, label: "Digital Marketing", path: "/services/digital-marketing", order: 3, isExternal: false },
+        { id: 10, label: "SEO Optimization", path: "/services/seo", order: 4, isExternal: false }
+      ]
+    },
+    {
+      id: 3,
+      title: "Resources",
+      order: 2,
+      links: [
+        { id: 11, label: "Blog", path: "/blog", order: 0, isExternal: false },
+        { id: 12, label: "Case Studies", path: "/case-studies", order: 1, isExternal: false },
+        { id: 13, label: "FAQ", path: "/faq", order: 2, isExternal: false },
+        { id: 14, label: "Privacy Policy", path: "/privacy-policy", order: 3, isExternal: false },
+        { id: 15, label: "Terms of Service", path: "/terms-of-service", order: 4, isExternal: false }
+      ]
+    }
+  ],
+  copyrightText: "© {year} Trojan Envoy. All rights reserved.",
+  privacyPolicyLink: "/privacy-policy",
+  termsOfServiceLink: "/terms-of-service",
+  lastUpdated: "2023-11-15"
+};
+
+const initialContactSettings: ContactSettings = {
+  id: 1,
+  title: "Get in Touch",
+  subtitle: "We'd love to hear from you",
+  description: {
+    blocks: [
+      {
+        key: "description",
+        text: "Have a project in mind? Let's talk about how we can help your business grow through innovative digital solutions.",
+        type: "unstyled",
+        depth: 0,
+        inlineStyleRanges: [],
+        entityRanges: [],
+        data: {}
+      }
+    ],
+    entityMap: {}
+  },
+  submitButtonText: "Send Message",
+  contactInfoItems: [
+    { 
+      id: 1, 
+      title: "Office Address", 
+      content: "1234 Tech Avenue, Innovation District\nNew York, NY 10001, USA", 
+      icon: "MapPin", 
+      order: 0 
+    },
+    { 
+      id: 2, 
+      title: "Contact Information", 
+      content: "Email: contact@trojanenvoy.com\nPhone: +1 (555) 123-4567", 
+      icon: "Phone", 
+      order: 1 
+    },
+    { 
+      id: 3, 
+      title: "Working Hours", 
+      content: "Monday - Friday: 9:00 AM - 6:00 PM\nSaturday & Sunday: Closed", 
+      icon: "Clock", 
+      order: 2 
+    }
+  ],
+  formFields: [
+    { 
+      id: 1, 
+      name: "name", 
+      label: "Full Name", 
+      type: "text", 
+      required: true, 
+      placeholder: "John Doe", 
+      order: 0 
+    },
+    { 
+      id: 2, 
+      name: "email", 
+      label: "Email Address", 
+      type: "email", 
+      required: true, 
+      placeholder: "john@example.com", 
+      order: 1 
+    },
+    { 
+      id: 3, 
+      name: "phone", 
+      label: "Phone Number", 
+      type: "phone", 
+      required: false, 
+      placeholder: "(555) 123-4567", 
+      order: 2 
+    },
+    { 
+      id: 4, 
+      name: "subject", 
+      label: "Subject", 
+      type: "text", 
+      required: true, 
+      placeholder: "Project Inquiry", 
+      order: 3 
+    },
+    { 
+      id: 5, 
+      name: "message", 
+      label: "Your Message", 
+      type: "textarea", 
+      required: true, 
+      placeholder: "Tell us about your project...", 
+      order: 4 
+    }
+  ],
+  enableRecaptcha: false,
+  enableFingerprinting: false,
+  enableEmailNotifications: false,
+  enableAppointmentScheduling: false,
+  lastUpdated: "2023-11-15"
+};
+
 class StorageService {
   private contentKey = 'trojan-envoy-content';
   private usersKey = 'trojan-envoy-users';
@@ -170,6 +324,8 @@ class StorageService {
   private aboutSettingsKey = 'trojan-envoy-about-settings';
   private referencesSettingsKey = 'trojan-envoy-references-settings';
   private faqSettingsKey = 'trojan-envoy-faq-settings';
+  private footerSettingsKey = 'trojan-envoy-footer-settings';
+  private contactSettingsKey = 'trojan-envoy-contact-settings';
   private eventListeners: Record<string, Function[]> = {};
 
   constructor() {
@@ -211,6 +367,14 @@ class StorageService {
     
     if (!localStorage.getItem(this.faqSettingsKey)) {
       localStorage.setItem(this.faqSettingsKey, JSON.stringify(initialFAQSettings));
+    }
+
+    if (!localStorage.getItem(this.footerSettingsKey)) {
+      localStorage.setItem(this.footerSettingsKey, JSON.stringify(initialFooterSettings));
+    }
+
+    if (!localStorage.getItem(this.contactSettingsKey)) {
+      localStorage.setItem(this.contactSettingsKey, JSON.stringify(initialContactSettings));
     }
   }
 
@@ -1006,6 +1170,46 @@ class StorageService {
     this.updateFAQSettings(settings);
     
     return settings.faqItems;
+  }
+
+  getFooterSettings(): FooterSettings {
+    const settings = localStorage.getItem(this.footerSettingsKey);
+    return settings ? JSON.parse(settings) : initialFooterSettings;
+  }
+
+  updateFooterSettings(settings: Partial<FooterSettings>): FooterSettings {
+    const currentSettings = this.getFooterSettings();
+    const updatedSettings: FooterSettings = {
+      ...currentSettings,
+      ...settings,
+      lastUpdated: new Date().toISOString().split('T')[0]
+    };
+    
+    localStorage.setItem(this.footerSettingsKey, JSON.stringify(updatedSettings));
+    
+    this.dispatchEvent('footer-settings-updated', updatedSettings);
+    
+    return updatedSettings;
+  }
+
+  getContactSettings(): ContactSettings {
+    const settings = localStorage.getItem(this.contactSettingsKey);
+    return settings ? JSON.parse(settings) : initialContactSettings;
+  }
+
+  updateContactSettings(settings: Partial<ContactSettings>): ContactSettings {
+    const currentSettings = this.getContactSettings();
+    const updatedSettings: ContactSettings = {
+      ...currentSettings,
+      ...settings,
+      lastUpdated: new Date().toISOString().split('T')[0]
+    };
+    
+    localStorage.setItem(this.contactSettingsKey, JSON.stringify(updatedSettings));
+    
+    this.dispatchEvent('contact-settings-updated', updatedSettings);
+    
+    return updatedSettings;
   }
 }
 

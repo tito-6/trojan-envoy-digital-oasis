@@ -270,3 +270,89 @@ export interface FAQItem {
   order: number;
   isActive?: boolean;
 }
+
+export interface FooterSettings {
+  id: number;
+  companyInfo: {
+    description: string;
+    address: string;
+    phone: string;
+    email: string;
+  };
+  socialLinks: SocialLink[];
+  footerSections: FooterSection[];
+  copyrightText: string;
+  privacyPolicyLink: string;
+  termsOfServiceLink: string;
+  lastUpdated: string;
+}
+
+export interface SocialLink {
+  id: number;
+  platform: string;
+  icon: string;
+  url: string;
+  order: number;
+}
+
+export interface FooterSection {
+  id: number;
+  title: string;
+  links: FooterLink[];
+  order: number;
+}
+
+export interface FooterLink {
+  id: number;
+  label: string;
+  path: string;
+  order: number;
+  isExternal: boolean;
+}
+
+export interface ContactSettings {
+  id: number;
+  title: string;
+  subtitle: string;
+  description: any;
+  submitButtonText: string;
+  contactInfoItems: ContactInfoItem[];
+  formFields: ContactFormField[];
+  enableRecaptcha: boolean;
+  recaptchaSiteKey?: string;
+  recaptchaSecretKey?: string;
+  enableFingerprinting: boolean;
+  enableEmailNotifications: boolean;
+  emailSender?: string;
+  emailRecipient?: string;
+  emailSubject?: string;
+  enableAppointmentScheduling: boolean;
+  appointmentLabel?: string;
+  availableDays?: string[];
+  workingHoursStart?: string;
+  workingHoursEnd?: string;
+  lastUpdated: string;
+}
+
+export interface ContactInfoItem {
+  id: number;
+  title: string;
+  content: string;
+  icon: string;
+  order: number;
+}
+
+export interface ContactFormField {
+  id: number;
+  name: string;
+  label: string;
+  type: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'date';
+  required: boolean;
+  placeholder: string;
+  order: number;
+  options?: {
+    id: number;
+    label: string;
+    value: string;
+  }[];
+}
