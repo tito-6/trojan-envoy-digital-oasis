@@ -7,6 +7,18 @@ const DB_NAME = 'trojanEnvoyDB';
 
 type EventCallback = (data: any) => void;
 
+interface FAQSettings {
+  id: number;
+  title: string;
+  subtitle: string;
+  viewAllText: string;
+  viewAllUrl: string;
+  faqItems: FAQItem[];
+  isActive: boolean;
+  showInFooter: boolean;
+  lastUpdated: string;
+}
+
 class StorageService {
   private db: IDBDatabase | null = null;
   private eventListeners: Record<string, EventCallback[]> = {};
@@ -270,18 +282,31 @@ class StorageService {
         return;
       }
 
-      const transaction = this.db.transaction(['contactRequests'], 'readwrite');
-      const store = transaction.objectStore('contactRequests');
-      const request = store.put({ id, ...contactRequest });
+      // First get the existing item
+      this.getContactRequestById(id).then(existingItem => {
+        if (!existingItem) {
+          reject(`Contact request with ID ${id} not found`);
+          return;
+        }
 
-      request.onsuccess = () => {
-        resolve(contactRequest);
-      };
+        const updatedItem = { ...existingItem, ...contactRequest };
+        
+        const transaction = this.db.transaction(['contactRequests'], 'readwrite');
+        const store = transaction.objectStore('contactRequests');
+        const request = store.put(updatedItem);
 
-      request.onerror = (event: any) => {
-        console.error("Error updating contact request: ", event.target.error);
-        reject(event.target.error);
-      };
+        request.onsuccess = () => {
+          resolve(updatedItem);
+
+          // Dispatch a custom event to notify components about the update
+          this.dispatchEvent('contact-request-updated', updatedItem);
+        };
+
+        request.onerror = (evt: any) => {
+          console.error("Error updating contact request: ", evt.target.error);
+          reject(evt.target.error);
+        };
+      }).catch(reject);
     });
   };
 
@@ -988,3 +1013,6 @@ class StorageService {
     return defaultFAQSettings;
   };
 }
+
+// Export a singleton instance of the StorageService
+export const storageService = new StorageService();
