@@ -1,4 +1,3 @@
-
 // src/lib/storage.ts
 
 import { ContentItem, ContactRequest, NavigationItem, FooterLink, FooterSection, FooterSettings, SocialLink, HeaderSettings, HeroSettings, ContactInfoItem, ContactFormField, ContactSettings, ServiceItem, ServicesSettings, AboutSettings, KeyPoint, StatItem, FAQItem, FAQSettings, ClientLogo, ReferencesSettings, User } from './types';
@@ -365,18 +364,18 @@ class StorageService {
       const store = transaction.objectStore('navigation');
       const request = store.add(navigationItem);
 
-      request.onsuccess = (event: any) => {
-        const id = event.target.result;
+      request.onsuccess = (evt: any) => {
+        const id = evt.target.result;
         resolve({ id, ...navigationItem } as NavigationItem);
 
         // Dispatch a custom event to notify components about the update
-        const event = new CustomEvent('navigation-updated');
-        window.dispatchEvent(event);
+        const customEvent = new CustomEvent('navigation-updated');
+        window.dispatchEvent(customEvent);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error adding navigation item: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error adding navigation item: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
@@ -396,13 +395,13 @@ class StorageService {
         resolve(navigationItem);
 
         // Dispatch a custom event to notify components about the update
-        const event = new CustomEvent('navigation-updated');
-        window.dispatchEvent(event);
+        const customEvent = new CustomEvent('navigation-updated');
+        window.dispatchEvent(customEvent);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error updating navigation item: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error updating navigation item: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
@@ -466,13 +465,13 @@ class StorageService {
         resolve();
 
         // Dispatch a custom event to notify components about the update
-        const event = new CustomEvent('navigation-updated');
-        window.dispatchEvent(event);
+        const customEvent = new CustomEvent('navigation-updated');
+        window.dispatchEvent(customEvent);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error deleting navigation item: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error deleting navigation item: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
@@ -493,13 +492,13 @@ class StorageService {
         resolve(footerSettings);
 
         // Dispatch a custom event to notify components about the update
-        const event = new CustomEvent('footer-settings-updated', { detail: footerSettings });
-        window.dispatchEvent(event);
+        const customEvent = new CustomEvent('footer-settings-updated', { detail: footerSettings });
+        window.dispatchEvent(customEvent);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error saving footer settings: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error saving footer settings: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
@@ -566,13 +565,13 @@ class StorageService {
         resolve(headerSettings);
 
         // Dispatch a custom event to notify components about the update
-        const event = new CustomEvent('header-settings-updated', { detail: headerSettings });
-        window.dispatchEvent(event);
+        const customEvent = new CustomEvent('header-settings-updated', { detail: headerSettings });
+        window.dispatchEvent(customEvent);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error saving header settings: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error saving header settings: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
@@ -622,13 +621,13 @@ class StorageService {
         resolve(heroSettings);
 
         // Dispatch a custom event to notify components about the update
-        const event = new CustomEvent('hero-settings-updated', { detail: heroSettings });
-        window.dispatchEvent(event);
+        const customEvent = new CustomEvent('hero-settings-updated', { detail: heroSettings });
+        window.dispatchEvent(customEvent);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error saving hero settings: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error saving hero settings: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
@@ -685,13 +684,13 @@ class StorageService {
         resolve(contactSettings);
 
         // Dispatch a custom event to notify components about the update
-        const event = new CustomEvent('contact-settings-updated', { detail: contactSettings });
-        window.dispatchEvent(event);
+        const customEvent = new CustomEvent('contact-settings-updated', { detail: contactSettings });
+        window.dispatchEvent(customEvent);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error saving contact settings: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error saving contact settings: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
@@ -751,13 +750,13 @@ class StorageService {
         resolve(servicesSettings);
 
         // Dispatch a custom event to notify components about the update
-        const event = new CustomEvent('services-settings-updated', { detail: servicesSettings });
-        window.dispatchEvent(event);
+        const customEvent = new CustomEvent('services-settings-updated', { detail: servicesSettings });
+        window.dispatchEvent(customEvent);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error saving services settings: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error saving services settings: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
@@ -804,13 +803,13 @@ class StorageService {
         resolve(aboutSettings);
 
         // Dispatch a custom event to notify components about the update
-        const event = new CustomEvent('about-settings-updated', { detail: aboutSettings });
-        window.dispatchEvent(event);
+        const customEvent = new CustomEvent('about-settings-updated', { detail: aboutSettings });
+        window.dispatchEvent(customEvent);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error saving about settings: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error saving about settings: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
@@ -911,13 +910,13 @@ class StorageService {
         resolve(faqSettings);
 
         // Dispatch a custom event to notify components about the update
-        const event = new CustomEvent('faq-settings-updated', { detail: faqSettings });
-        window.dispatchEvent(event);
+        const customEvent = new CustomEvent('faq-settings-updated', { detail: faqSettings });
+        window.dispatchEvent(customEvent);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error saving faq settings: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error saving faq settings: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
@@ -964,13 +963,13 @@ class StorageService {
         resolve(referencesSettings);
 
         // Dispatch a custom event to notify components about the update
-        const event = new CustomEvent('references-settings-updated', { detail: referencesSettings });
-        window.dispatchEvent(event);
+        const customEvent = new CustomEvent('references-settings-updated', { detail: referencesSettings });
+        window.dispatchEvent(customEvent);
       };
 
-      request.onerror = (event: any) => {
-        console.error("Error saving references settings: ", event.target.error);
-        reject(event.target.error);
+      request.onerror = (evt: any) => {
+        console.error("Error saving references settings: ", evt.target.error);
+        reject(evt.target.error);
       };
     });
   };
@@ -1000,7 +999,7 @@ class StorageService {
 
     return defaultReferencesSettings;
   };
-  
+
   // Add client logo
   addClientLogo = (logo: Omit<ClientLogo, "id" | "order">): Promise<ClientLogo> => {
     return new Promise((resolve, reject) => {
