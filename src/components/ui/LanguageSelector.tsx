@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/lib/i18n";
 import { storageService } from "@/lib/storage";
+import { LanguageState } from "@/lib/types";
 
 export function LanguageSelector() {
-  const { availableLanguages, currentLanguage, changeLanguage } = useLanguage();
+  const { availableLanguages, currentLanguage, changeLanguage } = useLanguage() as LanguageState;
   const [enabledLanguages, setEnabledLanguages] = useState<string[]>([]);
   const [defaultLanguage, setDefaultLanguage] = useState<string>("en");
 
@@ -23,16 +24,18 @@ export function LanguageSelector() {
     setDefaultLanguage(settings.defaultLanguage || "en");
 
     // Subscribe to settings updates
-    const handleSettingsUpdate = () => {
-      const updatedSettings = storageService.getHeaderSettings();
-      setEnabledLanguages(updatedSettings.enabledLanguages || ["en"]);
-      setDefaultLanguage(updatedSettings.defaultLanguage || "en");
+    const handleSettingsUpdate = (event: CustomEvent) => {
+      if (event.detail) {
+        const updatedSettings = event.detail;
+        setEnabledLanguages(updatedSettings.enabledLanguages || ["en"]);
+        setDefaultLanguage(updatedSettings.defaultLanguage || "en");
+      }
     };
 
-    window.addEventListener('header-settings-updated', handleSettingsUpdate);
+    window.addEventListener('header-settings-updated', handleSettingsUpdate as EventListener);
 
     return () => {
-      window.removeEventListener('header-settings-updated', handleSettingsUpdate);
+      window.removeEventListener('header-settings-updated', handleSettingsUpdate as EventListener);
     };
   }, []);
 

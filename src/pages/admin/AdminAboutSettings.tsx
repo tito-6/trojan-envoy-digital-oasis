@@ -1,17 +1,22 @@
-import React, { useState } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { storageService } from "@/lib/storage";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter,
+  DialogDescription
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
+import { AboutSettings, KeyPoint, StatItem } from "@/lib/types";
 import { Plus, Trash, MoveUp, MoveDown, Link as LinkIcon, Image, FileText, Video } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { storageService } from "@/lib/storage";
-import { AboutSettings, KeyPoint, StatItem } from "@/lib/types";
-import { useToast } from "@/hooks/use-toast";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
 
 const AdminAboutSettings: React.FC = () => {
@@ -20,7 +25,9 @@ const AdminAboutSettings: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
   const [showMediaOptions, setShowMediaOptions] = useState(false);
   const [mediaType, setMediaType] = useState<"image" | "video" | "document">("image");
-  
+  const [newKeyPointText, setNewKeyPointText] = useState("");
+  const [addingKeyPoint, setAddingKeyPoint] = useState(false);
+
   const handleGeneralSettingsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setSettings((prev) => ({
@@ -28,7 +35,7 @@ const AdminAboutSettings: React.FC = () => {
       [name]: value
     }));
   };
-  
+
   const handleSaveSettings = () => {
     storageService.updateAboutSettings(settings);
     toast({
@@ -36,21 +43,20 @@ const AdminAboutSettings: React.FC = () => {
       description: "About section settings have been updated successfully."
     });
   };
-  
-  // Key Points Management
+
   const handleAddKeyPoint = () => {
     const newKeyPoint = {
-      text: "New key point",
-      order: settings.keyPoints.length + 1
+      title: newKeyPointText,
+      description: "Click to edit description",
+      icon: "Lightbulb"
     };
     
-    const addedPoint = storageService.addKeyPoint(newKeyPoint);
-    setSettings((prev) => ({
-      ...prev,
-      keyPoints: [...prev.keyPoints, addedPoint]
-    }));
+    storageService.addKeyPoint(newKeyPoint);
+    setNewKeyPointText("");
+    fetchSettings();
+    setAddingKeyPoint(false);
   };
-  
+
   const handleKeyPointChange = (id: number, text: string) => {
     storageService.updateKeyPoint(id, { text });
     setSettings((prev) => ({
@@ -60,7 +66,7 @@ const AdminAboutSettings: React.FC = () => {
       )
     }));
   };
-  
+
   const handleDeleteKeyPoint = (id: number) => {
     if (storageService.deleteKeyPoint(id)) {
       setSettings((prev) => ({
@@ -69,18 +75,16 @@ const AdminAboutSettings: React.FC = () => {
       }));
     }
   };
-  
+
   const handleReorderKeyPoint = (id: number, direction: 'up' | 'down') => {
     const keyPoints = [...settings.keyPoints];
     const index = keyPoints.findIndex((point) => point.id === id);
     
     if (direction === 'up' && index > 0) {
-      // Swap with previous item
       const temp = keyPoints[index].order;
       keyPoints[index].order = keyPoints[index - 1].order;
       keyPoints[index - 1].order = temp;
     } else if (direction === 'down' && index < keyPoints.length - 1) {
-      // Swap with next item
       const temp = keyPoints[index].order;
       keyPoints[index].order = keyPoints[index + 1].order;
       keyPoints[index + 1].order = temp;
@@ -97,8 +101,7 @@ const AdminAboutSettings: React.FC = () => {
       keyPoints: keyPoints.sort((a, b) => a.order - b.order)
     }));
   };
-  
-  // Stats Management
+
   const handleAddStat = () => {
     const newStat = {
       value: "0+",
@@ -123,7 +126,7 @@ const AdminAboutSettings: React.FC = () => {
       description: "A new statistic has been added to the About section."
     });
   };
-  
+
   const handleStatChange = (id: number, field: keyof StatItem, value: any) => {
     storageService.updateStatItem(id, { [field]: value } as Partial<StatItem>);
     setSettings((prev) => ({
@@ -133,11 +136,11 @@ const AdminAboutSettings: React.FC = () => {
       )
     }));
   };
-  
+
   const handleToggleStatActive = (id: number, isActive: boolean) => {
     handleStatChange(id, 'isActive', isActive);
   };
-  
+
   const handleDeleteStat = (id: number) => {
     if (storageService.deleteStatItem(id)) {
       setSettings((prev) => ({
@@ -151,18 +154,16 @@ const AdminAboutSettings: React.FC = () => {
       });
     }
   };
-  
+
   const handleReorderStat = (id: number, direction: 'up' | 'down') => {
     const stats = [...settings.stats];
     const index = stats.findIndex((stat) => stat.id === id);
     
     if (direction === 'up' && index > 0) {
-      // Swap with previous item
       const temp = stats[index].order;
       stats[index].order = stats[index - 1].order;
       stats[index - 1].order = temp;
     } else if (direction === 'down' && index < stats.length - 1) {
-      // Swap with next item
       const temp = stats[index].order;
       stats[index].order = stats[index + 1].order;
       stats[index + 1].order = temp;
@@ -179,13 +180,13 @@ const AdminAboutSettings: React.FC = () => {
       stats: stats.sort((a, b) => a.order - b.order)
     }));
   };
-  
+
   const mediaOptions = [
     { label: "Images", icon: <Image className="h-4 w-4" />, type: "image" as const },
     { label: "Videos", icon: <Video className="h-4 w-4" />, type: "video" as const },
     { label: "Documents", icon: <FileText className="h-4 w-4" />, type: "document" as const }
   ];
-  
+
   return (
     <AdminLayout>
       <div className="p-6">
@@ -389,11 +390,47 @@ const AdminAboutSettings: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="mb-4">
-                  <Button onClick={handleAddKeyPoint} variant="outline" size="sm">
+                  <Button onClick={() => setAddingKeyPoint(true)} variant="outline" size="sm">
                     <Plus className="mr-2 h-4 w-4" />
                     Add Key Point
                   </Button>
                 </div>
+                
+                <Dialog open={addingKeyPoint} onOpenChange={setAddingKeyPoint}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Key Point</DialogTitle>
+                      <DialogDescription>
+                        Enter the title and description for the key point.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="key-point-title">Title</Label>
+                        <Input 
+                          id="key-point-title" 
+                          name="key-point-title" 
+                          value={newKeyPointText} 
+                          onChange={(e) => setNewKeyPointText(e.target.value)}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="key-point-description">Description</Label>
+                        <Textarea 
+                          id="key-point-description" 
+                          name="key-point-description" 
+                          rows={3}
+                          value="Click to edit description"
+                        />
+                      </div>
+                    </DialogContent>
+                    <DialogFooter>
+                      <Button onClick={() => setAddingKeyPoint(false)}>Cancel</Button>
+                      <Button onClick={handleAddKeyPoint} variant="default">Add</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
                 
                 <div className="space-y-4">
                   {settings.keyPoints.sort((a, b) => a.order - b.order).map((point) => (

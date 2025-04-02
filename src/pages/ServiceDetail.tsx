@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Header from "@/components/common/Header";
@@ -133,6 +132,40 @@ const ServiceDetailPage: React.FC = () => {
       }
     };
   }, [slug, navigate]);
+  
+  useEffect(() => {
+    if (!service) {
+      const mockService: ContentItem = {
+        id: 1,
+        title: "Web Development",
+        type: "Service",
+        description: "Custom web applications built with modern technologies",
+        content: "<p>Our web development services include...</p>",
+        formattedContent: "Our web development services include...",
+        htmlContent: "<div>Our web development services include...</div>",
+        seoKeywords: ["web development", "javascript", "react", "node.js"],
+        category: "Development",
+        published: true,
+        lastUpdated: new Date().toISOString(),
+        iconName: "Code",
+        color: "#4285F4",
+        bgColor: "#EBF2FF",
+        videos: ["https://www.youtube.com/watch?v=dQw4w9WgXcQ"],
+        documents: ["/examples/service-brochure.pdf"],
+        seoHeadingStructure: {
+          h1: "Web Development Services",
+          h2: ["Our Approach", "Technologies We Use", "Benefits"],
+          h3: {
+            "Our Approach": ["Discovery", "Planning", "Development", "Testing", "Deployment"],
+            "Technologies We Use": ["Frontend", "Backend", "Database", "Hosting"],
+            "Benefits": ["Scalability", "Performance", "Security", "Maintainability"]
+          }
+        }
+      };
+      
+      setService(mockService);
+    }
+  }, [service]);
   
   if (loading) {
     return (

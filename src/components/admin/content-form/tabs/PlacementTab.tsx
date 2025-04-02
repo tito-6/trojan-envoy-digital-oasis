@@ -1,5 +1,5 @@
-
 import React from "react";
+import { ContentType } from "@/lib/types";
 import { UseFormReturn } from "react-hook-form";
 import { ContentFormValues } from "../schema";
 import { TabsContent } from "@/components/ui/tabs";
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar, GanttChart } from "lucide-react";
-import { ContentType, ContentItem } from "@/lib/types";
+import { ContentItem } from "@/lib/types";
 
 interface PlacementTabProps {
   form: UseFormReturn<ContentFormValues>;

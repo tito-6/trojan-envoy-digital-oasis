@@ -1,403 +1,150 @@
-
-import React, { useState } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { storageService } from "@/lib/storage";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter 
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { FAQSettings, FAQItem } from "@/lib/types";
-import { PlusCircle, Trash2, MoveUp, MoveDown, Eye, EyeOff, Save } from "lucide-react";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Switch } from "@/components/ui/switch";
 
 const AdminFAQSettings: React.FC = () => {
+  const [settings, setSettings] = useState<FAQSettings | null>(null);
+  const [isAddingFAQ, setAddingFAQ] = useState(false);
+  const [newFAQQuestion, setNewFAQQuestion] = useState("");
+  const [newFAQAnswer, setNewFAQAnswer] = useState("");
   const { toast } = useToast();
-  const [settings, setSettings] = useState<FAQSettings>(storageService.getFAQSettings());
-  const [newFAQ, setNewFAQ] = useState<Omit<FAQItem, 'id'>>({
-    question: "",
-    answer: "",
-    order: settings.faqItems.length + 1
-  });
-  
-  // Handle general settings change
-  const handleGeneralSettingsChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setSettings({
-      ...settings,
-      [name]: value
-    });
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = () => {
+    const storedSettings = storageService.getFAQSettings();
+    setSettings(storedSettings);
   };
-  
-  // Handle new FAQ field changes
-  const handleNewFAQChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setNewFAQ({
-      ...newFAQ,
-      [name]: value
+
+  const handleAddFAQItem = () => {
+    storageService.addFAQItem({
+      question: newFAQQuestion,
+      answer: newFAQAnswer
     });
+    
+    setNewFAQQuestion("");
+    setNewFAQAnswer("");
+    fetchSettings();
+    setAddingFAQ(false);
   };
-  
-  // Add a new FAQ
-  const handleAddFAQ = () => {
-    if (!newFAQ.question.trim() || !newFAQ.answer.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide both question and answer.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Add the new FAQ
-    storageService.addFAQItem(newFAQ);
-    
-    // Update the settings
-    setSettings(storageService.getFAQSettings());
-    
-    // Reset the new FAQ form
-    setNewFAQ({
-      question: "",
-      answer: "",
-      order: settings.faqItems.length + 2
-    });
-    
+
+  const handleUpdateSettings = (updatedSettings: FAQSettings) => {
+    storageService.updateFAQSettings(updatedSettings);
+    setSettings(updatedSettings);
     toast({
-      title: "FAQ Added",
-      description: "The new FAQ has been added successfully."
-    });
-  };
-  
-  // Update FAQ fields
-  const handleFAQChange = (id: number, field: keyof FAQItem, value: any) => {
-    const updatedFAQs = settings.faqItems.map(item => {
-      if (item.id === id) {
-        return { ...item, [field]: value };
-      }
-      return item;
-    });
-    
-    setSettings({
-      ...settings,
-      faqItems: updatedFAQs
-    });
-  };
-  
-  // Toggle FAQ visibility
-  const handleToggleActive = (id: number) => {
-    const item = settings.faqItems.find(item => item.id === id);
-    if (!item) return;
-    
-    const isActive = item.isActive === false ? true : false;
-    handleFAQChange(id, 'isActive', isActive);
-  };
-  
-  // Move FAQ up in order
-  const handleMoveUp = (id: number) => {
-    const index = settings.faqItems.findIndex(item => item.id === id);
-    if (index <= 0) return;
-    
-    const updatedItems = [...settings.faqItems];
-    const temp = updatedItems[index].order;
-    updatedItems[index].order = updatedItems[index - 1].order;
-    updatedItems[index - 1].order = temp;
-    
-    updatedItems.sort((a, b) => a.order - b.order);
-    
-    setSettings({
-      ...settings,
-      faqItems: updatedItems
-    });
-  };
-  
-  // Move FAQ down in order
-  const handleMoveDown = (id: number) => {
-    const index = settings.faqItems.findIndex(item => item.id === id);
-    if (index >= settings.faqItems.length - 1) return;
-    
-    const updatedItems = [...settings.faqItems];
-    const temp = updatedItems[index].order;
-    updatedItems[index].order = updatedItems[index + 1].order;
-    updatedItems[index + 1].order = temp;
-    
-    updatedItems.sort((a, b) => a.order - b.order);
-    
-    setSettings({
-      ...settings,
-      faqItems: updatedItems
-    });
-  };
-  
-  // Delete a FAQ
-  const handleDeleteFAQ = (id: number) => {
-    const updatedItems = settings.faqItems.filter(item => item.id !== id);
-    
-    // Update orders after deletion
-    const reorderedItems = updatedItems.map((item, index) => ({
-      ...item,
-      order: index + 1
-    }));
-    
-    setSettings({
-      ...settings,
-      faqItems: reorderedItems
-    });
-    
-    toast({
-      title: "FAQ Removed",
-      description: "The FAQ has been removed successfully."
-    });
-  };
-  
-  // Save all settings
-  const handleSaveSettings = () => {
-    storageService.updateFAQSettings(settings);
-    
-    toast({
-      title: "FAQ Settings Saved",
-      description: "Your changes have been saved successfully."
+      title: "Settings updated",
+      description: "FAQ settings have been successfully updated.",
     });
   };
 
+  if (!settings) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <AdminLayout>
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">FAQ Section Settings</h1>
-          <Button onClick={handleSaveSettings}>
-            <Save className="mr-2 h-4 w-4" />
-            Save Changes
-          </Button>
-        </div>
-        
-        <Tabs defaultValue="general" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="general">General Settings</TabsTrigger>
-            <TabsTrigger value="items">FAQ Items</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="general" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>General Settings</CardTitle>
-                <CardDescription>Configure the main settings for the FAQ section.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="title">Section Title</Label>
-                    <Input 
-                      id="title" 
-                      name="title" 
-                      value={settings.title} 
-                      onChange={handleGeneralSettingsChange} 
-                    />
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="subtitle">Section Subtitle</Label>
-                    <Textarea 
-                      id="subtitle" 
-                      name="subtitle" 
-                      value={settings.subtitle} 
-                      onChange={handleGeneralSettingsChange} 
-                      rows={3}
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="viewAllText">Button Text</Label>
-                      <Input 
-                        id="viewAllText" 
-                        name="viewAllText" 
-                        value={settings.viewAllText} 
-                        onChange={handleGeneralSettingsChange} 
-                      />
-                    </div>
-                    
-                    <div className="grid gap-2">
-                      <Label htmlFor="viewAllUrl">Button URL</Label>
-                      <Input 
-                        id="viewAllUrl" 
-                        name="viewAllUrl" 
-                        value={settings.viewAllUrl} 
-                        onChange={handleGeneralSettingsChange} 
-                        placeholder="/faq or https://example.com"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        For internal pages, start with a slash (e.g., "/faq"). 
-                        For external links, include the full URL (e.g., "https://example.com").
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="items" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Add New FAQ</CardTitle>
-                <CardDescription>Add a new question and answer to the FAQ section.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="question">Question</Label>
-                    <Input 
-                      id="question" 
-                      name="question" 
-                      value={newFAQ.question} 
-                      onChange={handleNewFAQChange} 
-                      placeholder="e.g., What services do you offer?"
-                    />
-                  </div>
-                  
-                  <div className="grid gap-2">
-                    <Label htmlFor="answer">Answer</Label>
-                    <Textarea 
-                      id="answer" 
-                      name="answer" 
-                      value={newFAQ.answer} 
-                      onChange={handleNewFAQChange}
-                      placeholder="Enter your answer here..."
-                      rows={4}
-                    />
-                  </div>
-                  
-                  <Button onClick={handleAddFAQ}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add FAQ
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Manage FAQs</CardTitle>
-                <CardDescription>Edit, reorder, or remove FAQ items.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Accordion type="multiple" className="w-full">
-                  {settings.faqItems.sort((a, b) => a.order - b.order).map((faq) => (
-                    <AccordionItem key={faq.id} value={`faq-${faq.id}`}>
-                      <div className="flex items-center justify-between">
-                        <AccordionTrigger className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center text-xs">
-                              {faq.order}
-                            </span>
-                            <span className={faq.isActive === false ? "opacity-50" : ""}>
-                              {faq.question}
-                            </span>
-                          </div>
-                        </AccordionTrigger>
-                        
-                        <div className="flex items-center gap-1 mr-4">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMoveUp(faq.id);
-                            }}
-                            disabled={faq.order === 1}
-                          >
-                            <MoveUp className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleMoveDown(faq.id);
-                            }}
-                            disabled={faq.order === settings.faqItems.length}
-                          >
-                            <MoveDown className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleToggleActive(faq.id);
-                            }}
-                          >
-                            {faq.isActive === false ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteFAQ(faq.id);
-                            }}
-                            className="text-destructive hover:text-destructive/90"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                      
-                      <AccordionContent>
-                        <div className="grid gap-4 pt-4">
-                          <div className="grid gap-2">
-                            <Label htmlFor={`question-${faq.id}`}>Question</Label>
-                            <Input 
-                              id={`question-${faq.id}`}
-                              value={faq.question} 
-                              onChange={(e) => handleFAQChange(faq.id, 'question', e.target.value)} 
-                            />
-                          </div>
-                          
-                          <div className="grid gap-2">
-                            <Label htmlFor={`answer-${faq.id}`}>Answer</Label>
-                            <Textarea 
-                              id={`answer-${faq.id}`}
-                              value={faq.answer} 
-                              onChange={(e) => handleFAQChange(faq.id, 'answer', e.target.value)} 
-                              rows={4}
-                            />
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <Label htmlFor={`active-${faq.id}`} className="flex-1">
-                              Active
-                            </Label>
-                            <Switch 
-                              id={`active-${faq.id}`}
-                              checked={faq.isActive !== false}
-                              onCheckedChange={(checked) => handleFAQChange(faq.id, 'isActive', checked)}
-                            />
-                          </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </CardContent>
-              <CardFooter>
-                <Button onClick={handleSaveSettings} className="ml-auto">
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Changes
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </AdminLayout>
+    <div className="container mx-auto py-10">
+      <Card>
+        <CardHeader>
+          <CardTitle>FAQ Settings</CardTitle>
+          <CardDescription>Manage frequently asked questions on your website.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4">
+            <div>
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                value={settings.title}
+                onChange={(e) => handleUpdateSettings({ ...settings, title: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="subtitle">Subtitle</Label>
+              <Input
+                id="subtitle"
+                value={settings.subtitle}
+                onChange={(e) => handleUpdateSettings({ ...settings, subtitle: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={settings.description}
+                onChange={(e) => handleUpdateSettings({ ...settings, description: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>FAQ Items</CardTitle>
+              <CardDescription>Manage individual FAQ items.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="list-none space-y-2">
+                {settings.faqItems.map((item) => (
+                  <li key={item.id} className="border rounded-md p-4">
+                    <p className="font-semibold">{item.question}</p>
+                    <p className="text-sm text-muted-foreground">{item.answer}</p>
+                  </li>
+                ))}
+              </ul>
+
+              <Button onClick={() => setAddingFAQ(true)} className="mt-4">
+                Add FAQ Item
+              </Button>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isAddingFAQ} onOpenChange={setAddingFAQ}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add New FAQ Item</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div>
+              <Label htmlFor="question">Question</Label>
+              <Input
+                id="question"
+                value={newFAQQuestion}
+                onChange={(e) => setNewFAQQuestion(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="answer">Answer</Label>
+              <Textarea
+                id="answer"
+                value={newFAQAnswer}
+                onChange={(e) => setNewFAQAnswer(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" onClick={handleAddFAQItem}>
+              Add Item
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

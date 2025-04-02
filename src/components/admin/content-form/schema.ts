@@ -1,5 +1,6 @@
 
 import { z } from "zod";
+import { ContentType } from "@/lib/types";
 
 // Schema to handle proper type conversions
 export const contentFormSchema = z.object({

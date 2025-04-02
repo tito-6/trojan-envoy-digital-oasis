@@ -1,5 +1,5 @@
-
 import React from "react";
+import { ContentType } from "@/lib/types";
 import { UseFormReturn } from "react-hook-form";
 import { ContentFormValues } from "../schema";
 import { TabsContent } from "@/components/ui/tabs";
@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, X } from "lucide-react";
-import { ContentType } from "@/lib/types";
 import { availableLanguages } from "@/lib/i18n";
 
 interface BasicInfoTabProps {
