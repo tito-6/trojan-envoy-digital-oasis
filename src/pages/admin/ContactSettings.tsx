@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,13 +12,15 @@ import { storageService } from "@/lib/storage";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Plus, X } from "lucide-react";
-import { ContactSettings, ContactInfoItem, ContactFormField } from "@/lib/types";
+import { ContactInfoItem, ContactFormField } from "@/lib/types";
+import type { ContactSettings as ContactSettingsType } from "@/lib/types";
 import RichTextEditor from "@/components/admin/richtext/RichTextEditor";
 import { supabase, checkSupabaseConnection } from "@/lib/supabase";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const ContactSettings: React.FC = () => {
   const { toast } = useToast();
-  const [settings, setSettings] = useState<ContactSettings>(() => storageService.getContactSettings());
+  const [settings, setSettings] = useState<ContactSettingsType>(() => storageService.getContactSettings());
   const [isUpdating, setIsUpdating] = useState(false);
   const [databaseConnected, setDatabaseConnected] = useState(false);
 
@@ -39,7 +42,7 @@ const ContactSettings: React.FC = () => {
     };
     
     checkConnection();
-  }, []);
+  }, [toast]);
 
   const handleBasicInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -110,10 +113,9 @@ const ContactSettings: React.FC = () => {
           name: `field${prev.formFields.length + 1}`,
           label: "New Field",
           type: "text",
-          required: true,
+          required: false,
           placeholder: "Enter value",
-          order: prev.formFields.length,
-          options: []
+          order: prev.formFields.length
         }
       ]
     }));
@@ -126,119 +128,68 @@ const ContactSettings: React.FC = () => {
     }));
   };
 
-  const addFieldOption = (fieldIndex: number) => {
-    setSettings(prev => {
-      const updatedFields = [...prev.formFields];
-      const currentOptions = updatedFields[fieldIndex].options || [];
-      updatedFields[fieldIndex].options = [
-        ...currentOptions,
-        {
-          id: Date.now(),
-          label: "New Option",
-          value: `option${currentOptions.length + 1}`
-        }
-      ];
-      return {
-        ...prev,
-        formFields: updatedFields
-      };
-    });
-  };
-
-  const updateFieldOption = (fieldIndex: number, optionIndex: number, field: string, value: string) => {
-    setSettings(prev => {
-      const updatedFields = [...prev.formFields];
-      const updatedOptions = [...(updatedFields[fieldIndex].options || [])];
-      updatedOptions[optionIndex] = {
-        ...updatedOptions[optionIndex],
-        [field]: value
-      };
-      updatedFields[fieldIndex].options = updatedOptions;
-      return {
-        ...prev,
-        formFields: updatedFields
-      };
-    });
-  };
-
-  const removeFieldOption = (fieldIndex: number, optionId: number) => {
-    setSettings(prev => {
-      const updatedFields = [...prev.formFields];
-      updatedFields[fieldIndex].options = updatedFields[fieldIndex].options?.filter(
-        option => option.id !== optionId
-      );
-      return {
-        ...prev,
-        formFields: updatedFields
-      };
-    });
-  };
-
-  const handleDescriptionChange = (value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      description: value
-    }));
-  };
-
-  const saveSettings = async () => {
+  const handleSubmit = async () => {
     setIsUpdating(true);
+    
     try {
+      // Update settings in local storage
       storageService.updateContactSettings(settings);
+      
+      // If connected to Supabase, update there as well
+      if (databaseConnected) {
+        await supabase
+          .from('contact_settings')
+          .upsert({ ...settings }, { onConflict: 'id' });
+      }
+      
       toast({
-        title: "Settings saved",
-        description: `Contact section settings have been updated successfully${databaseConnected ? ' and synced to database' : ''}.`
+        title: "Contact settings updated",
+        description: "Your changes have been saved successfully."
       });
     } catch (error) {
+      console.error('Error updating contact settings:', error);
       toast({
-        title: "Error saving settings",
-        description: "An error occurred while saving the settings.",
+        title: "Error updating settings",
+        description: "There was a problem updating your contact settings.",
         variant: "destructive"
       });
-      console.error("Error saving contact settings:", error);
     } finally {
       setIsUpdating(false);
     }
   };
 
+  const handleToggleChange = (field: string, value: boolean) => {
+    setSettings(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   return (
     <AdminLayout>
-      <div className="container py-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Contact Section Settings</h1>
-            {databaseConnected && (
-              <p className="text-sm text-green-500 flex items-center mt-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                Connected to database
-              </p>
-            )}
-          </div>
-          <Button onClick={saveSettings} disabled={isUpdating}>
-            {isUpdating ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-
+      <div className="container mx-auto py-10">
+        <h1 className="text-3xl font-bold mb-6">Contact Settings</h1>
+        
         <Tabs defaultValue="general">
-          <TabsList className="mb-4">
+          <TabsList className="mb-6">
             <TabsTrigger value="general">General</TabsTrigger>
-            <TabsTrigger value="contact-info">Contact Information</TabsTrigger>
+            <TabsTrigger value="contact-info">Contact Info</TabsTrigger>
             <TabsTrigger value="form-fields">Form Fields</TabsTrigger>
             <TabsTrigger value="advanced">Advanced Settings</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="general" className="space-y-4">
+          
+          <TabsContent value="general" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>General Settings</CardTitle>
+                <CardTitle>Basic Information</CardTitle>
                 <CardDescription>
-                  Configure the main settings for the contact section.
+                  Configure the general settings for your contact page
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Section Title</Label>
+                    <Label htmlFor="title">Page Title</Label>
                     <Input 
                       id="title" 
                       name="title" 
@@ -246,8 +197,9 @@ const ContactSettings: React.FC = () => {
                       onChange={handleBasicInfoChange} 
                     />
                   </div>
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="subtitle">Section Subtitle</Label>
+                    <Label htmlFor="subtitle">Subtitle</Label>
                     <Input 
                       id="subtitle" 
                       name="subtitle" 
@@ -256,16 +208,18 @@ const ContactSettings: React.FC = () => {
                     />
                   </div>
                 </div>
-
+                
                 <div className="space-y-2">
-                  <Label htmlFor="description">Section Description</Label>
-                  <RichTextEditor
-                    value={settings.description}
-                    onChange={handleDescriptionChange}
-                    height="150px"
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea 
+                    id="description" 
+                    name="description" 
+                    value={settings.description} 
+                    onChange={handleBasicInfoChange}
+                    rows={4}
                   />
                 </div>
-
+                
                 <div className="space-y-2">
                   <Label htmlFor="submitButtonText">Submit Button Text</Label>
                   <Input 
@@ -278,212 +232,196 @@ const ContactSettings: React.FC = () => {
               </CardContent>
             </Card>
           </TabsContent>
-
-          <TabsContent value="contact-info" className="space-y-4">
+          
+          <TabsContent value="contact-info" className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Contact Information Items</CardTitle>
-                <CardDescription>
-                  Manage the contact information displayed in the contact section.
-                </CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Contact Information</CardTitle>
+                  <CardDescription>
+                    Add contact details that will be displayed on the contact page
+                  </CardDescription>
+                </div>
+                <Button onClick={addContactInfoItem}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Item
+                </Button>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={addContactInfoItem}
-                  className="mb-4"
-                >
-                  <Plus className="h-4 w-4 mr-2" /> Add Contact Info Item
-                </Button>
-                
-                {settings.contactInfoItems.map((item, index) => (
-                  <div key={item.id} className="p-4 border rounded-md space-y-3 relative">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="absolute right-2 top-2" 
-                      onClick={() => removeContactInfoItem(item.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Title</Label>
-                        <Input 
-                          value={item.title} 
-                          onChange={(e) => handleContactInfoUpdate(index, 'title', e.target.value)} 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Icon</Label>
-                        <Input 
-                          value={item.icon} 
-                          onChange={(e) => handleContactInfoUpdate(index, 'icon', e.target.value)} 
-                          placeholder="Lucide icon name (e.g. MapPin, Phone, Mail)"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Content</Label>
-                      <Textarea 
-                        value={item.content} 
-                        onChange={(e) => handleContactInfoUpdate(index, 'content', e.target.value)} 
-                        rows={3}
-                      />
-                    </div>
+                {settings.contactInfoItems.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground">
+                    No contact information items added yet. Click the button above to add one.
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="form-fields" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Form Fields Configuration</CardTitle>
-                <CardDescription>
-                  Customize the form fields that will be displayed in the contact form.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={addFormField}
-                  className="mb-4"
-                >
-                  <Plus className="h-4 w-4 mr-2" /> Add Form Field
-                </Button>
-
-                {settings.formFields.map((field, index) => (
-                  <div key={field.id} className="p-4 border rounded-md space-y-3 relative">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="absolute right-2 top-2" 
-                      onClick={() => removeFormField(field.id)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label>Field Label</Label>
-                        <Input 
-                          value={field.label} 
-                          onChange={(e) => handleFormFieldUpdate(index, 'label', e.target.value)} 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Field Name</Label>
-                        <Input 
-                          value={field.name} 
-                          onChange={(e) => handleFormFieldUpdate(index, 'name', e.target.value)} 
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Field Type</Label>
-                        <select 
-                          className="w-full h-10 px-3 rounded-md border border-input bg-background" 
-                          value={field.type} 
-                          onChange={(e) => handleFormFieldUpdate(index, 'type', e.target.value)}
+                ) : (
+                  settings.contactInfoItems.map((item, index) => (
+                    <div key={item.id} className="border rounded-lg p-4 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-medium">Contact Information Item #{index + 1}</h3>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => removeContactInfoItem(item.id)}
                         >
-                          <option value="text">Text</option>
-                          <option value="email">Email</option>
-                          <option value="phone">Phone</option>
-                          <option value="textarea">Textarea</option>
-                          <option value="select">Select</option>
-                          <option value="checkbox">Checkbox</option>
-                          <option value="radio">Radio</option>
-                          <option value="date">Date</option>
-                        </select>
+                          <X className="w-4 h-4" />
+                        </Button>
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Placeholder</Label>
-                        <Input 
-                          value={field.placeholder} 
-                          onChange={(e) => handleFormFieldUpdate(index, 'placeholder', e.target.value)} 
-                        />
-                      </div>
-                      <div className="flex items-center space-x-2 h-full pt-8">
-                        <Switch 
-                          checked={field.required} 
-                          onCheckedChange={(checked) => handleFormFieldUpdate(index, 'required', checked)} 
-                        />
-                        <Label>Required field</Label>
-                      </div>
-                    </div>
-
-                    {(field.type === 'select' || field.type === 'radio' || field.type === 'checkbox') && (
-                      <div className="mt-4 border-t pt-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <Label>Options</Label>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => addFieldOption(index)}
-                          >
-                            <Plus className="h-3 w-3 mr-1" /> Add Option
-                          </Button>
-                        </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          {field.options?.map((option, optionIndex) => (
-                            <div key={option.id} className="flex gap-2 items-center">
-                              <Input 
-                                className="flex-1"
-                                value={option.label} 
-                                onChange={(e) => updateFieldOption(index, optionIndex, 'label', e.target.value)} 
-                                placeholder="Option label"
-                              />
-                              <Input 
-                                className="flex-1"
-                                value={option.value} 
-                                onChange={(e) => updateFieldOption(index, optionIndex, 'value', e.target.value)} 
-                                placeholder="Option value"
-                              />
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                onClick={() => removeFieldOption(index, option.id)}
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
+                          <Label>Title</Label>
+                          <Input 
+                            value={item.title} 
+                            onChange={(e) => handleContactInfoUpdate(index, 'title', e.target.value)} 
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Icon</Label>
+                          <Input 
+                            value={item.icon} 
+                            onChange={(e) => handleContactInfoUpdate(index, 'icon', e.target.value)} 
+                            placeholder="MapPin, Phone, Mail, etc."
+                          />
                         </div>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      
+                      <div className="space-y-2">
+                        <Label>Content</Label>
+                        <Textarea 
+                          value={item.content} 
+                          onChange={(e) => handleContactInfoUpdate(index, 'content', e.target.value)}
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  ))
+                )}
               </CardContent>
             </Card>
           </TabsContent>
-
-          <TabsContent value="advanced" className="space-y-4">
+          
+          <TabsContent value="form-fields" className="space-y-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Form Fields</CardTitle>
+                  <CardDescription>
+                    Customize the fields in your contact form
+                  </CardDescription>
+                </div>
+                <Button onClick={addFormField}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Field
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {settings.formFields.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground">
+                    No form fields added yet. Click the button above to add one.
+                  </div>
+                ) : (
+                  settings.formFields.map((field, index) => (
+                    <div key={field.id} className="border rounded-lg p-4 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-medium">Form Field #{index + 1}</h3>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => removeFormField(field.id)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Label</Label>
+                          <Input 
+                            value={field.label} 
+                            onChange={(e) => handleFormFieldUpdate(index, 'label', e.target.value)} 
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Field Name</Label>
+                          <Input 
+                            value={field.name} 
+                            onChange={(e) => handleFormFieldUpdate(index, 'name', e.target.value)} 
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Field Type</Label>
+                          <select
+                            className="w-full px-3 py-2 border rounded-md"
+                            value={field.type}
+                            onChange={(e) => handleFormFieldUpdate(index, 'type', e.target.value)}
+                          >
+                            <option value="text">Text</option>
+                            <option value="email">Email</option>
+                            <option value="tel">Telephone</option>
+                            <option value="textarea">Text Area</option>
+                            <option value="select">Dropdown</option>
+                            <option value="checkbox">Checkbox</option>
+                            <option value="radio">Radio Button</option>
+                          </select>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label>Placeholder</Label>
+                          <Input 
+                            value={field.placeholder || ''} 
+                            onChange={(e) => handleFormFieldUpdate(index, 'placeholder', e.target.value)} 
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`required-${field.id}`}
+                          checked={field.required}
+                          onCheckedChange={(checked) => 
+                            handleFormFieldUpdate(index, 'required', checked === true)
+                          }
+                        />
+                        <Label htmlFor={`required-${field.id}`}>Required Field</Label>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="advanced" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Advanced Settings</CardTitle>
                 <CardDescription>
-                  Configure advanced features for the contact form.
+                  Configure advanced features for your contact form
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    checked={settings.enableRecaptcha} 
-                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, enableRecaptcha: checked }))} 
-                  />
-                  <Label>Enable reCAPTCHA</Label>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="enableRecaptcha" className="font-medium">
+                      Enable reCAPTCHA
+                    </Label>
+                    <Switch
+                      id="enableRecaptcha"
+                      checked={settings.enableRecaptcha}
+                      onCheckedChange={(checked) => handleToggleChange('enableRecaptcha', checked)}
+                    />
+                  </div>
+                  <p className="text-muted-foreground text-sm">
+                    Protect your form from spam by enabling Google reCAPTCHA v3
+                  </p>
                 </div>
                 
                 {settings.enableRecaptcha && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 mt-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="recaptchaSiteKey">reCAPTCHA Site Key</Label>
                       <Input 
@@ -491,9 +429,9 @@ const ContactSettings: React.FC = () => {
                         name="recaptchaSiteKey" 
                         value={settings.recaptchaSiteKey} 
                         onChange={handleBasicInfoChange} 
-                        placeholder="Enter your reCAPTCHA site key"
                       />
                     </div>
+                    
                     <div className="space-y-2">
                       <Label htmlFor="recaptchaSecretKey">reCAPTCHA Secret Key</Label>
                       <Input 
@@ -501,80 +439,88 @@ const ContactSettings: React.FC = () => {
                         name="recaptchaSecretKey" 
                         value={settings.recaptchaSecretKey} 
                         onChange={handleBasicInfoChange} 
-                        placeholder="Enter your reCAPTCHA secret key"
                         type="password"
                       />
                     </div>
                   </div>
                 )}
-
-                <Separator className="my-4" />
-
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    checked={settings.enableFingerprinting} 
-                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, enableFingerprinting: checked }))} 
-                  />
-                  <Label>Enable User Fingerprinting</Label>
-                </div>
-
-                <Separator className="my-4" />
-
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    checked={settings.enableEmailNotifications} 
-                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, enableEmailNotifications: checked }))} 
-                  />
-                  <Label>Enable Email Notifications</Label>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="enableEmailNotifications" className="font-medium">
+                      Email Notifications
+                    </Label>
+                    <Switch
+                      id="enableEmailNotifications"
+                      checked={settings.enableEmailNotifications}
+                      onCheckedChange={(checked) => handleToggleChange('enableEmailNotifications', checked)}
+                    />
+                  </div>
+                  <p className="text-muted-foreground text-sm">
+                    Receive email notifications when someone submits your contact form
+                  </p>
                 </div>
                 
                 {settings.enableEmailNotifications && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6 mt-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="emailSender">Sender Email</Label>
-                      <Input 
-                        id="emailSender" 
-                        name="emailSender" 
-                        value={settings.emailSender} 
-                        onChange={handleBasicInfoChange} 
-                        placeholder="noreply@example.com"
-                      />
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="emailSender">Sender Email</Label>
+                        <Input 
+                          id="emailSender" 
+                          name="emailSender" 
+                          value={settings.emailSender} 
+                          onChange={handleBasicInfoChange} 
+                          placeholder="noreply@example.com"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="emailRecipient">Recipient Email</Label>
+                        <Input 
+                          id="emailRecipient" 
+                          name="emailRecipient" 
+                          value={settings.emailRecipient} 
+                          onChange={handleBasicInfoChange} 
+                          placeholder="you@example.com"
+                        />
+                      </div>
                     </div>
+                    
                     <div className="space-y-2">
-                      <Label htmlFor="emailRecipient">Recipient Email</Label>
-                      <Input 
-                        id="emailRecipient" 
-                        name="emailRecipient" 
-                        value={settings.emailRecipient} 
-                        onChange={handleBasicInfoChange} 
-                        placeholder="contact@example.com"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="emailSubject">Email Subject Template</Label>
+                      <Label htmlFor="emailSubject">Email Subject</Label>
                       <Input 
                         id="emailSubject" 
                         name="emailSubject" 
                         value={settings.emailSubject} 
                         onChange={handleBasicInfoChange} 
-                        placeholder="New contact form submission: {subject}"
                       />
                     </div>
                   </div>
                 )}
-
-                <Separator className="my-4" />
-
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    checked={settings.enableAppointmentScheduling} 
-                    onCheckedChange={(checked) => setSettings(prev => ({ ...prev, enableAppointmentScheduling: checked }))} 
-                  />
-                  <Label>Enable Appointment Scheduling</Label>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="enableAppointmentScheduling" className="font-medium">
+                      Appointment Scheduling
+                    </Label>
+                    <Switch
+                      id="enableAppointmentScheduling"
+                      checked={settings.enableAppointmentScheduling}
+                      onCheckedChange={(checked) => handleToggleChange('enableAppointmentScheduling', checked)}
+                    />
+                  </div>
+                  <p className="text-muted-foreground text-sm">
+                    Allow users to schedule appointments directly from your contact form
+                  </p>
                 </div>
                 
                 {settings.enableAppointmentScheduling && (
-                  <div className="grid grid-cols-1 gap-4 pl-6 mt-2">
+                  <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="appointmentLabel">Appointment Field Label</Label>
                       <Input 
@@ -582,57 +528,55 @@ const ContactSettings: React.FC = () => {
                         name="appointmentLabel" 
                         value={settings.appointmentLabel} 
                         onChange={handleBasicInfoChange} 
-                        placeholder="Schedule an Appointment"
                       />
                     </div>
-
-                    <div className="space-y-2">
-                      <Label>Available Days</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((day) => (
-                          <div key={day} className="flex items-center space-x-2">
-                            <Switch 
-                              checked={settings.availableDays?.includes(day)} 
-                              onCheckedChange={(checked) => {
-                                setSettings(prev => {
-                                  const currentDays = prev.availableDays || [];
-                                  return {
-                                    ...prev, 
-                                    availableDays: checked
-                                      ? [...currentDays, day]
-                                      : currentDays.filter(d => d !== day)
-                                  };
-                                });
-                              }} 
-                            />
-                            <Label>{day}</Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="workingHoursStart">Working Hours Start</Label>
                         <Input 
                           id="workingHoursStart" 
                           name="workingHoursStart" 
+                          type="time"
                           value={settings.workingHoursStart} 
                           onChange={handleBasicInfoChange} 
-                          placeholder="09:00"
-                          type="time"
                         />
                       </div>
+                      
                       <div className="space-y-2">
                         <Label htmlFor="workingHoursEnd">Working Hours End</Label>
                         <Input 
                           id="workingHoursEnd" 
                           name="workingHoursEnd" 
+                          type="time"
                           value={settings.workingHoursEnd} 
                           onChange={handleBasicInfoChange} 
-                          placeholder="17:00"
-                          type="time"
                         />
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label>Available Days</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                          <div key={day} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`day-${day}`}
+                              checked={settings.availableDays.includes(day)}
+                              onCheckedChange={(checked) => {
+                                const updatedDays = checked
+                                  ? [...settings.availableDays, day]
+                                  : settings.availableDays.filter(d => d !== day);
+                                
+                                setSettings(prev => ({
+                                  ...prev,
+                                  availableDays: updatedDays
+                                }));
+                              }}
+                            />
+                            <Label htmlFor={`day-${day}`}>{day}</Label>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -641,6 +585,16 @@ const ContactSettings: React.FC = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        
+        <div className="flex justify-end mt-6">
+          <Button 
+            onClick={handleSubmit} 
+            disabled={isUpdating}
+            className="min-w-[150px]"
+          >
+            {isUpdating ? "Saving..." : "Save Settings"}
+          </Button>
+        </div>
       </div>
     </AdminLayout>
   );

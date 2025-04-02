@@ -1,105 +1,71 @@
 
 import React, { useState, useEffect } from "react";
-import { Globe } from "lucide-react";
-import { availableLanguages, useLanguage, LanguageCode } from "@/lib/i18n";
-import { cn } from "@/lib/utils";
+import { Check, ChevronDown, Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/lib/i18n";
 import { storageService } from "@/lib/storage";
 
-const LanguageSelector: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const { currentLanguage, setLanguage } = useLanguage();
+export function LanguageSelector() {
+  const { availableLanguages, currentLanguage, changeLanguage } = useLanguage();
   const [enabledLanguages, setEnabledLanguages] = useState<string[]>([]);
+  const [defaultLanguage, setDefaultLanguage] = useState<string>("en");
 
   useEffect(() => {
-    // Load enabled languages from header settings
-    const headerSettings = storageService.getHeaderSettings();
-    setEnabledLanguages(headerSettings.enabledLanguages);
-    
-    // Subscribe to changes in header settings
-    const unsubscribe = storageService.addEventListener('header-settings-updated', (settings) => {
-      setEnabledLanguages(settings.enabledLanguages);
-      
-      // If current language is no longer enabled, switch to default
-      if (!settings.enabledLanguages.includes(currentLanguage)) {
-        setLanguage(settings.defaultLanguage as LanguageCode);
-      }
-    });
-    
-    return () => unsubscribe();
-  }, [currentLanguage, setLanguage]);
+    // Get enabled languages from header settings
+    const settings = storageService.getHeaderSettings();
+    setEnabledLanguages(settings.enabledLanguages || ["en"]);
+    setDefaultLanguage(settings.defaultLanguage || "en");
 
-  const toggleDropdown = () => setIsOpen(!isOpen);
-  const closeDropdown = () => setIsOpen(false);
-
-  const handleLanguageChange = (langCode: LanguageCode) => {
-    setLanguage(langCode);
-    closeDropdown();
-  };
-
-  // Close the dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.language-dropdown')) {
-        closeDropdown();
-      }
+    // Subscribe to settings updates
+    const handleSettingsUpdate = () => {
+      const updatedSettings = storageService.getHeaderSettings();
+      setEnabledLanguages(updatedSettings.enabledLanguages || ["en"]);
+      setDefaultLanguage(updatedSettings.defaultLanguage || "en");
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('header-settings-updated', handleSettingsUpdate);
+
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('header-settings-updated', handleSettingsUpdate);
     };
   }, []);
-  
-  // Filter available languages to only show enabled ones
-  const filteredLanguages = availableLanguages.filter(lang => 
-    enabledLanguages.includes(lang.code)
-  );
 
-  if (filteredLanguages.length <= 1) {
-    return null;
-  }
+  // Filter available languages based on enabled languages
+  const filteredLanguages = availableLanguages.filter(
+    (lang) => enabledLanguages.includes(lang.code)
+  );
 
   return (
-    <div className="relative language-dropdown">
-      <button
-        onClick={toggleDropdown}
-        className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-secondary transition-colors"
-        aria-label="Select language"
-      >
-        <Globe className="w-4 h-4" />
-        <span className="text-sm font-medium uppercase">
-          {currentLanguage}
-        </span>
-      </button>
-
-      {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={closeDropdown}
-          />
-          <div className="absolute right-0 mt-2 w-40 bg-background border border-border rounded-lg shadow-lg z-20 overflow-hidden glass-card animate-fade-in">
-            <ul className="py-1">
-              {filteredLanguages.map((lang) => (
-                <li key={lang.code}>
-                  <button
-                    onClick={() => handleLanguageChange(lang.code as LanguageCode)}
-                    className={cn(
-                      "w-full text-left px-4 py-2 text-sm transition-colors hover:bg-secondary",
-                      currentLanguage === lang.code && "bg-secondary/50"
-                    )}
-                  >
-                    {lang.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </>
-      )}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="rounded-full">
+          <Globe className="h-5 w-5" />
+          <span className="sr-only">Toggle language</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {filteredLanguages.map((language) => (
+          <DropdownMenuItem
+            key={language.code}
+            onClick={() => changeLanguage(language.code)}
+            className="flex items-center justify-between px-3 py-2 cursor-pointer"
+          >
+            <div className="flex items-center gap-2">
+              <span>{language.flag}</span>
+              <span>{language.label}</span>
+            </div>
+            {currentLanguage === language.code && (
+              <Check className="h-4 w-4" />
+            )}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
-};
-
-export default LanguageSelector;
+}

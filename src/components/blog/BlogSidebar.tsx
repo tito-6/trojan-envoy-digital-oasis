@@ -1,188 +1,167 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Tag, ArrowRight } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Search, Tag, Clock, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BlogCategory, ContentItem } from "@/lib/types";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { BlogCategory } from "@/lib/types";
+import { useLanguage } from "@/lib/i18n";
 import { storageService } from "@/lib/storage";
-import { useToast } from "@/hooks/use-toast";
 
 interface BlogSidebarProps {
-  blogStats?: {
+  blogStats: {
     total: number;
     categories: BlogCategory[];
   };
 }
 
 const BlogSidebar: React.FC<BlogSidebarProps> = ({ blogStats }) => {
+  const { t, currentLanguage } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  // Use provided categories from blogStats or fallback to empty array
-  const categories = blogStats?.categories || [];
-  
-  // Get popular posts from the CMS based on most recent
-  const allContent = storageService.getAllContent();
-  const popularPosts = allContent
-    .filter(item => item.type === "Blog Post" && item.published)
-    .sort((a, b) => {
-      const dateA = a.publishDate || a.lastUpdated;
-      const dateB = b.publishDate || b.lastUpdated;
-      return new Date(dateB).getTime() - new Date(dateA).getTime();
-    })
-    .slice(0, 3);
-  
-  // Extract tags from all blog posts
-  const tags = Array.from(
-    new Set(
-      allContent
-        .filter(item => item.type === "Blog Post" && item.published)
-        .flatMap(post => post.seoKeywords || [])
-    )
-  );
-  
+  const [popularTags, setPopularTags] = useState<string[]>([]);
+  const [recentPosts, setRecentPosts] = useState<{ title: string; slug: string; date: string }[]>([]);
+
+  useEffect(() => {
+    // Extract popular tags from all blog posts (combining categories and keywords)
+    const allContent = storageService.getAllContent();
+    const blogPosts = allContent.filter(item => 
+      item.type === "Blog Post" && 
+      item.published === true &&
+      (!item.language || item.language === currentLanguage)
+    );
+    
+    // Get tags frequency (from seoKeywords)
+    const tagsMap = new Map<string, number>();
+    
+    blogPosts.forEach(post => {
+      if (post.seoKeywords && Array.isArray(post.seoKeywords)) {
+        post.seoKeywords.forEach(keyword => {
+          if (typeof keyword === 'string') {
+            const count = tagsMap.get(keyword) || 0;
+            tagsMap.set(keyword, count + 1);
+          }
+        });
+      }
+    });
+    
+    // Sort by frequency and get top 10
+    const sortedTags = Array.from(tagsMap.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(entry => entry[0]);
+    
+    setPopularTags(sortedTags);
+    
+    // Get recent posts
+    const recent = blogPosts
+      .sort((a, b) => {
+        const dateA = a.publishDate || a.lastUpdated;
+        const dateB = b.publishDate || b.lastUpdated;
+        return new Date(dateB).getTime() - new Date(dateA).getTime();
+      })
+      .slice(0, 5)
+      .map(post => ({
+        title: post.title,
+        slug: post.slug || '',
+        date: post.publishDate || post.lastUpdated
+      }));
+    
+    setRecentPosts(recent);
+  }, [currentLanguage]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      navigate(`/blog?search=${encodeURIComponent(searchTerm)}`);
-      toast({
-        title: "Searching for",
-        description: searchTerm,
-      });
+      navigate(`/blog?search=${encodeURIComponent(searchTerm.trim())}`);
     }
   };
-  
+
   return (
-    <div className="space-y-8 should-animate">
-      <Card>
-        <CardHeader>
-          <CardTitle>Search</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSearch}>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search posts..."
-                className="w-full pl-10 pr-4 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Categories</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {categories.length > 0 ? (
-            <ul className="divide-y divide-border">
-              {categories.map((category) => (
-                <li key={category.name}>
-                  <Link
-                    to={`/blog/category/${category.name.toLowerCase()}`}
-                    className="flex items-center justify-between px-6 py-3 hover:bg-secondary/50 transition-colors"
-                  >
-                    <span>{category.name}</span>
-                    <span className="text-sm text-muted-foreground">({category.count})</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="px-6 py-4 text-muted-foreground text-sm">
-              No categories found. Add some blog posts with keywords to create categories.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Popular Posts</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {popularPosts.length > 0 ? (
-            <ul className="divide-y divide-border">
-              {popularPosts.map((post) => (
-                <li key={post.id} className="p-6">
-                  <Link
-                    to={`/blog/${post.slug || `post-${post.id}`}`}
-                    className="group"
-                  >
-                    <h4 className="font-medium group-hover:text-primary transition-colors mb-1">
-                      {post.title}
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      {post.publishDate || post.lastUpdated}
-                    </p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="px-6 py-4 text-muted-foreground text-sm">
-              No blog posts found. Add some from the Content Management System.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Tag className="w-4 h-4" />
-            Tags
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {tags.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag) => (
+    <div className="space-y-8">
+      {/* Search */}
+      <div className="rounded-lg border bg-card p-5">
+        <h3 className="text-lg font-semibold mb-4">{t('blog.search')}</h3>
+        <form onSubmit={handleSearch} className="flex space-x-2">
+          <Input
+            placeholder={t('blog.searchPlaceholder')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1"
+          />
+          <Button type="submit" variant="secondary" size="icon">
+            <Search className="h-4 w-4" />
+          </Button>
+        </form>
+      </div>
+
+      {/* Categories */}
+      <div className="rounded-lg border bg-card p-5">
+        <h3 className="text-lg font-semibold mb-4">{t('blog.categories')}</h3>
+        {blogStats.categories.length > 0 ? (
+          <div className="space-y-2">
+            {blogStats.categories.map((category) => (
+              <div key={category.id} className="flex justify-between items-center">
                 <Link
-                  key={tag}
-                  to={`/blog/tag/${tag.toLowerCase()}`}
-                  className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-xs hover:bg-primary hover:text-primary-foreground transition-colors"
+                  to={`/blog?category=${encodeURIComponent(category.slug)}`}
+                  className="hover:text-primary transition-colors text-sm"
                 >
-                  {tag}
+                  {category.name}
                 </Link>
-              ))}
-            </div>
-          ) : (
-            <div className="text-muted-foreground text-sm">
-              No tags found. Add some blog posts with keywords to create tags.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Newsletter</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Subscribe to our newsletter to receive the latest updates and insights.
-          </p>
-          <div className="space-y-3">
-            <input
-              type="email"
-              placeholder="Your email address"
-              className="w-full px-4 py-2 rounded-md border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-            <Button className="w-full">
-              Subscribe
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
+                <Badge variant="secondary">{category.count}</Badge>
+              </div>
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        ) : (
+          <p className="text-muted-foreground text-sm">{t('blog.noCategories')}</p>
+        )}
+      </div>
+
+      {/* Recent Posts */}
+      <div className="rounded-lg border bg-card p-5">
+        <h3 className="text-lg font-semibold mb-4">{t('blog.recentPosts')}</h3>
+        {recentPosts.length > 0 ? (
+          <div className="space-y-4">
+            {recentPosts.map((post, index) => (
+              <div key={index} className="space-y-1">
+                <Link
+                  to={`/blog/${post.slug}`}
+                  className="hover:text-primary transition-colors text-sm font-medium"
+                >
+                  {post.title}
+                </Link>
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <Clock className="h-3 w-3 mr-1" />
+                  <span>{new Date(post.date).toLocaleDateString()}</span>
+                </div>
+                <Separator className="mt-2" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-sm">{t('blog.noPosts')}</p>
+        )}
+      </div>
+
+      {/* Popular Tags */}
+      <div className="rounded-lg border bg-card p-5">
+        <h3 className="text-lg font-semibold mb-4">{t('blog.popularTags')}</h3>
+        {popularTags.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {popularTags.map((tag, index) => (
+              <Link key={index} to={`/blog?tag=${encodeURIComponent(tag.toLowerCase())}`}>
+                <Badge variant="outline" className="cursor-pointer hover:bg-secondary">
+                  {tag}
+                </Badge>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-sm">{t('blog.noTags')}</p>
+        )}
+      </div>
     </div>
   );
 };
