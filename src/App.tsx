@@ -31,11 +31,13 @@ import FAQ from "./pages/FAQ";
 import Careers from "./pages/Careers";
 import AdminServicesSettings from "./pages/admin/AdminServicesSettings";
 import AdminAboutSettings from "./pages/admin/AdminAboutSettings";
+import AdminReferencesSettings from "./pages/admin/AdminReferencesSettings";
+import AdminFAQSettings from "./pages/admin/AdminFAQSettings";
 import { LanguageCode, availableLanguages } from "./lib/i18n";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+function App() {
   useEffect(() => {
     // Check for saved theme preference
     const savedTheme = localStorage.getItem("theme");
@@ -127,20 +129,22 @@ const App = () => {
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/content" element={<AdminContent />} />
-            <Route path="/admin/contacts" element={<AdminContacts />} />
-            <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/header" element={<AdminHeader />} />
             <Route path="/admin/hero" element={<AdminHero />} />
-            <Route path="/admin/services-settings" element={<AdminServicesSettings />} />
             <Route path="/admin/about-settings" element={<AdminAboutSettings />} />
+            <Route path="/admin/services-settings" element={<AdminServicesSettings />} />
+            <Route path="/admin/references-settings" element={<AdminReferencesSettings />} />
+            <Route path="/admin/faq-settings" element={<AdminFAQSettings />} />
+            <Route path="/admin/contacts" element={<AdminContacts />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
             
-            {/* Keep this catch-all route at the end */}
+            {/* Not Found Route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;

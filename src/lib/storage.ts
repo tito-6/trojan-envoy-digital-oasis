@@ -1,9 +1,7 @@
-import { ContentItem, ContactRequest, User, NavigationItem, HeaderSettings, HeroSettings, PartnerLogo, TechIcon, ServicesSettings, ServiceItem, AboutSettings, KeyPoint, StatItem } from './types';
+import { ContentItem, ContactRequest, User, NavigationItem, HeaderSettings, HeroSettings, PartnerLogo, TechIcon, ServicesSettings, ServiceItem, AboutSettings, KeyPoint, StatItem, ReferencesSettings, FAQSettings, ClientLogo, FAQItem } from './types';
 
-// Initial sample data for content - we'll keep this minimal
 const initialContent: ContentItem[] = [];
 
-// Initial navigation items
 const initialNavigation: NavigationItem[] = [
   { id: 1, label: "Home", path: "/", order: 1 },
   { id: 2, label: "Services", path: "/services", order: 2 },
@@ -13,15 +11,12 @@ const initialNavigation: NavigationItem[] = [
   { id: 6, label: "Contact", path: "/contact", order: 6 },
 ];
 
-// Initial sample users
 const initialUsers: User[] = [
   { id: 1, name: "Admin User", email: "admin@trojan-envoy.com", role: "Admin", lastLogin: "2023-11-15" },
 ];
 
-// Initial sample contact requests - empty now
 const initialContacts: ContactRequest[] = [];
 
-// Initial header settings
 const initialHeaderSettings: HeaderSettings = {
   id: 1,
   siteTitle: "Trojan Envoy",
@@ -35,7 +30,6 @@ const initialHeaderSettings: HeaderSettings = {
   lastUpdated: "2023-11-15"
 };
 
-// Initial hero settings
 const initialHeroSettings: HeroSettings = {
   id: 1,
   title: "Transform Your Digital Presence",
@@ -86,7 +80,6 @@ const initialHeroSettings: HeroSettings = {
   lastUpdated: "2023-11-15"
 };
 
-// Initial about settings
 const initialAboutSettings: AboutSettings = {
   id: 1,
   title: "Empowering Businesses",
@@ -113,6 +106,60 @@ const initialAboutSettings: AboutSettings = {
   lastUpdated: "2023-11-15"
 };
 
+const initialReferencesSettings: ReferencesSettings = {
+  id: 1,
+  title: "Trusted By Industry Leaders",
+  subtitle: "We're proud to partner with these remarkable organizations",
+  viewCaseStudiesText: "View Our Case Studies",
+  viewCaseStudiesUrl: "/case-studies",
+  clientLogos: [
+    { id: 1, name: "Microsoft", logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg", scale: "w-32", order: 1 },
+    { id: 2, name: "Google", logo: "https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg", scale: "w-28", order: 2 },
+    { id: 3, name: "Amazon", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg", scale: "w-32", order: 3 },
+    { id: 4, name: "IBM", logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg", scale: "w-24", order: 4 },
+    { id: 5, name: "Samsung", logo: "https://upload.wikimedia.org/wikipedia/commons/2/24/Samsung_Logo.svg", scale: "w-32", order: 5 },
+    { id: 6, name: "Coca-Cola", logo: "https://upload.wikimedia.org/wikipedia/commons/c/ce/Coca-Cola_logo.svg", scale: "w-32", order: 6 },
+    { id: 7, name: "Toyota", logo: "https://upload.wikimedia.org/wikipedia/commons/9/9d/Toyota_logo.svg", scale: "w-20", order: 7 },
+    { id: 8, name: "Nike", logo: "https://upload.wikimedia.org/wikipedia/commons/a/a6/Logo_NIKE.svg", scale: "w-20", order: 8 },
+  ],
+  lastUpdated: "2023-11-15"
+};
+
+const initialFAQSettings: FAQSettings = {
+  id: 1,
+  title: "Frequently Asked Questions",
+  subtitle: "Find answers to common questions about our services",
+  viewAllText: "View all FAQs",
+  viewAllUrl: "/faq",
+  faqItems: [
+    {
+      id: 1,
+      question: "What services does Trojan Envoy offer?",
+      answer: "We offer comprehensive digital solutions including web development, mobile app development, UI/UX design, and digital marketing services tailored to your business needs.",
+      order: 1
+    },
+    {
+      id: 2,
+      question: "How long does it take to complete a website project?",
+      answer: "Project timelines vary based on complexity. Simple websites typically take 2-4 weeks, while larger projects may take 2-6 months. We'll provide a specific timeline after understanding your requirements.",
+      order: 2
+    },
+    {
+      id: 3,
+      question: "Do you provide ongoing support after project completion?",
+      answer: "Yes! We offer various maintenance and support packages to keep your digital products secure, up-to-date, and performing optimally.",
+      order: 3
+    },
+    {
+      id: 4,
+      question: "What is your approach to project management?",
+      answer: "We follow agile methodologies with regular client communication and iterative development cycles to ensure transparency and alignment throughout the project.",
+      order: 4
+    }
+  ],
+  lastUpdated: "2023-11-15"
+};
+
 class StorageService {
   private contentKey = 'trojan-envoy-content';
   private usersKey = 'trojan-envoy-users';
@@ -121,6 +168,8 @@ class StorageService {
   private headerSettingsKey = 'trojan-envoy-header-settings';
   private heroSettingsKey = 'trojan-envoy-hero-settings';
   private aboutSettingsKey = 'trojan-envoy-about-settings';
+  private referencesSettingsKey = 'trojan-envoy-references-settings';
+  private faqSettingsKey = 'trojan-envoy-faq-settings';
   private eventListeners: Record<string, Function[]> = {};
 
   constructor() {
@@ -154,6 +203,14 @@ class StorageService {
     
     if (!localStorage.getItem(this.aboutSettingsKey)) {
       localStorage.setItem(this.aboutSettingsKey, JSON.stringify(initialAboutSettings));
+    }
+    
+    if (!localStorage.getItem(this.referencesSettingsKey)) {
+      localStorage.setItem(this.referencesSettingsKey, JSON.stringify(initialReferencesSettings));
+    }
+    
+    if (!localStorage.getItem(this.faqSettingsKey)) {
+      localStorage.setItem(this.faqSettingsKey, JSON.stringify(initialFAQSettings));
     }
   }
 
@@ -642,7 +699,6 @@ class StorageService {
       }
     });
     
-    // Sort by order
     settings.techIcons.sort((a, b) => a.order - b.order);
     
     this.updateHeroSettings(settings);
@@ -798,6 +854,158 @@ class StorageService {
     this.updateAboutSettings(settings);
     
     return settings.stats;
+  }
+
+  getReferencesSettings(): ReferencesSettings {
+    const settings = localStorage.getItem(this.referencesSettingsKey);
+    return settings ? JSON.parse(settings) : initialReferencesSettings;
+  }
+
+  updateReferencesSettings(settings: Partial<ReferencesSettings>): ReferencesSettings {
+    const currentSettings = this.getReferencesSettings();
+    const updatedSettings: ReferencesSettings = {
+      ...currentSettings,
+      ...settings,
+      lastUpdated: new Date().toISOString().split('T')[0]
+    };
+    
+    localStorage.setItem(this.referencesSettingsKey, JSON.stringify(updatedSettings));
+    
+    this.dispatchEvent('references-settings-updated', updatedSettings);
+    
+    return updatedSettings;
+  }
+
+  addClientLogo(logo: Omit<ClientLogo, 'id'>): ClientLogo {
+    const settings = this.getReferencesSettings();
+    const newId = settings.clientLogos.length > 0 ? 
+      Math.max(...settings.clientLogos.map(logo => logo.id)) + 1 : 1;
+    
+    const newLogo: ClientLogo = { ...logo, id: newId };
+    
+    settings.clientLogos.push(newLogo);
+    this.updateReferencesSettings(settings);
+    
+    return newLogo;
+  }
+
+  updateClientLogo(id: number, logo: Partial<ClientLogo>): ClientLogo | null {
+    const settings = this.getReferencesSettings();
+    const index = settings.clientLogos.findIndex(item => item.id === id);
+    
+    if (index === -1) return null;
+    
+    const updatedLogo = { ...settings.clientLogos[index], ...logo };
+    settings.clientLogos[index] = updatedLogo;
+    
+    this.updateReferencesSettings(settings);
+    
+    return updatedLogo;
+  }
+
+  deleteClientLogo(id: number): boolean {
+    const settings = this.getReferencesSettings();
+    const filteredLogos = settings.clientLogos.filter(logo => logo.id !== id);
+    
+    if (filteredLogos.length === settings.clientLogos.length) return false;
+    
+    settings.clientLogos = filteredLogos;
+    this.updateReferencesSettings(settings);
+    
+    return true;
+  }
+
+  reorderClientLogos(items: { id: number, order: number }[]): ClientLogo[] {
+    const settings = this.getReferencesSettings();
+    
+    items.forEach(item => {
+      const index = settings.clientLogos.findIndex(i => i.id === item.id);
+      if (index !== -1) {
+        settings.clientLogos[index].order = item.order;
+      }
+    });
+    
+    settings.clientLogos.sort((a, b) => a.order - b.order);
+    
+    this.updateReferencesSettings(settings);
+    
+    return settings.clientLogos;
+  }
+
+  getFAQSettings(): FAQSettings {
+    const settings = localStorage.getItem(this.faqSettingsKey);
+    return settings ? JSON.parse(settings) : initialFAQSettings;
+  }
+
+  updateFAQSettings(settings: Partial<FAQSettings>): FAQSettings {
+    const currentSettings = this.getFAQSettings();
+    const updatedSettings: FAQSettings = {
+      ...currentSettings,
+      ...settings,
+      lastUpdated: new Date().toISOString().split('T')[0]
+    };
+    
+    localStorage.setItem(this.faqSettingsKey, JSON.stringify(updatedSettings));
+    
+    this.dispatchEvent('faq-settings-updated', updatedSettings);
+    
+    return updatedSettings;
+  }
+
+  addFAQItem(item: Omit<FAQItem, 'id'>): FAQItem {
+    const settings = this.getFAQSettings();
+    const newId = settings.faqItems.length > 0 ? 
+      Math.max(...settings.faqItems.map(item => item.id)) + 1 : 1;
+    
+    const newItem: FAQItem = { ...item, id: newId };
+    
+    settings.faqItems.push(newItem);
+    this.updateFAQSettings(settings);
+    
+    return newItem;
+  }
+
+  updateFAQItem(id: number, item: Partial<FAQItem>): FAQItem | null {
+    const settings = this.getFAQSettings();
+    const index = settings.faqItems.findIndex(i => i.id === id);
+    
+    if (index === -1) return null;
+    
+    const updatedItem = { ...settings.faqItems[index], ...item };
+    settings.faqItems[index] = updatedItem;
+    
+    this.updateFAQSettings(settings);
+    
+    return updatedItem;
+  }
+
+  deleteFAQItem(id: number): boolean {
+    const settings = this.getFAQSettings();
+    const filteredItems = settings.faqItems.filter(item => item.id !== id);
+    
+    if (filteredItems.length === settings.faqItems.length) return false;
+    
+    settings.faqItems = filteredItems;
+    this.updateFAQSettings(settings);
+    
+    return true;
+  }
+
+  reorderFAQItems(items: { id: number, order: number }[]): FAQItem[] {
+    const settings = this.getFAQSettings();
+    
+    items.forEach(item => {
+      const index = settings.faqItems.findIndex(i => i.id === item.id);
+      if (index !== -1) {
+        settings.faqItems[index].order = item.order;
+      }
+    });
+    
+    settings.faqItems.sort((a, b) => a.order - b.order);
+    
+    this.updateFAQSettings(settings);
+    
+    return settings.faqItems;
   }
 }
 

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Hero from "@/components/home/Hero";
 import Services from "@/components/home/Services";
 import About from "@/components/home/About";
@@ -13,6 +13,7 @@ import { storageService } from "@/lib/storage";
 
 const Index: React.FC = () => {
   const { t } = useLanguage();
+  const [update, forceUpdate] = useState(false);
 
   useEffect(() => {
     // Add fade-in animation to elements with the fade-in-element class
@@ -35,20 +36,31 @@ const Index: React.FC = () => {
     // Set up storage listeners for live updates
     const aboutUpdateListener = () => {
       // Force re-render when about settings change
-      forceUpdate(n => !n);
+      forceUpdate(prev => !prev);
     };
     
-    // Subscribe to about settings updates
-    const unsubscribe = storageService.addEventListener('about-settings-updated', aboutUpdateListener);
+    const referencesUpdateListener = () => {
+      // Force re-render when references settings change
+      forceUpdate(prev => !prev);
+    };
+    
+    const faqUpdateListener = () => {
+      // Force re-render when FAQ settings change
+      forceUpdate(prev => !prev);
+    };
+    
+    // Subscribe to settings updates
+    const unsubscribeAbout = storageService.addEventListener('about-settings-updated', aboutUpdateListener);
+    const unsubscribeReferences = storageService.addEventListener('references-settings-updated', referencesUpdateListener);
+    const unsubscribeFAQ = storageService.addEventListener('faq-settings-updated', faqUpdateListener);
     
     return () => {
       observer.disconnect();
-      unsubscribe();
+      unsubscribeAbout();
+      unsubscribeReferences();
+      unsubscribeFAQ();
     };
   }, [t]);
-  
-  // Force update state to trigger re-renders when settings change
-  const [update, forceUpdate] = React.useState(false);
 
   return (
     <div className="min-h-screen">
@@ -58,8 +70,8 @@ const Index: React.FC = () => {
         <Hero />
         <Services />
         <About key={`about-${update}`} />
-        <References />
-        <HomeFAQ />
+        <References key={`references-${update}`} />
+        <HomeFAQ key={`faq-${update}`} />
         <Contact />
       </main>
       

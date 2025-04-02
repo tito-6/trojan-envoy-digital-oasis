@@ -14,7 +14,9 @@ import {
   MonitorSmartphone,
   LucideIcon,
   Palette,
-  Info
+  Info,
+  Building,
+  HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -102,6 +104,16 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       title: "Services Management", 
       icon: <Palette className="w-4 h-4" />, 
       href: "/admin/services-settings" 
+    },
+    { 
+      title: "References Management", 
+      icon: <Building className="w-4 h-4" />, 
+      href: "/admin/references-settings" 
+    },
+    { 
+      title: "FAQ Management", 
+      icon: <HelpCircle className="w-4 h-4" />, 
+      href: "/admin/faq-settings" 
     },
     { 
       title: "Contact Requests", 

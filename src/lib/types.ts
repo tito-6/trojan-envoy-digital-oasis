@@ -233,3 +233,40 @@ export interface MediaItem {
   thumbnailUrl?: string;
   order: number;
 }
+
+export interface ReferencesSettings {
+  id: number;
+  title: string;
+  subtitle: string;
+  viewCaseStudiesText: string;
+  viewCaseStudiesUrl: string;
+  clientLogos: ClientLogo[];
+  lastUpdated: string;
+}
+
+export interface ClientLogo {
+  id: number;
+  name: string;
+  logo: string;
+  scale: string;
+  order: number;
+  isActive?: boolean;
+}
+
+export interface FAQSettings {
+  id: number;
+  title: string;
+  subtitle: string;
+  viewAllText: string;
+  viewAllUrl: string;
+  faqItems: FAQItem[];
+  lastUpdated: string;
+}
+
+export interface FAQItem {
+  id: number;
+  question: string;
+  answer: string;
+  order: number;
+  isActive?: boolean;
+}
