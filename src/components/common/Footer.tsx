@@ -39,7 +39,13 @@ const Footer: React.FC = () => {
               dangerouslySetInnerHTML={{ __html: 
                 typeof settings.companyInfo.description === 'string' 
                   ? settings.companyInfo.description 
-                  : settings.companyInfo.description?.blocks?.[0]?.text || '' 
+                  : (typeof settings.companyInfo.description === 'object' && 
+                     settings.companyInfo.description !== null && 
+                     'blocks' in settings.companyInfo.description &&
+                     Array.isArray(settings.companyInfo.description.blocks) && 
+                     settings.companyInfo.description.blocks.length > 0) 
+                      ? settings.companyInfo.description.blocks[0].text || '' 
+                      : ''
               }}
             />
 

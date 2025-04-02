@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useToast } from "@/hooks/use-toast";
@@ -27,9 +26,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { storageService } from "@/lib/storage";
 import { LucideIcon, MapPin, Phone, Mail, Clock } from "lucide-react";
-import { ContactFormField } from "@/lib/types";
+import { ContactFormField, ContactRequest } from "@/lib/types";
 
-// Define the country codes for the dropdown
 const countryCodes = [
   { code: "+1", country: "US", label: "United States (+1)", flag: "🇺🇸" },
   { code: "+44", country: "UK", label: "United Kingdom (+44)", flag: "🇬🇧" },
@@ -48,24 +46,23 @@ const countryCodes = [
   { code: "+27", country: "ZA", label: "South Africa (+27)", flag: "🇿🇦" }
 ];
 
-// Define the phone number regex for different countries
 const phoneRegexMap: Record<string, RegExp> = {
-  US: /^\d{10}$/, // US: 10 digits
-  UK: /^\d{10,11}$/, // UK: 10-11 digits
-  IN: /^\d{10}$/, // India: 10 digits
-  AU: /^\d{9,10}$/, // Australia: 9-10 digits
-  FR: /^\d{9}$/, // France: 9 digits
-  DE: /^\d{10,11}$/, // Germany: 10-11 digits
-  CN: /^\d{11}$/, // China: 11 digits
-  JP: /^\d{10,11}$/, // Japan: 10-11 digits
-  KR: /^\d{9,10}$/, // South Korea: 9-10 digits
-  BR: /^\d{10,11}$/, // Brazil: 10-11 digits
-  MX: /^\d{10}$/, // Mexico: 10 digits
-  ES: /^\d{9}$/, // Spain: 9 digits
-  IT: /^\d{10}$/, // Italy: 10 digits
-  RU: /^\d{10}$/, // Russia: 10 digits
-  ZA: /^\d{9}$/, // South Africa: 9 digits
-  DEFAULT: /^\d{7,15}$/, // Generic: 7-15 digits
+  US: /^\d{10}$/,
+  UK: /^\d{10,11}$/,
+  IN: /^\d{10}$/,
+  AU: /^\d{9,10}$/,
+  FR: /^\d{9}$/,
+  DE: /^\d{10,11}$/,
+  CN: /^\d{11}$/,
+  JP: /^\d{10,11}$/,
+  KR: /^\d{9,10}$/,
+  BR: /^\d{10,11}$/,
+  MX: /^\d{10}$/,
+  ES: /^\d{9}$/,
+  IT: /^\d{10}$/,
+  RU: /^\d{10}$/,
+  ZA: /^\d{9}$/,
+  DEFAULT: /^\d{7,15}$/
 };
 
 const Contact: React.FC = () => {
@@ -86,7 +83,6 @@ const Contact: React.FC = () => {
     };
   }, []);
 
-  // Dynamically build the validation schema based on form fields
   const createValidationSchema = () => {
     const schemaFields: Record<string, any> = {};
     
@@ -121,7 +117,6 @@ const Contact: React.FC = () => {
       schemaFields[field.name] = fieldSchema;
     });
     
-    // Special handling for phone field
     const phoneField = settings.formFields.find(f => f.type === 'phone');
     if (phoneField) {
       schemaFields.countryCode = z.string().default("+1");
@@ -129,7 +124,6 @@ const Contact: React.FC = () => {
     
     const baseSchema = z.object(schemaFields);
     
-    // Add refinement for phone validation if needed
     if (phoneField) {
       return baseSchema.refine((data) => {
         if (!data[phoneField.name] || !data.countryCode) return true;
@@ -151,7 +145,6 @@ const Contact: React.FC = () => {
   const validationSchema = createValidationSchema();
   type ContactFormData = z.infer<typeof validationSchema>;
   
-  // Create default values for the form
   const createDefaultValues = () => {
     const defaultValues: Record<string, any> = {};
     
@@ -182,7 +175,6 @@ const Contact: React.FC = () => {
     defaultValues: createDefaultValues(),
   });
   
-  // Get icon component by name
   const getIconComponent = (iconName: string): React.ReactNode => {
     switch (iconName) {
       case 'MapPin':
@@ -202,7 +194,6 @@ const Contact: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Format phone number with country code if applicable
       const phoneField = settings.formFields.find(f => f.type === 'phone');
       let formattedData = { ...data };
       
@@ -210,12 +201,10 @@ const Contact: React.FC = () => {
         formattedData[phoneField.name] = `${data.countryCode} ${data[phoneField.name]}`;
       }
       
-      // Remove countryCode from data before submission
       if (formattedData.countryCode) {
         delete formattedData.countryCode;
       }
       
-      // Prepare data for storage
       const contactRequest: Partial<ContactRequest> = {
         name: formattedData.name as string,
         email: formattedData.email as string,
@@ -227,7 +216,6 @@ const Contact: React.FC = () => {
         contactRequest.phone = formattedData[phoneField.name] as string;
       }
       
-      // Save to storage service
       storageService.addContactRequest(contactRequest);
       
       toast({
@@ -327,7 +315,6 @@ const Contact: React.FC = () => {
   );
 };
 
-// Helper function to render the appropriate form control based on field type
 function renderFormControl(
   field: ContactFormField, 
   formField: any, 
