@@ -4,44 +4,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import type { Request, Response } from "express";
 import { sendContactHandler } from "./src/api/contact";
-
-interface WaitingListData {
-  email: string;
-  name?: string;
-  interests?: string[];
-  message?: string;
-  createdAt: string;
-}
-
-async function sendWaitingListHandler(req: Request, res: Response) {
-  try {
-    const data = req.body as WaitingListData;
-    
-    // Validate required fields
-    if (!data.email) {
-      throw new Error('Email is required');
-    }
-
-    // Here you would typically:
-    // 1. Save to your database
-    // 2. Send confirmation email
-    // 3. Add to email marketing list
-    // For now, we'll simulate success
-
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
-      success: true,
-      message: 'Successfully added to waiting list'
-    }));
-  } catch (error) {
-    console.error('Error processing waiting list submission:', error);
-    res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
-    }));
-  }
-}
+import { sendWaitingListHandler } from "./src/api/waiting-list";
 
 export default defineConfig({
   server: {
@@ -55,11 +18,11 @@ export default defineConfig({
       configureServer(server) {
         server.middlewares.use(async (req: Request, res: Response, next) => {
           const { pathname } = new URL(req.url ?? "", `http://${req.headers.host}`);
+          
+          // Handle contact form submissions
           if (pathname === "/api/contact" && req.method === "POST") {
             try {
               console.log("[API] Received contact form submission");
-              
-              // Parse the request body
               const buffers: Buffer[] = [];
               for await (const chunk of req) {
                 buffers.push(chunk);
@@ -67,17 +30,15 @@ export default defineConfig({
               const data = Buffer.concat(buffers).toString();
               req.body = data ? JSON.parse(data) : {};
               console.log("[API] Parsed request body:", req.body);
-
-              // Call the API handler
               await sendContactHandler(req, res);
               console.log("[API] Contact form processed successfully");
             } catch (error) {
-              console.error("[API] Middleware error:", error);
+              console.error("[API] Contact middleware error:", error);
               if (!res.writableEnded) {
                 res.writeHead(500, { "Content-Type": "application/json" });
                 res.end(JSON.stringify({
-                  error: "Internal server error",
-                  details: error instanceof Error ? error.message : "Unknown error",
+                  success: false,
+                  error: error instanceof Error ? error.message : "Unknown error occurred"
                 }));
               }
             }
@@ -100,10 +61,10 @@ export default defineConfig({
             } catch (error) {
               console.error("[API] Waiting list middleware error:", error);
               if (!res.writableEnded) {
-                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.writeHead(500, { "Content-Type": "application/json" });
                 res.end(JSON.stringify({
                   success: false,
-                  error: error instanceof Error ? error.message : 'Unknown error occurred'
+                  error: error instanceof Error ? error.message : "Unknown error occurred"
                 }));
               }
             }
