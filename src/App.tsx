@@ -1,9 +1,8 @@
-
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect } from "react";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
@@ -15,12 +14,6 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Contact from "./pages/Contact";
 import AITools from "./pages/AITools";
-import Admin from "./pages/admin/Admin";
-import AdminLogin from "./pages/admin/AdminLogin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminContent from "./pages/admin/AdminContent";
-import AdminContacts from "./pages/admin/AdminContacts";
-import AdminUsers from "./pages/admin/AdminUsers";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -29,6 +22,8 @@ import CaseStudyDetail from "./pages/CaseStudyDetail";
 import FAQ from "./pages/FAQ";
 import Careers from "./pages/Careers";
 import { LanguageCode, availableLanguages } from "./lib/i18n";
+import ThankYou from "./pages/ThankYou";
+import WaitingListPage from "./pages/WaitingListPage";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +86,9 @@ const App = () => {
             <Route path="/blog" element={<Blog />} />
             {createLocalizedRoutes("/blog", Blog)}
             
+            <Route path="/blog/tag/:tag" element={<Blog />} />
+            {createLocalizedRoutes("/blog/tag/:tag", Blog)}
+            
             <Route path="/blog/:slug" element={<BlogPost />} />
             {createLocalizedRoutes("/blog/:slug", BlogPost)}
             
@@ -119,13 +117,12 @@ const App = () => {
             <Route path="/faq" element={<FAQ />} />
             {createLocalizedRoutes("/faq", FAQ)}
             
-            {/* Admin Routes (No language prefix) */}
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/content" element={<AdminContent />} />
-            <Route path="/admin/contacts" element={<AdminContacts />} />
-            <Route path="/admin/users" element={<AdminUsers />} />
+            {/* Add ThankYou page route */}
+            <Route path="/thank-you" element={<ThankYou />} />
+            {createLocalizedRoutes("/thank-you", ThankYou)}
+            
+            <Route path="/waiting-list" element={<WaitingListPage />} />
+            {createLocalizedRoutes("/waiting-list", WaitingListPage)}
             
             {/* Keep this catch-all route at the end */}
             <Route path="*" element={<NotFound />} />

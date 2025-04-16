@@ -1,4 +1,3 @@
-
 // Arabic translations
 export const ar = {
   // Navigation
@@ -63,4 +62,31 @@ export const ar = {
   
   // Explore services button
   'explore.services': 'استكشف خدماتنا',
+
+  // Blog translations
+  'blog.title': 'مدونتنا',
+  'blog.description': 'استكشف مقالاتنا وأدلتنا ورؤيتنا حول الاتجاهات الرقمية والتكنولوجيا واستراتيجيات الأعمال.',
+  'blog.backToList': 'العودة إلى جميع المقالات',
+  'blog.readMore': 'اقرأ المزيد',
+  'blog.readingTime': 'دقائق قراءة',
+  'blog.tags': 'الوسوم',
+  'blog.noTags': 'لا توجد وسوم',
+  'blog.noContent': 'لا يوجد محتوى متاح لهذا المقال.',
+  'blog.relatedPosts': 'مقالات ذات صلة',
+  'blog.post.notFound.title': 'المقال غير موجود',
+  'blog.post.notFound.description': 'تعذر العثور على المقال المطلوب.',
+  'blog.search.placeholder': 'البحث في المقالات...',
+  'blog.category.all': 'جميع الفئات',
+  'blog.tags.all': 'جميع الوسوم',
+  'blog.filter.newest': 'الأحدث أولاً',
+  'blog.filter.oldest': 'الأقدم أولاً',
+  'blog.share': 'مشاركة المقال',
+  'blog.seo.default.title': 'المدونة والرؤى | Trojan Envoy',
+  'blog.seo.default.description': 'ابق على اطلاع بأحدث الاتجاهات في التكنولوجيا والتطوير والتحول الرقمي من خلال رؤى وأدلة خبرائنا.',
+
+  // SEO
+  'seo.keywords': 'تطوير المواقع, تطوير تطبيقات الجوال, التسويق الرقمي, تصميم واجهة المستخدم, تحسين محركات البحث, حلول التجارة الإلكترونية, التحول الرقمي, تطوير البرمجيات, استشارات تقنية المعلومات, أتمتة الأعمال, حلول السحابة, الأمن السيبراني, تكامل الذكاء الاصطناعي, إنشاء المحتوى, الاستراتيجية الرقمية, Trojan Envoy',
+
+  // Service pages
+  'service.details': 'تفاصيل الخدمة',
 };

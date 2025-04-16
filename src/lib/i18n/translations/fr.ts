@@ -1,4 +1,3 @@
-
 // French translations
 export const fr = {
   // Navigation
@@ -63,4 +62,31 @@ export const fr = {
   
   // Explore services button
   'explore.services': 'Explorer Nos Services',
+
+  // Blog translations
+  'blog.title': 'Notre Blog',
+  'blog.description': 'Explorez nos articles, guides et analyses sur les tendances numériques, la technologie et les stratégies commerciales.',
+  'blog.backToList': 'Retour à tous les articles',
+  'blog.readMore': 'Lire la Suite',
+  'blog.readingTime': 'min de lecture',
+  'blog.tags': 'Tags',
+  'blog.noTags': 'Aucun tag',
+  'blog.noContent': 'Aucun contenu disponible pour cet article.',
+  'blog.relatedPosts': 'Articles Connexes',
+  'blog.post.notFound.title': 'Article introuvable',
+  'blog.post.notFound.description': 'L\'article demandé est introuvable.',
+  'blog.search.placeholder': 'Rechercher des articles...',
+  'blog.category.all': 'Toutes les Catégories',
+  'blog.tags.all': 'Tous les Tags',
+  'blog.filter.newest': 'Plus Récents',
+  'blog.filter.oldest': 'Plus Anciens',
+  'blog.share': 'Partager cet article',
+  'blog.seo.default.title': 'Blog et Analyses | Trojan Envoy',
+  'blog.seo.default.description': 'Restez à jour avec les dernières tendances en technologie, développement et transformation numérique grâce à nos analyses d\'experts et nos guides.',
+
+  // SEO
+  'seo.keywords': 'développement web, développement d\'applications mobiles, marketing numérique, conception UI/UX, optimisation SEO, solutions e-commerce, transformation numérique, développement logiciel, conseil informatique, automatisation d\'entreprise, solutions cloud, cybersécurité, intégration IA, création de contenu, stratégie numérique, Trojan Envoy',
+
+  // Service pages
+  'service.details': 'Détails du Service',
 };

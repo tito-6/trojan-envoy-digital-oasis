@@ -1,4 +1,3 @@
-
 // Turkish translations
 export const tr = {
   // Navigation
@@ -63,4 +62,31 @@ export const tr = {
   
   // Explore services button
   'explore.services': 'Hizmetlerimizi Keşfedin',
+
+  // Blog translations
+  'blog.title': 'Blog',
+  'blog.description': 'Dijital trendler, teknoloji ve iş stratejileri hakkındaki makalelerimizi, rehberlerimizi ve öngörülerimizi keşfedin.',
+  'blog.backToList': 'Tüm Yazılara Dön',
+  'blog.readMore': 'Devamını Oku',
+  'blog.readingTime': 'dk okuma',
+  'blog.tags': 'Etiketler',
+  'blog.noTags': 'Etiket yok',
+  'blog.noContent': 'Bu yazı için içerik bulunamadı.',
+  'blog.relatedPosts': 'İlgili Yazılar',
+  'blog.post.notFound.title': 'Yazı bulunamadı',
+  'blog.post.notFound.description': 'İstenen yazı bulunamadı.',
+  'blog.search.placeholder': 'Yazılarda ara...',
+  'blog.category.all': 'Tüm Kategoriler',
+  'blog.tags.all': 'Tüm Etiketler',
+  'blog.filter.newest': 'En Yeniler',
+  'blog.filter.oldest': 'En Eskiler',
+  'blog.share': 'Bu yazıyı paylaş',
+  'blog.seo.default.title': 'Blog & İçgörüler | Trojan Envoy',
+  'blog.seo.default.description': 'Uzman içgörülerimiz ve rehberlerimizle teknoloji, geliştirme ve dijital dönüşüm alanındaki en son trendleri takip edin.',
+
+  // SEO
+  'seo.keywords': 'web geliştirme, mobil uygulama geliştirme, dijital pazarlama, UI/UX tasarım, SEO optimizasyonu, e-ticaret çözümleri, dijital dönüşüm, yazılım geliştirme, BT danışmanlığı, iş otomasyonu, bulut çözümleri, siber güvenlik, yapay zeka entegrasyonu, içerik üretimi, dijital strateji, Trojan Envoy',
+
+  // Service pages
+  'service.details': 'Hizmet Detayları',
 };

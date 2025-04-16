@@ -1,4 +1,3 @@
-
 // German translations
 export const de = {
   // Navigation
@@ -63,4 +62,31 @@ export const de = {
   
   // Explore services button
   'explore.services': 'Entdecken Sie Unsere Dienstleistungen',
+
+  // Blog translations
+  'blog.title': 'Unser Blog',
+  'blog.description': 'Entdecken Sie unsere Artikel, Leitfäden und Einblicke zu digitalen Trends, Technologie und Geschäftsstrategien.',
+  'blog.backToList': 'Zurück zur Übersicht',
+  'blog.readMore': 'Weiterlesen',
+  'blog.readingTime': 'min Lesezeit',
+  'blog.tags': 'Tags',
+  'blog.noTags': 'Keine Tags',
+  'blog.noContent': 'Kein Inhalt für diesen Artikel verfügbar.',
+  'blog.relatedPosts': 'Ähnliche Artikel',
+  'blog.post.notFound.title': 'Artikel nicht gefunden',
+  'blog.post.notFound.description': 'Der angeforderte Artikel konnte nicht gefunden werden.',
+  'blog.search.placeholder': 'Artikel durchsuchen...',
+  'blog.category.all': 'Alle Kategorien',
+  'blog.tags.all': 'Alle Tags',
+  'blog.filter.newest': 'Neueste zuerst',
+  'blog.filter.oldest': 'Älteste zuerst',
+  'blog.share': 'Artikel teilen',
+  'blog.seo.default.title': 'Blog & Einblicke | Trojan Envoy',
+  'blog.seo.default.description': 'Bleiben Sie auf dem Laufenden mit den neuesten Trends in Technologie, Entwicklung und digitaler Transformation durch unsere Experteneinblicke und Leitfäden.',
+
+  // SEO
+  'seo.keywords': 'Webentwicklung, Mobile App-Entwicklung, Digitales Marketing, UI/UX-Design, SEO-Optimierung, E-Commerce-Lösungen, Digitale Transformation, Softwareentwicklung, IT-Beratung, Geschäftsautomatisierung, Cloud-Lösungen, Cybersicherheit, KI-Integration, Content-Erstellung, Digitale Strategie, Trojan Envoy',
+
+  // Service pages
+  'service.details': 'Servicedetails',
 };

@@ -1,4 +1,3 @@
-
 // Chinese translations
 export const zh = {
   // Navigation
@@ -71,6 +70,30 @@ export const zh = {
   
   // Explore services button
   'explore.services': '探索我们的服务',
+
+  // Blog translations
+  'blog.title': '博客专栏',
+  'blog.description': '探索我们关于数字趋势、技术和商业策略的文章、指南和见解。',
+  'blog.backToList': '返回文章列表',
+  'blog.readMore': '阅读更多',
+  'blog.readingTime': '分钟阅读',
+  'blog.tags': '标签',
+  'blog.noTags': '暂无标签',
+  'blog.noContent': '暂无内容',
+  'blog.relatedPosts': '相关文章',
+  'blog.post.notFound.title': '文章未找到',
+  'blog.post.notFound.description': '无法找到请求的文章。',
+  'blog.search.placeholder': '搜索文章...',
+  'blog.category.all': '所有分类',
+  'blog.tags.all': '所有标签',
+  'blog.filter.newest': '最新发布',
+  'blog.filter.oldest': '最早发布',
+  'blog.share': '分享文章',
+  'blog.seo.default.title': '博客与洞察 | Trojan Envoy',
+  'blog.seo.default.description': '通过我们的专家洞察和指南，了解技术、开发和数字化转型的最新趋势。',
+
+  // SEO
+  'seo.keywords': '网站开发, 移动应用开发, 数字营销, UI/UX设计, SEO优化, 电子商务解决方案, 数字化转型, 软件开发, IT咨询, 业务自动化, 云解决方案, 网络安全, 人工智能集成, 内容创作, 数字策略, Trojan Envoy',
   
   // Service pages
   'service.details': '服务详情',

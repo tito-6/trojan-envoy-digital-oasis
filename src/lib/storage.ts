@@ -1,4 +1,4 @@
-import { ContentItem, ContactRequest, User, NavigationItem } from './types';
+import { ContentItem, ContactRequest, User, NavigationItem, WaitingListEntry } from './types';
 
 // Initial sample data for content - we'll keep this minimal
 const initialContent: ContentItem[] = [];
@@ -21,11 +21,14 @@ const initialUsers: User[] = [
 // Initial sample contact requests - empty now
 const initialContacts: ContactRequest[] = [];
 
+const initialWaitingList: WaitingListEntry[] = [];
+
 class StorageService {
   private contentKey = 'trojan-envoy-content';
   private usersKey = 'trojan-envoy-users';
   private contactsKey = 'trojan-envoy-contacts';
   private navigationKey = 'trojan-envoy-navigation';
+  private waitingListKey = 'waiting-list';
   private eventListeners: Record<string, Function[]> = {};
 
   constructor() {
@@ -357,6 +360,62 @@ class StorageService {
     localStorage.setItem(this.contactsKey, JSON.stringify(filteredContacts));
     
     this.dispatchEvent('contact-deleted', id);
+    
+    return true;
+  }
+
+  getAllWaitingListEntries(): WaitingListEntry[] {
+    const entries = localStorage.getItem(this.waitingListKey);
+    return entries ? JSON.parse(entries) : initialWaitingList;
+  }
+
+  getWaitingListEntryByEmail(email: string): WaitingListEntry | undefined {
+    return this.getAllWaitingListEntries().find(entry => entry.email === email);
+  }
+
+  addWaitingListEntry(entry: Omit<WaitingListEntry, 'id' | 'dateSubmitted' | 'status'>): WaitingListEntry {
+    const allEntries = this.getAllWaitingListEntries();
+    const newId = allEntries.length > 0 ? Math.max(...allEntries.map(e => e.id)) + 1 : 1;
+    
+    const newEntry: WaitingListEntry = {
+      ...entry,
+      id: newId,
+      dateSubmitted: new Date().toISOString().split('T')[0],
+      status: 'New'
+    };
+    
+    allEntries.push(newEntry);
+    localStorage.setItem(this.waitingListKey, JSON.stringify(allEntries));
+    
+    this.dispatchEvent('waiting-list-added', newEntry);
+    
+    return newEntry;
+  }
+
+  updateWaitingListEntry(id: number, entry: Partial<WaitingListEntry>): WaitingListEntry | null {
+    const allEntries = this.getAllWaitingListEntries();
+    const index = allEntries.findIndex(e => e.id === id);
+    
+    if (index === -1) return null;
+    
+    const updatedEntry = { ...allEntries[index], ...entry };
+    allEntries[index] = updatedEntry;
+    localStorage.setItem(this.waitingListKey, JSON.stringify(allEntries));
+    
+    this.dispatchEvent('waiting-list-updated', updatedEntry);
+    
+    return updatedEntry;
+  }
+
+  deleteWaitingListEntry(id: number): boolean {
+    const allEntries = this.getAllWaitingListEntries();
+    const filteredEntries = allEntries.filter(entry => entry.id !== id);
+    
+    if (filteredEntries.length === allEntries.length) return false;
+    
+    localStorage.setItem(this.waitingListKey, JSON.stringify(filteredEntries));
+    
+    this.dispatchEvent('waiting-list-deleted', id);
     
     return true;
   }

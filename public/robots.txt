@@ -1,14 +1,28 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
+# robots.txt for Trojan Envoy
 
 User-agent: *
 Allow: /
+
+# Sitemap location
+Sitemap: https://trojanenvoy.com/sitemap.xml
+
+# Language specific paths
+Allow: /en/
+Allow: /es/
+Allow: /fr/
+Allow: /de/
+Allow: /zh/
+Allow: /ar/
+Allow: /tr/
+
+# Blog paths
+Allow: /blog/
+Allow: /blog/category/
+Allow: /blog/tag/
+
+# Prevent crawling of search result pages
+Disallow: /blog?search=
+Disallow: /blog/search?q=
+
+# Rate limiting
+Crawl-delay: 1

@@ -1,4 +1,3 @@
-
 import { create } from 'zustand';
 import { es } from './i18n/translations/es';
 import { fr } from './i18n/translations/fr';
@@ -43,7 +42,7 @@ const translations: Translations = {
     'hero.subtitle': 'We transform vision into digital excellence',
     'hero.cta': 'Discuss Your Project',
     'hero.description': 'We create exceptional digital experiences through innovative software development, strategic marketing, and cutting-edge design.',
-    'partners.title': 'Certified Partners With Leading Platforms',
+    'partners.title': 'Certified Team With Leading Platforms',
     'partners.certified': 'Certified',
     
     // Services Section
@@ -118,7 +117,10 @@ const translations: Translations = {
     'services.cta.features.title6': 'Competitive pricing',
     'services.cta.button.primary': 'Get Started',
     'services.cta.button.secondary': 'View Our Work',
-    
+
+    // SEO
+    'seo.keywords': 'web development, mobile app development, digital marketing, UI/UX design, SEO optimization, e-commerce solutions, digital transformation, software development, IT consulting, business automation, cloud solutions, cybersecurity, AI integration, content creation, digital strategy, Trojan Envoy',
+
     // Contact form on services page
     'services.form.title': 'Request a Free Consultation',
     'services.form.name': 'Your Name',
@@ -131,6 +133,27 @@ const translations: Translations = {
     
     // Learn more button
     'learn.more': 'Learn More',
+
+    // Blog translations
+    'blog.title': 'Our Blog',
+    'blog.description': 'Explore our articles, guides, and insights on digital trends, technology, and business strategies.',
+    'blog.backToList': 'Back to all posts',
+    'blog.readMore': 'Read More',
+    'blog.readingTime': 'min read',
+    'blog.tags': 'Tags',
+    'blog.noTags': 'No tags',
+    'blog.noContent': 'No content available for this post.',
+    'blog.relatedPosts': 'Related Posts',
+    'blog.post.notFound.title': 'Blog post not found',
+    'blog.post.notFound.description': 'The requested blog post could not be found.',
+    'blog.search.placeholder': 'Search articles...',
+    'blog.category.all': 'All Categories',
+    'blog.tags.all': 'All Tags',
+    'blog.filter.newest': 'Newest First',
+    'blog.filter.oldest': 'Oldest First',
+    'blog.share': 'Share this article',
+    'blog.seo.default.title': 'Blog & Insights | Trojan Envoy',
+    'blog.seo.default.description': 'Stay up to date with the latest trends in technology, development, and digital transformation through our expert insights and guides.',
   },
   es,
   fr,

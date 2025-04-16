@@ -1,4 +1,3 @@
-
 // Spanish translations
 export const es = {
   // Navigation
@@ -63,4 +62,31 @@ export const es = {
   
   // Explore services button
   'explore.services': 'Explorar Nuestros Servicios',
+
+  // Blog translations
+  'blog.title': 'Nuestro Blog',
+  'blog.description': 'Explora nuestros artículos, guías y conocimientos sobre tendencias digitales, tecnología y estrategias empresariales.',
+  'blog.backToList': 'Volver a todos los artículos',
+  'blog.readMore': 'Leer Más',
+  'blog.readingTime': 'min de lectura',
+  'blog.tags': 'Etiquetas',
+  'blog.noTags': 'Sin etiquetas',
+  'blog.noContent': 'No hay contenido disponible para este artículo.',
+  'blog.relatedPosts': 'Artículos Relacionados',
+  'blog.post.notFound.title': 'Artículo no encontrado',
+  'blog.post.notFound.description': 'El artículo solicitado no se pudo encontrar.',
+  'blog.search.placeholder': 'Buscar artículos...',
+  'blog.category.all': 'Todas las Categorías',
+  'blog.tags.all': 'Todas las Etiquetas',
+  'blog.filter.newest': 'Más Recientes',
+  'blog.filter.oldest': 'Más Antiguos',
+  'blog.share': 'Compartir este artículo',
+  'blog.seo.default.title': 'Blog y Conocimientos | Trojan Envoy',
+  'blog.seo.default.description': 'Mantente actualizado con las últimas tendencias en tecnología, desarrollo y transformación digital a través de nuestros conocimientos y guías expertas.',
+
+  // SEO
+  'seo.keywords': 'desarrollo web, desarrollo de aplicaciones móviles, marketing digital, diseño UI/UX, optimización SEO, soluciones de comercio electrónico, transformación digital, desarrollo de software, consultoría IT, automatización empresarial, soluciones en la nube, ciberseguridad, integración de IA, creación de contenido, estrategia digital, Trojan Envoy',
+
+  // Service pages
+  'service.details': 'Detalles del Servicio',
 };
