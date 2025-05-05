@@ -36,6 +36,7 @@ import AdminFAQSettings from "./pages/admin/AdminFAQSettings";
 import ContactSettings from "./pages/admin/ContactSettings";
 import FooterSettings from "./pages/admin/FooterSettings";
 import { LanguageCode, availableLanguages } from "./lib/i18n";
+import RootLayout from "./components/common/RootLayout";
 
 const queryClient = new QueryClient();
 
@@ -76,57 +77,61 @@ function App() {
             {/* Language Root Routes */}
             {createLanguageRoutes(availableLanguages)}
             
-            {/* Main Routes for all languages */}
-            <Route path="/" element={<Index />} />
-            {createLocalizedRoutes("/", Index)}
-            
-            <Route path="/services" element={<Services />} />
-            {createLocalizedRoutes("/services", Services)}
-            
-            <Route path="/services/:slug" element={<ServiceDetail />} />
-            {createLocalizedRoutes("/services/:slug", ServiceDetail)}
-            
-            <Route path="/about" element={<About />} />
-            {createLocalizedRoutes("/about", About)}
-            
-            <Route path="/portfolio" element={<Portfolio />} />
-            {createLocalizedRoutes("/portfolio", Portfolio)}
-            
-            <Route path="/portfolio/:slug" element={<PortfolioItem />} />
-            {createLocalizedRoutes("/portfolio/:slug", PortfolioItem)}
-            
-            <Route path="/blog" element={<Blog />} />
-            {createLocalizedRoutes("/blog", Blog)}
-            
-            <Route path="/blog/:slug" element={<BlogPost />} />
-            {createLocalizedRoutes("/blog/:slug", BlogPost)}
-            
-            <Route path="/contact" element={<Contact />} />
-            {createLocalizedRoutes("/contact", Contact)}
-            
-            <Route path="/ai-tools" element={<AITools />} />
-            {createLocalizedRoutes("/ai-tools", AITools)}
-            
-            {/* New Pages */}
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            {createLocalizedRoutes("/privacy-policy", PrivacyPolicy)}
-            
-            <Route path="/terms-of-service" element={<TermsOfService />} />
-            {createLocalizedRoutes("/terms-of-service", TermsOfService)}
-            
-            <Route path="/case-studies" element={<CaseStudies />} />
-            {createLocalizedRoutes("/case-studies", CaseStudies)}
-            
-            <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
-            {createLocalizedRoutes("/case-studies/:slug", CaseStudyDetail)}
-            
-            <Route path="/careers" element={<Careers />} />
-            {createLocalizedRoutes("/careers", Careers)}
-            
-            <Route path="/faq" element={<FAQ />} />
-            {createLocalizedRoutes("/faq", FAQ)}
-            
-            {/* Admin Routes (No language prefix) */}
+            {/* Main Routes Wrapper */}
+            <Route element={<RootLayout />}>
+              {/* Root Route */}
+              <Route path="/" element={<Index />} />
+              {createLocalizedRoutes("/", Index)}
+              
+              {/* Main Routes for all languages */}
+              <Route path="/services" element={<Services />} />
+              {createLocalizedRoutes("/services", Services)}
+              
+              <Route path="/services/:slug" element={<ServiceDetail />} />
+              {createLocalizedRoutes("/services/:slug", ServiceDetail)}
+              
+              <Route path="/about" element={<About />} />
+              {createLocalizedRoutes("/about", About)}
+              
+              <Route path="/portfolio" element={<Portfolio />} />
+              {createLocalizedRoutes("/portfolio", Portfolio)}
+              
+              <Route path="/portfolio/:slug" element={<PortfolioItem />} />
+              {createLocalizedRoutes("/portfolio/:slug", PortfolioItem)}
+              
+              <Route path="/blog" element={<Blog />} />
+              {createLocalizedRoutes("/blog", Blog)}
+              
+              <Route path="/blog/:slug" element={<BlogPost />} />
+              {createLocalizedRoutes("/blog/:slug", BlogPost)}
+              
+              <Route path="/contact" element={<Contact />} />
+              {createLocalizedRoutes("/contact", Contact)}
+              
+              <Route path="/ai-tools" element={<AITools />} />
+              {createLocalizedRoutes("/ai-tools", AITools)}
+              
+              {/* New Pages */}
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              {createLocalizedRoutes("/privacy-policy", PrivacyPolicy)}
+              
+              <Route path="/terms-of-service" element={<TermsOfService />} />
+              {createLocalizedRoutes("/terms-of-service", TermsOfService)}
+              
+              <Route path="/case-studies" element={<CaseStudies />} />
+              {createLocalizedRoutes("/case-studies", CaseStudies)}
+              
+              <Route path="/case-studies/:slug" element={<CaseStudyDetail />} />
+              {createLocalizedRoutes("/case-studies/:slug", CaseStudyDetail)}
+              
+              <Route path="/careers" element={<Careers />} />
+              {createLocalizedRoutes("/careers", Careers)}
+              
+              <Route path="/faq" element={<FAQ />} />
+              {createLocalizedRoutes("/faq", FAQ)}
+            </Route>
+
+            {/* Admin Routes (No language prefix, separate layout) */}
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />

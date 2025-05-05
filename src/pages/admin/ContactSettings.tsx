@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,33 +14,41 @@ import { Plus, X } from "lucide-react";
 import { ContactInfoItem, ContactFormField } from "@/lib/types";
 import type { ContactSettings as ContactSettingsType } from "@/lib/types";
 import RichTextEditor from "@/components/admin/richtext/RichTextEditor";
-import { supabase, checkSupabaseConnection } from "@/lib/supabase";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const ContactSettings: React.FC = () => {
   const { toast } = useToast();
-  const [settings, setSettings] = useState<ContactSettingsType>(() => storageService.getContactSettings());
+  const [settings, setSettings] = useState<ContactSettingsType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [databaseConnected, setDatabaseConnected] = useState(false);
 
   useEffect(() => {
-    const checkConnection = async () => {
-      const isConnected = await checkSupabaseConnection();
-      setDatabaseConnected(isConnected);
-      
-      if (isConnected) {
-        const supabaseSettings = await storageService.getContactSettingsFromSupabase();
-        if (supabaseSettings) {
-          setSettings(supabaseSettings);
-          toast({
-            title: "Settings loaded from database",
-            description: "Contact settings have been loaded from Supabase."
-          });
+    const fetchSettings = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/settings/contact_settings');
+        if (!response.ok) {
+          throw new Error('Failed to fetch contact settings');
         }
+        const data = await response.json();
+        setSettings(data);
+        toast({
+          title: "Settings loaded",
+          description: "Contact settings have been loaded successfully."
+        });
+      } catch (error) {
+        console.error('Error fetching contact settings:', error);
+        toast({
+          title: "Error loading settings",
+          description: "There was a problem loading your contact settings.",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    checkConnection();
+    fetchSettings();
   }, [toast]);
 
   const handleBasicInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -129,19 +136,22 @@ const ContactSettings: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    setIsUpdating(true);
+    if (!settings) return;
     
+    setIsUpdating(true);
     try {
-      // Update settings in local storage
-      storageService.updateContactSettings(settings);
-      
-      // If connected to Supabase, update there as well
-      if (databaseConnected) {
-        await supabase
-          .from('contact_settings')
-          .upsert({ ...settings }, { onConflict: 'id' });
+      const response = await fetch('/api/settings/contact_settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(settings),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update settings');
       }
-      
+
       toast({
         title: "Contact settings updated",
         description: "Your changes have been saved successfully."
@@ -164,6 +174,26 @@ const ContactSettings: React.FC = () => {
       [field]: value
     }));
   };
+
+  if (isLoading) {
+    return (
+      <AdminLayout>
+        <div className="container mx-auto py-10">
+          <div className="animate-pulse">Loading settings...</div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (!settings) {
+    return (
+      <AdminLayout>
+        <div className="container mx-auto py-10">
+          <div className="text-red-500">Failed to load settings</div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -498,6 +528,7 @@ const ContactSettings: React.FC = () => {
                         onChange={handleBasicInfoChange} 
                       />
                     </div>
+                    
                   </div>
                 )}
                 

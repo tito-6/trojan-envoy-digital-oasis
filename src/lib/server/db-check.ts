@@ -1,10 +1,17 @@
+import db from './mysql';
+import { supabase } from '../supabase';
 
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = 'https://ouleltyzacvwhknbcfgs.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91bGVsdHl6YWN2d2hrbmJjZmdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1ODQ3MTIsImV4cCI6MjA1OTE2MDcxMn0.V-OT4Kwfzi-WTNgb5iYbcLCDsH9fRHokT9sbhA04Mjk';
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const checkMySQLConnection = async () => {
+  try {
+    const result = await db.query('SELECT 1 as connected');
+    await db.end();
+    console.log('Successfully connected to MySQL');
+    return true;
+  } catch (error) {
+    console.error('MySQL connection error:', error);
+    return false;
+  }
+};
 
 export const checkSupabaseConnection = async () => {
   try {

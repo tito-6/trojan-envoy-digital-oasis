@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { storageService } from "@/lib/storage";
@@ -24,19 +25,37 @@ const NavigationManager: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [newItem, setNewItem] = useState({ label: "", path: "" });
   const [currentItem, setCurrentItem] = useState<NavigationItem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Load navigation items
-    const items = storageService.getAllNavigationItems();
-    setNavItems([...items].sort((a, b) => a.order - b.order));
+    const fetchNavItems = async () => {
+      try {
+        setIsLoading(true);
+        const items = await storageService.getAllNavigationItems();
+        setNavItems([...items].sort((a, b) => a.order - b.order));
+      } catch (error) {
+        console.error("Failed to load navigation items:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load navigation items. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchNavItems();
     
     // Subscribe to changes
     const handleNavigationUpdated = (updatedItems: NavigationItem[]) => {
       setNavItems([...updatedItems].sort((a, b) => a.order - b.order));
     };
     
-    window.addEventListener('navigation-updated', () => {
-      setNavItems([...storageService.getAllNavigationItems()].sort((a, b) => a.order - b.order));
+    window.addEventListener('navigation-updated', async () => {
+      const items = await storageService.getAllNavigationItems();
+      setNavItems([...items].sort((a, b) => a.order - b.order));
     });
     
     storageService.addEventListener('navigation-updated', handleNavigationUpdated);
@@ -45,9 +64,9 @@ const NavigationManager: React.FC = () => {
       storageService.addEventListener('navigation-updated', handleNavigationUpdated);
       window.removeEventListener('navigation-updated', () => {});
     };
-  }, []);
+  }, [toast]);
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (!newItem.label.trim() || !newItem.path.trim()) {
       toast({
         title: "Validation Error",
@@ -58,7 +77,7 @@ const NavigationManager: React.FC = () => {
     }
 
     try {
-      storageService.addNavigationItem({
+      await storageService.addNavigationItem({
         label: newItem.label,
         path: newItem.path.startsWith("/") ? newItem.path : `/${newItem.path}`,
         order: navItems.length + 1,
@@ -71,6 +90,9 @@ const NavigationManager: React.FC = () => {
         title: "Navigation Item Added",
         description: `"${newItem.label}" has been added to navigation.`,
       });
+      
+      const items = await storageService.getAllNavigationItems();
+      setNavItems([...items].sort((a, b) => a.order - b.order));
     } catch (error) {
       console.error("Error adding navigation item:", error);
       toast({
@@ -81,7 +103,7 @@ const NavigationManager: React.FC = () => {
     }
   };
 
-  const handleEditItem = () => {
+  const handleEditItem = async () => {
     if (!currentItem || !currentItem.label.trim() || !currentItem.path.trim()) {
       toast({
         title: "Validation Error",
@@ -92,7 +114,7 @@ const NavigationManager: React.FC = () => {
     }
 
     try {
-      storageService.updateNavigationItem(currentItem.id, {
+      await storageService.updateNavigationItem(currentItem.id, {
         label: currentItem.label,
         path: currentItem.path.startsWith("/") ? currentItem.path : `/${currentItem.path}`,
       });
@@ -103,6 +125,9 @@ const NavigationManager: React.FC = () => {
         title: "Navigation Item Updated",
         description: `"${currentItem.label}" has been updated.`,
       });
+      
+      const items = await storageService.getAllNavigationItems();
+      setNavItems([...items].sort((a, b) => a.order - b.order));
     } catch (error) {
       console.error("Error updating navigation item:", error);
       toast({
@@ -113,10 +138,10 @@ const NavigationManager: React.FC = () => {
     }
   };
 
-  const handleDeleteItem = (id: number, label: string) => {
+  const handleDeleteItem = async (id: number, label: string) => {
     if (window.confirm(`Are you sure you want to delete "${label}" from navigation?`)) {
       try {
-        storageService.deleteNavigationItem(id);
+        await storageService.deleteNavigationItem(id);
         
         toast({
           title: "Navigation Item Deleted",
@@ -131,8 +156,11 @@ const NavigationManager: React.FC = () => {
         }));
         
         if (reorderedItems.length > 0) {
-          storageService.reorderNavigationItems(reorderedItems);
+          await storageService.reorderNavigationItems(reorderedItems);
         }
+        
+        const items = await storageService.getAllNavigationItems();
+        setNavItems([...items].sort((a, b) => a.order - b.order));
       } catch (error) {
         console.error("Error deleting navigation item:", error);
         toast({
@@ -144,7 +172,7 @@ const NavigationManager: React.FC = () => {
     }
   };
 
-  const handleMoveItem = (id: number, direction: "up" | "down") => {
+  const handleMoveItem = async (id: number, direction: "up" | "down") => {
     const index = navItems.findIndex(item => item.id === id);
     if (index === -1) return;
     
@@ -158,7 +186,7 @@ const NavigationManager: React.FC = () => {
     updatedItems[newIndex].order = temp;
     
     try {
-      storageService.reorderNavigationItems(
+      await storageService.reorderNavigationItems(
         updatedItems.map(item => ({ id: item.id, order: item.order }))
       );
       
@@ -166,6 +194,9 @@ const NavigationManager: React.FC = () => {
         title: "Navigation Order Updated",
         description: "The navigation order has been updated.",
       });
+      
+      const items = await storageService.getAllNavigationItems();
+      setNavItems([...items].sort((a, b) => a.order - b.order));
     } catch (error) {
       console.error("Error reordering navigation items:", error);
       toast({
@@ -175,6 +206,22 @@ const NavigationManager: React.FC = () => {
       });
     }
   };
+
+  if (isLoading) {
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Navigation Menu</CardTitle>
+          <CardDescription>Loading navigation items...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="mt-6">

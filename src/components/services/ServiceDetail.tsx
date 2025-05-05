@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { storageService } from "@/lib/storage";
 import { ContentItem } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface ServiceDetailProps {
   service?: ContentItem; // Allow passing service directly
@@ -18,13 +19,25 @@ interface ServiceDetailProps {
 const ServiceDetail: React.FC<ServiceDetailProps> = ({ service: serviceProp, className }) => {
   const { slug } = useParams<{ slug: string }>();
   const [service, setService] = useState<ContentItem | null>(serviceProp || null);
+  const [loading, setLoading] = useState<boolean>(!serviceProp);
 
   useEffect(() => {
     if (!serviceProp && slug) {
       const fetchService = async () => {
-        const services = await storageService.getContentByType("Service");
-        const foundService = services.find((item) => item.slug === slug);
-        setService(foundService || null);
+        try {
+          setLoading(true);
+          const services = await storageService.getContentByType("Service");
+          const foundService = services.find((item) => item.slug === slug);
+          setService(foundService || null);
+          if (!foundService) {
+            toast.error("Service not found");
+          }
+        } catch (error) {
+          console.error("Error fetching service:", error);
+          toast.error("Failed to load service details");
+        } finally {
+          setLoading(false);
+        }
       };
       
       fetchService();
@@ -75,6 +88,16 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service: serviceProp, cla
     );
   };
 
+  if (loading) {
+    return (
+      <div className="container py-12">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
+
   if (!service) {
     return (
       <div className="container py-12">
@@ -83,6 +106,9 @@ const ServiceDetail: React.FC<ServiceDetailProps> = ({ service: serviceProp, cla
           <p className="text-muted-foreground">
             Sorry, the service you are looking for could not be found.
           </p>
+          <Button className="mt-6" asChild>
+            <a href="/services">Back to Services</a>
+          </Button>
         </div>
       </div>
     );

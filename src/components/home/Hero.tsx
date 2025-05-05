@@ -6,6 +6,27 @@ import { storageService } from "@/lib/storage";
 import { HeroSettings, PartnerLogo, TechIcon } from "@/lib/types";
 import { getIconComponentByName } from "@/lib/iconUtils";
 
+const defaultSettings: HeroSettings = {
+  id: 1,
+  title: "Building Digital Solutions",
+  subtitle: "Transform Your Vision",
+  description: "We create innovative digital solutions that help businesses grow and succeed in the modern world.",
+  primaryButtonText: "Get Started",
+  primaryButtonUrl: "/contact",
+  secondaryButtonText: "Learn More",
+  secondaryButtonUrl: "/services",
+  showPartnerLogos: true,
+  partnerSectionTitle: "Trusted By Industry Leaders",
+  partnerCertifiedText: "Certified Partner",
+  showTechStack: true,
+  techStackTitle: "Powered by Modern Technology",
+  techStackSubtitle: "Our Tech Stack",
+  techStackDescription: "We use cutting-edge technologies to build scalable and efficient solutions.",
+  partnerLogos: [],
+  techIcons: [],
+  lastUpdated: new Date().toISOString()
+};
+
 const renderIcon = (iconName: string, props = {}) => {
   if (!iconName) {
     return <Award {...props} />;
@@ -34,7 +55,32 @@ const Hero: React.FC = () => {
   const { t } = useLanguage();
   const heroRef = useRef<HTMLDivElement>(null);
   const techSectionRef = useRef<HTMLDivElement>(null);
-  const [heroSettings, setHeroSettings] = useState(storageService.getHeroSettings());
+  const [heroSettings, setHeroSettings] = useState<HeroSettings>(defaultSettings);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        setIsLoading(true);
+        const settings = await storageService.getHeroSettings();
+        if (settings) {
+          setHeroSettings(settings);
+        }
+      } catch (error) {
+        console.error('Error loading hero settings:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadSettings();
+    
+    const unsubscribe = storageService.addEventListener('hero-settings-updated', loadSettings);
+    
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -89,14 +135,6 @@ const Hero: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = storageService.addEventListener('hero-settings-updated', () => {
-      setHeroSettings(storageService.getHeroSettings());
-    });
-    
-    return unsubscribe;
-  }, []);
-  
   const renderPartnerLogo = (logo: PartnerLogo) => {
     return (
       <div 

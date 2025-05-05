@@ -109,41 +109,8 @@ const getIconForService = (title: string) => {
   return <Code className="w-5 h-5 text-primary" />;
 };
 
-const ServicesList: React.FC = () => {
+const ServicesList: React.FC<{ services: ContentItem[] }> = ({ services }) => {
   const { t } = useLanguage();
-  const [services, setServices] = useState<ContentItem[]>([]);
-  
-  useEffect(() => {
-    const loadServices = () => {
-      const allContent = storageService.getAllContent();
-      const serviceItems = allContent.filter(item => 
-        item.type === "Service" && item.published === true
-      );
-      
-      const sortedServices = [...serviceItems].sort((a, b) => {
-        if (a.order !== undefined && b.order !== undefined) {
-          return a.order - b.order;
-        }
-        return a.title.localeCompare(b.title);
-      });
-      
-      setServices(sortedServices);
-    };
-    
-    loadServices();
-    
-    const unsubscribe = storageService.addEventListener('content-updated', loadServices);
-    const unsubscribeAdded = storageService.addEventListener('content-added', loadServices);
-    const unsubscribeDeleted = storageService.addEventListener('content-deleted', loadServices);
-    const unsubscribeSettings = storageService.addEventListener('services-settings-updated', loadServices);
-    
-    return () => {
-      unsubscribe();
-      unsubscribeAdded();
-      unsubscribeDeleted();
-      unsubscribeSettings();
-    };
-  }, []);
   
   const parseFeatures = (content?: string): string[] => {
     if (!content) return [];

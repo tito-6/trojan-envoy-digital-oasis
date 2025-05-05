@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
@@ -115,13 +114,27 @@ const defaultSettings: ServicesSettings = {
 
 const Services: React.FC = () => {
   const { t } = useLanguage();
-  const [settings, setSettings] = useState<ServicesSettings>(defaultSettings);
+  const [settings, setSettings] = useState<ServicesSettings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    const loadSettings = () => {
-      const storedSettings = storageService.getServicesSettings();
-      if (storedSettings) {
-        setSettings(storedSettings);
+    const loadSettings = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const storedSettings = await storageService.getServicesSettings();
+        if (storedSettings) {
+          setSettings(storedSettings);
+        } else {
+          setSettings(defaultSettings);
+        }
+      } catch (error) {
+        console.error('Error loading services settings:', error);
+        setError('Failed to load services. Please try again later.');
+        setSettings(defaultSettings);
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -133,24 +146,46 @@ const Services: React.FC = () => {
       unsubscribe();
     };
   }, []);
+
+  if (isLoading) {
+    return (
+      <section className="section-padding bg-background" id="services">
+        <div className="container mx-auto text-center">
+          <div className="animate-pulse">Loading services...</div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="section-padding bg-background" id="services">
+        <div className="container mx-auto text-center text-red-500">
+          {error}
+        </div>
+      </section>
+    );
+  }
+
+  const currentSettings = settings || defaultSettings;
   
   // Sort services by order
-  const sortedServices = [...settings.services].sort((a, b) => a.order - b.order);
+  const sortedServices = [...(currentSettings.services || [])].sort((a, b) => a.order - b.order);
 
   return (
     <section className="section-padding bg-background" id="services">
       <div className="container mx-auto">
         <div className="text-center max-w-xl mx-auto mb-12 md:mb-16">
           <div className="inline-block px-4 py-1.5 rounded-full bg-secondary mb-4 text-sm font-medium animate-slide-up">
-            {settings.subtitle}
+            {currentSettings.subtitle}
           </div>
           
           <h2 className="text-3xl md:text-4xl font-display font-bold mb-4 animate-slide-up">
-            {settings.title}
+            {currentSettings.title}
           </h2>
           
           <p className="text-muted-foreground animate-slide-up">
-            {settings.description}
+            {currentSettings.description}
           </p>
         </div>
         
@@ -174,10 +209,10 @@ const Services: React.FC = () => {
         
         <div className="mt-12 text-center">
           <Link
-            to={settings.viewAllUrl}
+            to={currentSettings.viewAllUrl}
             className="inline-flex items-center gap-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground px-6 py-3 rounded-lg font-medium transition-colors"
           >
-            {settings.viewAllText}
+            {currentSettings.viewAllText}
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

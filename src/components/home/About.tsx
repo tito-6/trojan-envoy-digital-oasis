@@ -1,17 +1,28 @@
-
 import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Check, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/lib/i18n";
-import { storageService } from "@/lib/storage";
 
 const About: React.FC = () => {
   const { t } = useLanguage();
   const statsRef = useRef<HTMLDivElement>(null);
   
-  // Get about settings from storage
-  const aboutSettings = storageService.getAboutSettings();
+  const stats = [
+    { value: "10+", label: "Years Experience", start: "0" },
+    { value: "200+", label: "Projects Completed", start: "0" },
+    { value: "50+", label: "Team Members", start: "0" },
+    { value: "98%", label: "Client Satisfaction", start: "0" },
+  ];
   
+  const keyPoints = [
+    "Industry-leading expertise",
+    "Results-driven approach",
+    "Innovative technologies",
+    "Dedicated support",
+    "Transparent communication",
+    "Agile methodology",
+  ];
+
   useEffect(() => {
     if (!statsRef.current) return;
 
@@ -32,21 +43,6 @@ const About: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Filter active stats
-  const activeStats = aboutSettings.stats.filter(stat => stat.isActive !== false);
-
-  // Fix the URL path by ensuring it starts with a slash and removing any double slashes
-  const getLinkPath = (url: string) => {
-    // If URL is external (has http or https), return as is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    
-    // For internal links, ensure they start with a slash but don't have double slashes
-    const path = url.startsWith('/') ? url : `/${url}`;
-    return path.replace(/\/+/g, '/');
-  };
-
   return (
     <section className="section-padding bg-secondary/30">
       <div className="container mx-auto">
@@ -57,77 +53,56 @@ const About: React.FC = () => {
             </div>
             
             <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
-              {aboutSettings.title}
-              <span className="block text-gradient mt-1">{aboutSettings.subtitle}</span>
+              {t('about.title')}
+              <span className="block text-gradient mt-1">{t('about.subtitle')}</span>
             </h2>
             
             <p className="text-muted-foreground mb-6">
-              {aboutSettings.description}
+              {t('about.description')}
             </p>
             
             <div className="mb-8">
-              <h3 className="text-xl font-semibold mb-4">{aboutSettings.missionTitle}</h3>
+              <h3 className="text-xl font-semibold mb-4">{t('about.mission.title')}</h3>
               <p className="text-muted-foreground">
-                {aboutSettings.missionDescription}
+                {t('about.mission.description')}
               </p>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-              {aboutSettings.keyPoints.map((point) => (
-                <div key={point.id} className="flex items-center gap-2">
+              {keyPoints.map((point) => (
+                <div key={point} className="flex items-center gap-2">
                   <div className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
                     <Check className="w-3 h-3 text-primary" />
                   </div>
-                  <span className="text-sm">{point.text}</span>
+                  <span className="text-sm">{point}</span>
                 </div>
               ))}
             </div>
             
-            {aboutSettings.learnMoreUrl && (
-              aboutSettings.learnMoreUrl.startsWith('http') ? (
-                // External link
-                <a
-                  href={aboutSettings.learnMoreUrl}
-                  className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {aboutSettings.learnMoreText}
-                  <ArrowRight className="w-4 h-4" />
-                </a>
-              ) : (
-                // Internal link
-                <Link
-                  to={getLinkPath(aboutSettings.learnMoreUrl)}
-                  className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
-                >
-                  {aboutSettings.learnMoreText}
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              )
-            )}
+            <Link
+              to="/about"
+              className="inline-flex items-center gap-2 text-primary hover:underline font-medium"
+            >
+              Learn more about us
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
           
           <div className="relative" ref={statsRef}>
             <div className="grid grid-cols-2 gap-6">
-              {activeStats.map((stat) => (
+              {stats.map((stat, index) => (
                 <div 
-                  key={stat.id} 
+                  key={stat.label} 
                   className="card-hover stats-card bg-background p-6 rounded-xl border border-border h-full flex flex-col items-center justify-center text-center"
-                  style={{ borderColor: stat.color ? `${stat.color}40` : undefined }}
                 >
                   <div 
                     className="counter text-3xl md:text-4xl font-bold mb-2"
                     data-start={stat.start}
                     data-end={stat.value}
-                    style={{ color: stat.color || 'inherit' }}
                   >
-                    {stat.value}{stat.suffix || ''}
+                    {stat.value}
                   </div>
                   <div className="text-sm text-muted-foreground">{stat.label}</div>
-                  {stat.description && (
-                    <div className="text-xs text-muted-foreground mt-2">{stat.description}</div>
-                  )}
                 </div>
               ))}
             </div>

@@ -1,304 +1,314 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useLanguage } from "@/lib/i18n";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { ContactFormField } from "@/lib/types";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { storageService } from "@/lib/storage";
-import { useLanguage } from "@/lib/i18n";
 
-const contactFormSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  phone: z.string().optional(),
-  subject: z.string().optional(),
-  message: z.string().min(10, {
-    message: "Message must be at least 10 characters.",
-  }),
-  terms: z.boolean().default(false),
+// Define the country codes for the dropdown
+const countryCodes = [
+  { code: "+1", country: "US", label: "United States (+1)", flag: "🇺🇸" },
+  { code: "+44", country: "UK", label: "United Kingdom (+44)", flag: "🇬🇧" },
+  { code: "+91", country: "IN", label: "India (+91)", flag: "🇮🇳" },
+  { code: "+61", country: "AU", label: "Australia (+61)", flag: "🇦🇺" },
+  { code: "+33", country: "FR", label: "France (+33)", flag: "🇫🇷" },
+  { code: "+49", country: "DE", label: "Germany (+49)", flag: "🇩🇪" },
+  { code: "+86", country: "CN", label: "China (+86)", flag: "🇨🇳" },
+  { code: "+81", country: "JP", label: "Japan (+81)", flag: "🇯🇵" },
+  { code: "+82", country: "KR", label: "South Korea (+82)", flag: "🇰🇷" },
+  { code: "+55", country: "BR", label: "Brazil (+55)", flag: "🇧🇷" },
+  { code: "+52", country: "MX", label: "Mexico (+52)", flag: "🇲🇽" },
+  { code: "+34", country: "ES", label: "Spain (+34)", flag: "🇪🇸" },
+  { code: "+39", country: "IT", label: "Italy (+39)", flag: "🇮🇹" },
+  { code: "+7", country: "RU", label: "Russia (+7)", flag: "🇷🇺" },
+  { code: "+27", country: "ZA", label: "South Africa (+27)", flag: "🇿🇦" }
+];
+
+// Define the phone number regex for different countries
+const phoneRegexMap: Record<string, RegExp> = {
+  US: /^\d{10}$/, // US: 10 digits
+  UK: /^\d{10,11}$/, // UK: 10-11 digits
+  IN: /^\d{10}$/, // India: 10 digits
+  AU: /^\d{9,10}$/, // Australia: 9-10 digits
+  FR: /^\d{9}$/, // France: 9 digits
+  DE: /^\d{10,11}$/, // Germany: 10-11 digits
+  CN: /^\d{11}$/, // China: 11 digits
+  JP: /^\d{10,11}$/, // Japan: 10-11 digits
+  KR: /^\d{9,10}$/, // South Korea: 9-10 digits
+  BR: /^\d{10,11}$/, // Brazil: 10-11 digits
+  MX: /^\d{10}$/, // Mexico: 10 digits
+  ES: /^\d{9}$/, // Spain: 9 digits
+  IT: /^\d{10}$/, // Italy: 10 digits
+  RU: /^\d{10}$/, // Russia: 10 digits
+  ZA: /^\d{9}$/, // South Africa: 9 digits
+  DEFAULT: /^\d{7,15}$/, // Generic: 7-15 digits
+};
+
+const contactSchema = z.object({
+  name: z.string().min(2, { message: "Name must be at least 2 characters" }),
+  email: z.string().email({ message: "Invalid email address" }),
+  countryCode: z.string().default("+1"),
+  phoneNumber: z.string().refine((val) => {
+    // This will be validated with the selected country code
+    return true;
+  }, { message: "Invalid phone number format" }),
+  subject: z.string().min(2, { message: "Subject is required" }),
+  message: z.string().min(10, { message: "Message must be at least 10 characters" }),
+})
+.refine((data) => {
+  // Get the country from the country code
+  const countryObj = countryCodes.find(c => c.code === data.countryCode);
+  const country = countryObj ? countryObj.country : "DEFAULT";
+  
+  // Get the regex for that country
+  const regex = phoneRegexMap[country] || phoneRegexMap.DEFAULT;
+  
+  // Test the phone number against the regex
+  return regex.test(data.phoneNumber.replace(/\D/g, ''));
+}, {
+  message: "Invalid phone number for the selected country",
+  path: ["phoneNumber"]
 });
 
-type ContactFormValues = z.infer<typeof contactFormSchema>;
+type ContactFormData = z.infer<typeof contactSchema>;
 
-interface ContactProps {
-  className?: string;
-}
-
-const Contact: React.FC<ContactProps> = ({ className }) => {
+const Contact: React.FC = () => {
   const { t } = useLanguage();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
-  const [formFields, setFormFields] = useState<ContactFormField[]>([]);
-  const [contactSettings, setContactSettings] = useState<any>({});
-  const [formData, setFormData] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    const settings = storageService.getContactSettings();
-    setContactSettings(settings);
-    setFormFields(settings.formFields);
-
-    const initialFormData: Record<string, string> = {};
-    settings.formFields.forEach((field: ContactFormField) => {
-      initialFormData[field.name] = "";
-    });
-    setFormData(initialFormData);
-  }, []);
-
-  const form = useForm<ContactFormValues>({
-    resolver: zodResolver(contactFormSchema),
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const form = useForm<ContactFormData>({
+    resolver: zodResolver(contactSchema),
     defaultValues: {
       name: "",
       email: "",
-      phone: "",
+      countryCode: "+1",
+      phoneNumber: "",
       subject: "",
       message: "",
-      terms: false,
     },
   });
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prevData => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-
+  
+  const onSubmit = async (data: ContactFormData) => {
+    setIsSubmitting(true);
+    
+    // Format the phone number with country code
+    const fullPhoneNumber = `${data.countryCode} ${data.phoneNumber}`;
+    
     try {
-      const requiredFields = formFields.filter(field => field.required);
-      for (const field of requiredFields) {
-        if (!formData[field.name]) {
-          toast({
-            title: "Error",
-            description: `Please fill in the ${field.label} field.`,
-            variant: "destructive",
-          });
-          setIsLoading(false);
-          return;
-        }
-      }
-
-      const contactRequest = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        subject: formData.subject || "Contact form submission",
-        message: formData.message,
-        createdAt: new Date().toISOString(),
-        status: "new" as const
-      };
-
-      storageService.addContactRequest(contactRequest);
-
+      // Save to our storage service
+      storageService.addContactRequest({
+        name: data.name,
+        email: data.email,
+        phone: fullPhoneNumber,
+        subject: data.subject,
+        message: data.message,
+      });
+      
       toast({
-        title: "Success",
-        description: "Your message has been sent successfully!",
+        title: "Message sent successfully!",
+        description: "We'll get back to you as soon as possible.",
       });
-
-      const resetFormData: Record<string, string> = {};
-      formFields.forEach(field => {
-        resetFormData[field.name] = "";
-      });
-      setFormData(resetFormData);
-
+      
       form.reset();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to send your message. Please try again.",
+        title: "Error sending message",
+        description: "Please try again later.",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <section className={cn("container grid items-center gap-6 py-8 md:py-10", className)}>
-      <div className="flex max-w-[980px] flex-col items-start gap-2">
-        <h2 className="scroll-m-20 pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0">
-          {contactSettings.title || t('contact.title')}
-        </h2>
-        <p className="max-w-[700px] text-muted-foreground">
-          {contactSettings.description || t('contact.description')}
-        </p>
+    <section className="section-padding" id="contact">
+      <div className="container mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
+          <div>
+            <div className="inline-block px-4 py-1.5 rounded-full bg-secondary mb-4 text-sm font-medium">
+              Get In Touch
+            </div>
+            
+            <h2 className="text-3xl md:text-4xl font-display font-bold mb-6">
+              {t('contact.title')}
+              <span className="block text-gradient mt-1">{t('contact.subtitle')}</span>
+            </h2>
+            
+            <p className="text-muted-foreground mb-8 max-w-md">
+              Have a project in mind? Let's talk about how we can help your business grow through innovative digital solutions.
+            </p>
+            
+            <div className="space-y-8">
+              <div className="contact-info-item">
+                <h3 className="text-lg font-semibold mb-2">Office Address</h3>
+                <p className="text-muted-foreground">
+                  1234 Tech Avenue, Innovation District<br />
+                  New York, NY 10001, USA
+                </p>
+              </div>
+              
+              <div className="contact-info-item">
+                <h3 className="text-lg font-semibold mb-2">Contact Information</h3>
+                <p className="text-muted-foreground">
+                  Email: contact@trojanenvoy.com<br />
+                  Phone: +1 (555) 123-4567
+                </p>
+              </div>
+              
+              <div className="contact-info-item">
+                <h3 className="text-lg font-semibold mb-2">Working Hours</h3>
+                <p className="text-muted-foreground">
+                  Monday - Friday: 9:00 AM - 6:00 PM<br />
+                  Saturday & Sunday: Closed
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="bg-card border border-border rounded-xl p-6 md:p-8 space-y-6 card-hover">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('contact.name')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('contact.email')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder="john@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="countryCode"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-1">
+                        <FormLabel>Country Code</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select country" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {countryCodes.map((country) => (
+                              <SelectItem key={country.code} value={country.code}>
+                                <span className="mr-2">{country.flag}</span> {country.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="phoneNumber"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Phone Number</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="(555) 123-4567" 
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={form.control}
+                  name="subject"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('contact.subject')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Project Inquiry" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="message"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('contact.message')}</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Tell us about your project..." 
+                          rows={5}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:opacity-90 transition-opacity disabled:opacity-70 flex items-center justify-center"
+                >
+                  {isSubmitting ? (
+                    <span className="animate-pulse">Sending...</span>
+                  ) : (
+                    t('contact.submit')
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </div>
+        </div>
       </div>
-      <Card className="w-full max-w-lg">
-        <CardHeader>
-          <CardTitle>{contactSettings.subtitle || t('contact.subtitle')}</CardTitle>
-          <CardDescription>
-            {t('contact.formDescription')}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <Form {...form}>
-            <form onSubmit={handleFormSubmit} className="space-y-4">
-              {formFields.filter(field => field.type === 'text' || field.type === 'email' || field.type === 'tel').map((field) => {
-                return (
-                  <FormField
-                    key={field.id}
-                    control={form.control}
-                    name={field.name as keyof ContactFormValues}
-                    render={({ field: formField }) => (
-                      <FormItem>
-                        <FormLabel>{field.label} {field.required && <span className="text-red-500">*</span>}</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder={field.placeholder}
-                            type={field.type}
-                            required={field.required}
-                            value={formData[field.name] || ""}
-                            onChange={handleInputChange}
-                            name={field.name}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                );
-              })}
-
-              {formFields.filter(field => field.type === 'select').map((field) => {
-                return (
-                  <div key={field.id} className="w-full">
-                    <label htmlFor={field.name} className="block text-sm font-medium mb-1">
-                      {field.label} {field.required && <span className="text-red-500">*</span>}
-                    </label>
-                    <select
-                      id={field.name}
-                      name={field.name}
-                      required={field.required}
-                      className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      value={formData[field.name] || ""}
-                      onChange={handleInputChange}
-                    >
-                      <option value="">Select {field.label}</option>
-                      {field.options && field.options.map((option, index) => (
-                        <option key={index} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              })}
-
-              {formFields.filter(field => field.type === 'textarea').map((field) => {
-                return (
-                  <FormField
-                    key={field.id}
-                    control={form.control}
-                    name={field.name as keyof ContactFormValues}
-                    render={({ field: formField }) => (
-                      <FormItem>
-                        <FormLabel>{field.label} {field.required && <span className="text-red-500">*</span>}</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder={field.placeholder}
-                            required={field.required}
-                            className="resize-none"
-                            value={formData[field.name] || ""}
-                            onChange={handleInputChange}
-                            name={field.name}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                );
-              })}
-
-              {formFields.filter(field => field.type === 'checkbox').map((field) => {
-                return (
-                  <FormField
-                    key={field.id}
-                    control={form.control}
-                    name={field.name as keyof ContactFormValues}
-                    render={({ field: formField }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={formData[field.name] === "true"}
-                            onCheckedChange={(checked) => {
-                              setFormData(prevData => ({
-                                ...prevData,
-                                [field.name]: checked ? "true" : "",
-                              }));
-                            }}
-                            name={field.name}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>{field.label}</FormLabel>
-                          <FormDescription>
-                            This is for testing purposes.
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                );
-              })}
-
-              <Button disabled={isLoading}>
-                {isLoading && (
-                  <svg
-                    className="mr-2 h-4 w-4 animate-spin"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                )}
-                {contactSettings.submitButtonText || t('contact.submit')}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
     </section>
   );
 };
